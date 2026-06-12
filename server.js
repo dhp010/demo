@@ -45,78 +45,114 @@ function buildMemoryStorage() {
   };
 }
 
-function buildPgStorage(pool) {
+function buildTursoStorage(client) {
+  function toNote(n) {
+    return {
+      id: n.id,
+      title: n.title || '',
+      content: n.content || '',
+      content_text: n.content_text || '',
+      tags: typeof n.tags === 'string' ? JSON.parse(n.tags || '[]') : (n.tags || []),
+      notebook_id: n.notebook_id,
+      pinned: !!n.pinned,
+      deleted: !!n.deleted,
+      created_at: Number(n.created_at),
+      updated_at: Number(n.updated_at),
+    };
+  }
+
   return {
     init: async () => {
-      await pool.query(`
+      await client.execute(`
         CREATE TABLE IF NOT EXISTS notebooks (
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
           color INTEGER DEFAULT 0
         )`);
-      await pool.query(`
+      await client.execute(`
         CREATE TABLE IF NOT EXISTS notes (
           id TEXT PRIMARY KEY,
           title TEXT DEFAULT '',
           content TEXT DEFAULT '',
           content_text TEXT DEFAULT '',
-          tags JSONB DEFAULT '[]',
+          tags TEXT DEFAULT '[]',
           notebook_id TEXT,
-          pinned BOOLEAN DEFAULT false,
-          deleted BOOLEAN DEFAULT false,
-          created_at BIGINT,
-          updated_at BIGINT
+          pinned INTEGER DEFAULT 0,
+          deleted INTEGER DEFAULT 0,
+          created_at INTEGER,
+          updated_at INTEGER
         )`);
-      const { rows } = await pool.query('SELECT COUNT(*) FROM notebooks');
-      if (parseInt(rows[0].count) === 0) {
-        await pool.query('INSERT INTO notebooks (id,name,color) VALUES ($1,$2,$3)', [genId(), '내 노트북', 0]);
-        await pool.query('INSERT INTO notebooks (id,name,color) VALUES ($1,$2,$3)', [genId(), '아이디어', 1]);
+      const res = await client.execute('SELECT COUNT(*) as cnt FROM notebooks');
+      if (Number(res.rows[0].cnt) === 0) {
+        await client.batch([
+          { sql: 'INSERT INTO notebooks (id,name,color) VALUES (?,?,?)', args: [genId(), '내 노트북', 0] },
+          { sql: 'INSERT INTO notebooks (id,name,color) VALUES (?,?,?)', args: [genId(), '아이디어', 1] },
+        ], 'write');
       }
     },
+
     getData: async () => {
       const [nbs, notes] = await Promise.all([
-        pool.query('SELECT * FROM notebooks ORDER BY name'),
-        pool.query('SELECT * FROM notes ORDER BY updated_at DESC NULLS LAST'),
+        client.execute('SELECT * FROM notebooks ORDER BY name'),
+        client.execute('SELECT * FROM notes ORDER BY updated_at DESC'),
       ]);
-      return { notebooks: nbs.rows, notes: notes.rows };
+      return {
+        notebooks: nbs.rows.map(nb => ({ id: nb.id, name: nb.name, color: Number(nb.color) })),
+        notes: notes.rows.map(toNote),
+      };
     },
+
     upsertNote: async (id, n) => {
-      await pool.query(`
-        INSERT INTO notes (id,title,content,content_text,tags,notebook_id,pinned,deleted,created_at,updated_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-        ON CONFLICT (id) DO UPDATE SET
-          title=$2, content=$3, content_text=$4, tags=$5,
-          notebook_id=$6, pinned=$7, deleted=$8, updated_at=$10`,
-        [id, n.title || '', n.content || '', n.contentText || '',
-         JSON.stringify(n.tags || []), n.notebookId || null,
-         !!n.pinned, !!n.deleted,
-         n.createdAt || Date.now(), n.updatedAt || Date.now()]);
+      await client.execute({
+        sql: `INSERT INTO notes (id,title,content,content_text,tags,notebook_id,pinned,deleted,created_at,updated_at)
+              VALUES (?,?,?,?,?,?,?,?,?,?)
+              ON CONFLICT(id) DO UPDATE SET
+                title=excluded.title, content=excluded.content,
+                content_text=excluded.content_text, tags=excluded.tags,
+                notebook_id=excluded.notebook_id, pinned=excluded.pinned,
+                deleted=excluded.deleted, updated_at=excluded.updated_at`,
+        args: [
+          id, n.title || '', n.content || '', n.contentText || '',
+          JSON.stringify(n.tags || []), n.notebookId || null,
+          n.pinned ? 1 : 0, n.deleted ? 1 : 0,
+          n.createdAt || Date.now(), n.updatedAt || Date.now(),
+        ],
+      });
     },
-    deleteNote: async (id) => pool.query('DELETE FROM notes WHERE id=$1', [id]),
+
+    deleteNote: async (id) => {
+      await client.execute({ sql: 'DELETE FROM notes WHERE id=?', args: [id] });
+    },
+
     upsertNotebook: async (id, nb) => {
-      await pool.query(`
-        INSERT INTO notebooks (id,name,color) VALUES ($1,$2,$3)
-        ON CONFLICT (id) DO UPDATE SET name=$2, color=$3`,
-        [id, nb.name || '노트북', nb.color || 0]);
+      await client.execute({
+        sql: `INSERT INTO notebooks (id,name,color) VALUES (?,?,?)
+              ON CONFLICT(id) DO UPDATE SET name=excluded.name, color=excluded.color`,
+        args: [id, nb.name || '노트북', nb.color || 0],
+      });
     },
+
     deleteNotebook: async (id) => {
-      await pool.query('UPDATE notes SET deleted=true WHERE notebook_id=$1', [id]);
-      await pool.query('DELETE FROM notebooks WHERE id=$1', [id]);
+      await client.batch([
+        { sql: 'UPDATE notes SET deleted=1 WHERE notebook_id=?', args: [id] },
+        { sql: 'DELETE FROM notebooks WHERE id=?', args: [id] },
+      ], 'write');
     },
   };
 }
 
+// ── SELECT STORAGE ───────────────────────────────────────
 let storage;
-if (process.env.DATABASE_URL) {
-  const { Pool } = require('pg');
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+if (process.env.TURSO_DATABASE_URL) {
+  const { createClient } = require('@libsql/client');
+  const client = createClient({
+    url: process.env.TURSO_DATABASE_URL,
+    authToken: process.env.TURSO_AUTH_TOKEN,
   });
-  storage = buildPgStorage(pool);
-  console.log('PostgreSQL 연결됨');
+  storage = buildTursoStorage(client);
+  console.log('Turso 연결됨:', process.env.TURSO_DATABASE_URL);
 } else {
-  console.warn('[경고] DATABASE_URL 미설정 — 인메모리 저장소 사용 (재시작 시 초기화됨)');
+  console.warn('[경고] TURSO_DATABASE_URL 미설정 — 인메모리 저장소 사용 (재시작 시 초기화됨)');
   storage = buildMemoryStorage();
 }
 
