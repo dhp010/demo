@@ -644,6 +644,13 @@
 </head>
 <body>
 
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay" style="position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:14px;">
+  <div style="width:36px;height:36px;border:3px solid #e0e0e0;border-top-color:#00A82D;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+  <span style="font-size:14px;color:#999;">데이터 불러오는 중...</span>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
 <!-- SIDEBAR -->
 <div id="sidebar">
   <div id="sidebar-logo">
@@ -904,23 +911,53 @@ function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
-// ── PERSISTENCE ──
-function save() {
-  localStorage.setItem('memo_notebooks', JSON.stringify(state.notebooks));
-  localStorage.setItem('memo_notes', JSON.stringify(state.notes));
+// ── API ──
+async function apiPut(path, data) {
+  const res = await fetch(path, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
 }
 
-function load() {
-  try {
-    const nbs = localStorage.getItem('memo_notebooks');
-    const notes = localStorage.getItem('memo_notes');
-    if (nbs) state.notebooks = JSON.parse(nbs);
-    if (notes) state.notes = JSON.parse(notes);
-  } catch(e) {}
+async function apiDelete(path) {
+  const res = await fetch(path, { method: 'DELETE' });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+}
 
-  if (!state.notebooks.length) {
-    state.notebooks.push({ id: genId(), name: '내 노트북', color: 0 });
-    state.notebooks.push({ id: genId(), name: '아이디어', color: 1 });
+async function syncNote(note) {
+  try { await apiPut(`/api/notes/${note.id}`, note); }
+  catch (e) { console.error('노트 저장 실패:', e); }
+}
+
+async function syncNotebook(nb) {
+  try { await apiPut(`/api/notebooks/${nb.id}`, nb); }
+  catch (e) { console.error('노트북 저장 실패:', e); }
+}
+
+// ── LOAD ──
+async function load() {
+  try {
+    const res = await fetch('/api/data');
+    const data = await res.json();
+    state.notebooks = data.notebooks.map(nb => ({
+      id: nb.id, name: nb.name, color: nb.color,
+    }));
+    state.notes = data.notes.map(n => ({
+      id: n.id,
+      title: n.title || '',
+      content: n.content || '',
+      contentText: n.content_text || '',
+      tags: Array.isArray(n.tags) ? n.tags : [],
+      notebookId: n.notebook_id,
+      pinned: !!n.pinned,
+      deleted: !!n.deleted,
+      createdAt: parseInt(n.created_at) || Date.now(),
+      updatedAt: parseInt(n.updated_at) || Date.now(),
+    }));
+  } catch (e) {
+    console.error('데이터 로드 실패:', e);
   }
 }
 
@@ -1083,7 +1120,7 @@ function switchToTag(tag) {
 }
 
 // ── NOTE CRUD ──
-function createNote() {
+async function createNote() {
   const notebookId = state.currentNotebook || state.notebooks[0]?.id;
   const note = {
     id: genId(),
@@ -1098,7 +1135,7 @@ function createNote() {
     updatedAt: Date.now(),
   };
   state.notes.unshift(note);
-  save();
+  await syncNote(note);
   openNote(note.id);
   renderNoteList();
   updateCounts();
@@ -1127,7 +1164,7 @@ function openNote(id) {
   renderNoteList();
 }
 
-function saveCurrentNote() {
+async function saveCurrentNote() {
   const note = state.notes.find(n => n.id === state.currentNoteId);
   if (!note) return;
   note.content = document.getElementById('note-editor').innerHTML;
@@ -1135,7 +1172,7 @@ function saveCurrentNote() {
   note.title = document.getElementById('note-title-input').value;
   note.updatedAt = Date.now();
   document.getElementById('note-date-display').textContent = formatDate(note.updatedAt);
-  save();
+  await syncNote(note);
   renderNoteList();
   updateCounts();
   renderTags();
@@ -1164,16 +1201,17 @@ function showSaveIndicator() {
   setTimeout(() => { el.style.color = '#aaa'; }, 1500);
 }
 
-function trashNote(id) {
+async function trashNote(id) {
   const note = state.notes.find(n => n.id === id);
   if (!note) return;
   note.deleted = true;
+  note.updatedAt = Date.now();
   if (state.currentNoteId === id) {
     state.currentNoteId = null;
     document.getElementById('editor-placeholder').style.display = 'flex';
     document.getElementById('editor-main').style.display = 'none';
   }
-  save();
+  await syncNote(note);
   renderAll();
 }
 
@@ -1181,24 +1219,27 @@ function deleteCurrentNote() {
   const note = state.notes.find(n => n.id === state.currentNoteId);
   if (!note) return;
   if (note.deleted) {
-    showConfirm('영구 삭제', '이 노트를 영구적으로 삭제하시겠습니까?', () => {
+    showConfirm('영구 삭제', '이 노트를 영구적으로 삭제하시겠습니까?', async () => {
+      await apiDelete(`/api/notes/${state.currentNoteId}`);
       state.notes = state.notes.filter(n => n.id !== state.currentNoteId);
       state.currentNoteId = null;
       document.getElementById('editor-placeholder').style.display = 'flex';
       document.getElementById('editor-main').style.display = 'none';
-      save(); renderAll();
+      renderAll();
     });
   } else {
     trashNote(state.currentNoteId);
   }
 }
 
-function togglePin() {
+async function togglePin() {
   const note = state.notes.find(n => n.id === state.currentNoteId);
   if (!note) return;
   note.pinned = !note.pinned;
+  note.updatedAt = Date.now();
   updatePinBtn(note.pinned);
-  save(); renderAll();
+  await syncNote(note);
+  renderAll();
 }
 
 function updatePinBtn(pinned) {
@@ -1215,7 +1256,7 @@ function renderTagChips(tags) {
   ).join('');
 }
 
-function handleTagInput(e) {
+async function handleTagInput(e) {
   if (e.key === 'Enter' || e.key === ',') {
     e.preventDefault();
     const val = e.target.value.trim().replace(/,/g, '');
@@ -1227,27 +1268,30 @@ function handleTagInput(e) {
       note.tags.push(val);
       renderTagChips(note.tags);
       renderTags();
+      note.updatedAt = Date.now();
+      await syncNote(note);
     }
     e.target.value = '';
-    save();
   } else if (e.key === 'Backspace' && !e.target.value) {
     const note = state.notes.find(n => n.id === state.currentNoteId);
     if (note && note.tags && note.tags.length) {
       note.tags.pop();
       renderTagChips(note.tags);
       renderTags();
-      save();
+      note.updatedAt = Date.now();
+      await syncNote(note);
     }
   }
 }
 
-function removeTag(tag) {
+async function removeTag(tag) {
   const note = state.notes.find(n => n.id === state.currentNoteId);
   if (!note) return;
   note.tags = (note.tags || []).filter(t => t !== tag);
   renderTagChips(note.tags);
   renderTags();
-  save();
+  note.updatedAt = Date.now();
+  await syncNote(note);
 }
 
 // ── NOTEBOOKS ──
@@ -1269,31 +1313,33 @@ function editNotebook(id) {
   setTimeout(() => document.getElementById('nb-name-input').focus(), 50);
 }
 
-function saveNotebook() {
+async function saveNotebook() {
   const name = document.getElementById('nb-name-input').value.trim();
   if (!name) return;
   if (state.editingNotebookId) {
     const nb = state.notebooks.find(n => n.id === state.editingNotebookId);
-    if (nb) nb.name = name;
+    if (nb) {
+      nb.name = name;
+      await syncNotebook(nb);
+    }
   } else {
-    state.notebooks.push({
-      id: genId(),
-      name,
-      color: state.notebooks.length % COLORS.length
-    });
+    const nb = { id: genId(), name, color: state.notebooks.length % COLORS.length };
+    state.notebooks.push(nb);
+    await syncNotebook(nb);
   }
   closeModal('notebook-modal');
-  save(); renderAll();
+  renderAll();
 }
 
 function deleteNotebook(id) {
   const noteCount = state.notes.filter(n => n.notebookId === id && !n.deleted).length;
   const msg = noteCount ? `이 노트북에 ${noteCount}개의 노트가 있습니다. 삭제하면 노트가 모두 휴지통으로 이동됩니다.` : '이 노트북을 삭제하시겠습니까?';
-  showConfirm('노트북 삭제', msg, () => {
+  showConfirm('노트북 삭제', msg, async () => {
+    await apiDelete(`/api/notebooks/${id}`);
     state.notes.filter(n => n.notebookId === id).forEach(n => n.deleted = true);
     state.notebooks = state.notebooks.filter(n => n.id !== id);
     if (state.currentNotebook === id) switchView('all', document.querySelector('[data-view="all"]'));
-    save(); renderAll();
+    renderAll();
   });
 }
 
@@ -1505,15 +1551,17 @@ document.addEventListener('keydown', e => {
 });
 
 // ── INIT ──
-load();
-renderAll();
-
-// Auto-open last note
-if (state.notes.length) {
-  const lastNote = state.notes.filter(n => !n.deleted)
-    .sort((a, b) => b.updatedAt - a.updatedAt)[0];
+(async () => {
+  const loading = document.getElementById('loading-overlay');
+  try {
+    await load();
+  } finally {
+    if (loading) loading.style.display = 'none';
+  }
+  renderAll();
+  const lastNote = state.notes.filter(n => !n.deleted).sort((a, b) => b.updatedAt - a.updatedAt)[0];
   if (lastNote) setTimeout(() => openNote(lastNote.id), 50);
-}
+})();
 </script>
 </body>
 </html>

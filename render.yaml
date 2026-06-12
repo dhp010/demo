@@ -5,7 +5,16 @@ services:
     plan: free
     buildCommand: npm install
     startCommand: node server.js
-    healthCheckPath: /
+    healthCheckPath: /api/data
     envVars:
       - key: NODE_ENV
         value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: memopad-db
+          property: connectionString
+
+databases:
+  - name: memopad-db
+    databaseName: memopad
+    plan: free
