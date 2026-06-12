@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>메모장</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #00A82D;
+    --green-dark: #007a20;
+    --green-light: #e8f5e9;
+    --sidebar-bg: #1a1a1a;
+    --sidebar-text: #ccc;
+    --sidebar-hover: #2d2d2d;
+    --sidebar-active: #3d3d3d;
+    --list-bg: #f5f5f5;
+    --list-border: #e0e0e0;
+    --editor-bg: #fff;
+    --toolbar-bg: #fafafa;
+    --text-primary: #1a1a1a;
+    --text-secondary: #666;
+    --shadow: 0 1px 3px rgba(0,0,0,0.12);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--list-bg);
+    color: var(--text-primary);
+  }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #sidebar-logo {
+    padding: 18px 16px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #2a2a2a;
+  }
+
+  #sidebar-logo .logo-icon {
+    width: 28px; height: 28px;
+    background: var(--green);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  #sidebar-logo .logo-icon svg { fill: white; width: 18px; height: 18px; }
+  #sidebar-logo .logo-text { color: #fff; font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+
+  #sidebar-search {
+    padding: 10px 12px;
+    border-bottom: 1px solid #2a2a2a;
+  }
+
+  #sidebar-search input {
+    width: 100%;
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    padding: 7px 10px 7px 30px;
+    color: #ccc;
+    font-size: 13px;
+    outline: none;
+  }
+
+  #sidebar-search input::placeholder { color: #666; }
+  #sidebar-search input:focus { border-color: var(--green); background: #333; }
+
+  .search-wrap { position: relative; }
+  .search-wrap .search-ico {
+    position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+    width: 14px; height: 14px; fill: #666; pointer-events: none;
+  }
+
+  #sidebar-nav {
+    padding: 8px 0;
+    border-bottom: 1px solid #2a2a2a;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px;
+    color: var(--sidebar-text);
+    font-size: 13.5px;
+    cursor: pointer;
+    border-radius: 6px;
+    margin: 1px 8px;
+    transition: background 0.15s;
+  }
+
+  .nav-item:hover { background: var(--sidebar-hover); }
+  .nav-item.active { background: var(--sidebar-active); color: #fff; }
+  .nav-item svg { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; }
+  .nav-item .badge {
+    margin-left: auto;
+    background: #3a3a3a;
+    color: #aaa;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    min-width: 22px;
+    text-align: center;
+  }
+
+  #notebooks-section {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  #notebooks-section::-webkit-scrollbar { width: 4px; }
+  #notebooks-section::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 2px; }
+
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 16px 4px;
+    color: #666;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .section-header .add-btn {
+    width: 18px; height: 18px;
+    background: none; border: none;
+    color: #666; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 3px;
+    font-size: 18px; line-height: 1;
+  }
+
+  .section-header .add-btn:hover { color: var(--green); }
+
+  .notebook-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 16px;
+    color: var(--sidebar-text);
+    font-size: 13px;
+    cursor: pointer;
+    margin: 1px 8px;
+    border-radius: 6px;
+    transition: background 0.15s;
+    position: relative;
+  }
+
+  .notebook-item:hover { background: var(--sidebar-hover); }
+  .notebook-item.active { background: var(--green-dark); color: #fff; }
+  .notebook-item svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; opacity: 0.7; }
+  .notebook-item span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .notebook-item .nb-count { color: #666; font-size: 11px; }
+  .notebook-item.active .nb-count { color: rgba(255,255,255,0.7); }
+
+  .notebook-item .nb-actions {
+    display: none; gap: 4px; align-items: center;
+    position: absolute; right: 8px;
+  }
+
+  .notebook-item:hover .nb-actions { display: flex; }
+  .notebook-item.active .nb-actions { display: flex; }
+
+  .nb-action-btn {
+    background: none; border: none;
+    color: #888; cursor: pointer;
+    width: 18px; height: 18px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 3px; font-size: 14px;
+  }
+
+  .nb-action-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
+  #sidebar-tags {
+    padding: 8px 0 16px;
+    border-top: 1px solid #2a2a2a;
+  }
+
+  .tag-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 16px;
+    color: var(--sidebar-text);
+    font-size: 12.5px;
+    cursor: pointer;
+    margin: 1px 8px;
+    border-radius: 6px;
+  }
+
+  .tag-item:hover { background: var(--sidebar-hover); }
+  .tag-item.active { background: var(--sidebar-active); color: #fff; }
+  .tag-item .tag-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── NOTE LIST ── */
+  #note-list-panel {
+    width: 280px;
+    min-width: 280px;
+    background: var(--list-bg);
+    border-right: 1px solid var(--list-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #list-header {
+    padding: 14px 14px 10px;
+    border-bottom: 1px solid var(--list-border);
+    background: #fff;
+  }
+
+  #list-header-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  #list-notebook-title {
+    font-size: 15px; font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 160px;
+  }
+
+  #list-header-actions { display: flex; gap: 6px; }
+
+  .header-btn {
+    background: none; border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+    transition: background 0.15s;
+  }
+
+  .header-btn:hover { background: #efefef; color: var(--text-primary); }
+  .header-btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+  .new-note-btn {
+    width: 100%;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: background 0.15s;
+  }
+
+  .new-note-btn:hover { background: var(--green-dark); }
+  .new-note-btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+  #list-sort {
+    padding: 6px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: #fff;
+    border-bottom: 1px solid var(--list-border);
+  }
+
+  #list-sort span { font-size: 11.5px; color: var(--text-secondary); }
+
+  #sort-select {
+    font-size: 11.5px; color: var(--text-secondary);
+    background: none; border: none;
+    cursor: pointer; outline: none;
+  }
+
+  #note-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 0;
+  }
+
+  #note-list::-webkit-scrollbar { width: 4px; }
+  #note-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+
+  .note-item {
+    padding: 12px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--list-border);
+    background: #fff;
+    transition: background 0.1s;
+    position: relative;
+  }
+
+  .note-item:hover { background: #f0f0f0; }
+  .note-item.active { background: var(--green-light); border-left: 3px solid var(--green); }
+  .note-item.active .note-item-inner { margin-left: -3px; }
+
+  .note-item-title {
+    font-size: 13.5px; font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 4px;
+  }
+
+  .note-item-preview {
+    font-size: 12px; color: var(--text-secondary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.4;
+  }
+
+  .note-item-meta {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 6px;
+  }
+
+  .note-item-date { font-size: 11px; color: #aaa; }
+
+  .note-item-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+
+  .note-tag-chip {
+    font-size: 10px; padding: 1px 6px;
+    background: #e8e8e8; color: #666;
+    border-radius: 10px;
+  }
+
+  .note-item.active .note-tag-chip { background: rgba(0,168,45,0.15); color: var(--green-dark); }
+
+  .note-pin-icon {
+    position: absolute; top: 10px; right: 10px;
+    width: 14px; height: 14px; fill: var(--green);
+  }
+
+  .note-item-delete {
+    position: absolute; top: 10px; right: 10px;
+    display: none;
+    background: none; border: none;
+    cursor: pointer; color: #ccc;
+    width: 20px; height: 20px;
+    align-items: center; justify-content: center;
+    border-radius: 3px;
+  }
+
+  .note-item:hover .note-item-delete { display: flex; }
+  .note-item:hover .note-pin-icon { display: none; }
+  .note-item-delete:hover { color: #e53935; background: #fce4ec; }
+  .note-item-delete svg { width: 13px; height: 13px; fill: currentColor; }
+
+  .empty-list {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 200px; color: #bbb;
+    font-size: 13px; gap: 8px;
+  }
+
+  .empty-list svg { width: 40px; height: 40px; fill: #ddd; }
+
+  /* ── EDITOR ── */
+  #editor-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--editor-bg);
+    overflow: hidden;
+  }
+
+  #editor-toolbar {
+    padding: 8px 16px;
+    background: var(--toolbar-bg);
+    border-bottom: 1px solid var(--list-border);
+    display: flex; align-items: center; gap: 2px;
+    flex-wrap: wrap;
+    min-height: 44px;
+  }
+
+  .toolbar-btn {
+    background: none; border: none;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 5px;
+    cursor: pointer; color: var(--text-secondary);
+    font-size: 13px; font-weight: 600;
+    transition: background 0.1s;
+  }
+
+  .toolbar-btn:hover { background: #efefef; color: var(--text-primary); }
+  .toolbar-btn.active { background: var(--green-light); color: var(--green-dark); }
+  .toolbar-btn svg { width: 15px; height: 15px; fill: currentColor; }
+
+  .toolbar-divider {
+    width: 1px; height: 20px;
+    background: var(--list-border);
+    margin: 0 4px;
+  }
+
+  .toolbar-select {
+    height: 30px; padding: 0 6px;
+    border: 1px solid var(--list-border);
+    border-radius: 5px;
+    background: #fff; color: var(--text-secondary);
+    font-size: 12px; cursor: pointer; outline: none;
+  }
+
+  .toolbar-select:hover { border-color: var(--green); }
+
+  #color-picker-wrap { position: relative; }
+
+  #font-color-btn {
+    position: relative;
+  }
+
+  #font-color-btn::after {
+    content: '';
+    display: block;
+    height: 3px;
+    width: 18px;
+    background: var(--current-color, #000);
+    border-radius: 1px;
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  #editor-note-header {
+    padding: 20px 32px 12px;
+    border-bottom: 1px solid var(--list-border);
+  }
+
+  #note-title-input {
+    width: 100%;
+    font-size: 24px; font-weight: 700;
+    border: none; outline: none;
+    color: var(--text-primary);
+    background: transparent;
+    line-height: 1.3;
+    resize: none;
+    font-family: inherit;
+  }
+
+  #note-title-input::placeholder { color: #ccc; }
+
+  #note-meta-row {
+    display: flex; align-items: center; gap: 16px;
+    margin-top: 8px; flex-wrap: wrap;
+  }
+
+  .meta-item {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--text-secondary);
+  }
+
+  .meta-item svg { width: 13px; height: 13px; fill: currentColor; }
+
+  #note-date-display { font-size: 12px; color: #aaa; }
+
+  #note-tags-input-wrap {
+    display: flex; align-items: center; gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .tag-chip {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--green-light);
+    color: var(--green-dark);
+    border-radius: 12px;
+    padding: 2px 10px 2px 8px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .tag-chip .remove-tag {
+    cursor: pointer; font-size: 14px; line-height: 1;
+    color: var(--green-dark); opacity: 0.6;
+    background: none; border: none; padding: 0;
+  }
+
+  .tag-chip .remove-tag:hover { opacity: 1; }
+
+  #tag-input {
+    border: none; outline: none;
+    font-size: 12px; color: var(--text-secondary);
+    background: transparent;
+    width: 80px;
+  }
+
+  #tag-input::placeholder { color: #bbb; }
+
+  #editor-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 32px 40px;
+  }
+
+  #editor-content::-webkit-scrollbar { width: 6px; }
+  #editor-content::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+
+  #note-editor {
+    min-height: 100%;
+    outline: none;
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--text-primary);
+    caret-color: var(--green);
+  }
+
+  #note-editor:empty::before {
+    content: '여기에 내용을 입력하세요...';
+    color: #ccc;
+    pointer-events: none;
+  }
+
+  #note-editor h1 { font-size: 1.8em; font-weight: 700; margin: 0.5em 0 0.3em; }
+  #note-editor h2 { font-size: 1.4em; font-weight: 700; margin: 0.5em 0 0.3em; }
+  #note-editor h3 { font-size: 1.15em; font-weight: 700; margin: 0.4em 0 0.2em; }
+  #note-editor p { margin: 0.2em 0; }
+  #note-editor ul, #note-editor ol { padding-left: 1.5em; }
+  #note-editor li { margin: 0.2em 0; }
+  #note-editor blockquote {
+    border-left: 4px solid var(--green);
+    padding-left: 14px; margin: 0.5em 0;
+    color: #666; font-style: italic;
+  }
+
+  #note-editor code {
+    background: #f0f0f0; padding: 1px 5px;
+    border-radius: 3px; font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+  }
+
+  #note-editor pre {
+    background: #1e1e1e; color: #d4d4d4;
+    padding: 14px 16px; border-radius: 8px;
+    margin: 0.5em 0; overflow-x: auto;
+    font-family: 'Courier New', monospace; font-size: 13px;
+  }
+
+  #note-editor pre code { background: none; color: inherit; padding: 0; }
+
+  #note-editor a { color: var(--green); text-decoration: underline; }
+
+  #note-editor hr {
+    border: none; border-top: 1px solid #e0e0e0;
+    margin: 1em 0;
+  }
+
+  #note-editor table {
+    border-collapse: collapse; width: 100%; margin: 0.5em 0;
+  }
+
+  #note-editor table td, #note-editor table th {
+    border: 1px solid #ddd; padding: 8px 12px;
+  }
+
+  #note-editor table th { background: #f5f5f5; font-weight: 600; }
+
+  #note-editor img { max-width: 100%; border-radius: 6px; margin: 0.3em 0; }
+
+  #note-editor input[type="checkbox"] { margin-right: 6px; cursor: pointer; accent-color: var(--green); }
+
+  .no-note-selected {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: #ccc; gap: 12px;
+  }
+
+  .no-note-selected svg { width: 64px; height: 64px; fill: #e0e0e0; }
+  .no-note-selected p { font-size: 15px; color: #bbb; }
+
+  /* ── MODALS ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal {
+    background: #fff; border-radius: 10px;
+    padding: 24px; width: 340px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+
+  .modal h3 { font-size: 16px; margin-bottom: 14px; color: var(--text-primary); }
+
+  .modal input {
+    width: 100%; padding: 9px 12px;
+    border: 1px solid #ddd; border-radius: 6px;
+    font-size: 14px; outline: none;
+    font-family: inherit;
+  }
+
+  .modal input:focus { border-color: var(--green); }
+
+  .modal-actions {
+    display: flex; gap: 8px; justify-content: flex-end;
+    margin-top: 16px;
+  }
+
+  .btn { padding: 8px 16px; border-radius: 6px; border: none; font-size: 13.5px; cursor: pointer; font-weight: 600; }
+  .btn-cancel { background: #f0f0f0; color: var(--text-secondary); }
+  .btn-cancel:hover { background: #e5e5e5; }
+  .btn-primary { background: var(--green); color: #fff; }
+  .btn-primary:hover { background: var(--green-dark); }
+  .btn-danger { background: #e53935; color: #fff; }
+  .btn-danger:hover { background: #c62828; }
+
+  /* ── STATUS BAR ── */
+  #status-bar {
+    position: fixed; bottom: 0; left: 220px; right: 0;
+    height: 24px;
+    background: var(--toolbar-bg);
+    border-top: 1px solid var(--list-border);
+    padding: 0 16px;
+    display: flex; align-items: center;
+    font-size: 11px; color: #aaa;
+    gap: 16px;
+    z-index: 10;
+  }
+
+  #editor-panel { padding-bottom: 24px; }
+
+  /* notebook color classes */
+  .nb-color-0 { color: #4CAF50; }
+  .nb-color-1 { color: #2196F3; }
+  .nb-color-2 { color: #FF9800; }
+  .nb-color-3 { color: #9C27B0; }
+  .nb-color-4 { color: #F44336; }
+  .nb-color-5 { color: #00BCD4; }
+
+  /* search highlight */
+  mark { background: #fff176; border-radius: 2px; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    #note-list-panel { width: 240px; min-width: 240px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div id="sidebar-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M14 10H2v2h12v-2zm0-4H2v2h12V6zm4 8v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM2 16h8v-2H2v2z"/></svg>
+    </div>
+    <span class="logo-text">메모장</span>
+  </div>
+
+  <div id="sidebar-search">
+    <div class="search-wrap">
+      <svg class="search-ico" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.5 6.5 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="text" id="global-search" placeholder="노트 검색...">
+    </div>
+  </div>
+
+  <div id="sidebar-nav">
+    <div class="nav-item active" data-view="all" onclick="switchView('all', this)">
+      <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+      모든 노트
+      <span class="badge" id="all-count">0</span>
+    </div>
+    <div class="nav-item" data-view="pinned" onclick="switchView('pinned', this)">
+      <svg viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
+      고정된 노트
+      <span class="badge" id="pin-count">0</span>
+    </div>
+    <div class="nav-item" data-view="trash" onclick="switchView('trash', this)">
+      <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+      휴지통
+    </div>
+  </div>
+
+  <div id="notebooks-section">
+    <div class="section-header">
+      노트북
+      <button class="add-btn" onclick="showNewNotebookModal()" title="새 노트북">+</button>
+    </div>
+    <div id="notebook-list"></div>
+  </div>
+
+  <div id="sidebar-tags">
+    <div class="section-header">태그</div>
+    <div id="tag-list"></div>
+  </div>
+</div>
+
+<!-- NOTE LIST -->
+<div id="note-list-panel">
+  <div id="list-header">
+    <div id="list-header-top">
+      <div id="list-notebook-title">모든 노트</div>
+      <div id="list-header-actions">
+        <button class="header-btn" onclick="toggleSortOrder()" title="정렬">
+          <svg viewBox="0 0 24 24"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/></svg>
+        </button>
+      </div>
+    </div>
+    <button class="new-note-btn" onclick="createNote()">
+      <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      새 노트
+    </button>
+  </div>
+  <div id="list-sort">
+    <span id="note-count-label">0개 노트</span>
+    <select id="sort-select" onchange="sortNotes()">
+      <option value="updated">최근 수정</option>
+      <option value="created">생성일</option>
+      <option value="title">제목</option>
+    </select>
+  </div>
+  <div id="note-list"></div>
+</div>
+
+<!-- EDITOR -->
+<div id="editor-panel">
+  <div id="editor-placeholder" class="no-note-selected">
+    <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+    <p>노트를 선택하거나 새 노트를 만드세요</p>
+  </div>
+
+  <div id="editor-main" style="display:none; flex:1; flex-direction:column; overflow:hidden;">
+    <div id="editor-toolbar">
+      <!-- Text style -->
+      <select class="toolbar-select" id="block-format" onchange="formatBlock(this.value)">
+        <option value="p">본문</option>
+        <option value="h1">제목 1</option>
+        <option value="h2">제목 2</option>
+        <option value="h3">제목 3</option>
+        <option value="pre">코드 블록</option>
+        <option value="blockquote">인용구</option>
+      </select>
+
+      <select class="toolbar-select" id="font-size" onchange="changeFontSize(this.value)" style="width:54px;">
+        <option value="3">보통</option>
+        <option value="1">작게</option>
+        <option value="4">크게</option>
+        <option value="5">더 크게</option>
+      </select>
+
+      <div class="toolbar-divider"></div>
+
+      <button class="toolbar-btn" id="btn-bold" onclick="execCmd('bold')" title="굵게 (Ctrl+B)"><b>B</b></button>
+      <button class="toolbar-btn" id="btn-italic" onclick="execCmd('italic')" title="기울임 (Ctrl+I)"><i>I</i></button>
+      <button class="toolbar-btn" id="btn-underline" onclick="execCmd('underline')" title="밑줄 (Ctrl+U)">
+        <svg viewBox="0 0 24 24"><path d="M12 17c3.31 0 6-2.69 6-6V3h-2.5v8c0 1.93-1.57 3.5-3.5 3.5S8.5 12.93 8.5 11V3H6v8c0 3.31 2.69 6 6 6zm-7 2v2h14v-2H5z"/></svg>
+      </button>
+      <button class="toolbar-btn" id="btn-strikethrough" onclick="execCmd('strikeThrough')" title="취소선">
+        <svg viewBox="0 0 24 24"><path d="M10 19h4v-3h-4v3zM5 4v3h5v3h4V7h5V4H5zM3 14h18v-2H3v2z"/></svg>
+      </button>
+
+      <div class="toolbar-divider"></div>
+
+      <button class="toolbar-btn" id="font-color-btn" title="글자 색상" onclick="document.getElementById('font-color-input').click()">A</button>
+      <input type="color" id="font-color-input" style="position:absolute;opacity:0;width:0;height:0;" oninput="changeFontColor(this.value)">
+
+      <button class="toolbar-btn" title="형광펜" onclick="document.getElementById('highlight-input').click()">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.5 6.5 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M2 20h20v2H2z" fill="#FFD600"/></svg>
+      </button>
+      <input type="color" id="highlight-input" value="#FFFF00" style="position:absolute;opacity:0;width:0;height:0;" oninput="changeHighlight(this.value)">
+
+      <div class="toolbar-divider"></div>
+
+      <button class="toolbar-btn" onclick="execCmd('insertUnorderedList')" title="글머리 기호">
+        <svg viewBox="0 0 24 24"><path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5 1.5-.68 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-8v2h14V5H7z"/></svg>
+      </button>
+      <button class="toolbar-btn" onclick="execCmd('insertOrderedList')" title="번호 목록">
+        <svg viewBox="0 0 24 24"><path d="M2 17h2v.5H3v1h1v.5H2v1h3v-4H2v1zm1-9h1V4H2v1h1v3zm-1 3h1.8L2 13.1v.9h3v-1H3.2L5 10.9V10H2v1zm5-6v2h14V5H7zm0 14h14v-2H7v2zm0-6h14v-2H7v2z"/></svg>
+      </button>
+      <button class="toolbar-btn" onclick="insertCheckbox()" title="체크박스">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      </button>
+
+      <div class="toolbar-divider"></div>
+
+      <button class="toolbar-btn" onclick="execCmd('justifyLeft')" title="왼쪽 정렬">
+        <svg viewBox="0 0 24 24"><path d="M15 15H3v2h12v-2zm0-8H3v2h12V7zM3 13h18v-2H3v2zm0 8h18v-2H3v2zM3 3v2h18V3H3z"/></svg>
+      </button>
+      <button class="toolbar-btn" onclick="execCmd('justifyCenter')" title="가운데 정렬">
+        <svg viewBox="0 0 24 24"><path d="M7 15v2h10v-2H7zm-4 6h18v-2H3v2zm0-8h18v-2H3v2zm4-6v2h10V7H7zM3 3v2h18V3H3z"/></svg>
+      </button>
+
+      <div class="toolbar-divider"></div>
+
+      <button class="toolbar-btn" onclick="insertHR()" title="구분선">—</button>
+      <button class="toolbar-btn" onclick="insertTable()" title="표">
+        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM8 20H4v-4h4v4zm0-6H4v-4h4v4zm0-6H4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4z"/></svg>
+      </button>
+      <button class="toolbar-btn" onclick="insertImage()" title="이미지 삽입">
+        <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+      </button>
+      <button class="toolbar-btn" onclick="insertLink()" title="링크">
+        <svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+      </button>
+
+      <div class="toolbar-divider"></div>
+
+      <button class="toolbar-btn" onclick="execCmd('undo')" title="실행 취소 (Ctrl+Z)">
+        <svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
+      </button>
+      <button class="toolbar-btn" onclick="execCmd('redo')" title="다시 실행 (Ctrl+Y)">
+        <svg viewBox="0 0 24 24"><path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/></svg>
+      </button>
+
+      <div style="margin-left:auto; display:flex; gap:4px;">
+        <button class="toolbar-btn" onclick="togglePin()" id="pin-btn" title="고정">
+          <svg viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>
+        </button>
+        <button class="toolbar-btn" onclick="exportNote()" title="내보내기">
+          <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        </button>
+        <button class="toolbar-btn" onclick="deleteCurrentNote()" title="삭제" style="color:#e53935;">
+          <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="editor-note-header">
+      <textarea id="note-title-input" rows="1" placeholder="제목 없음" oninput="autoResizeTitle(this); onTitleChange()"></textarea>
+      <div id="note-meta-row">
+        <div class="meta-item">
+          <svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+          <span id="note-date-display">방금</span>
+        </div>
+        <div class="meta-item">
+          <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+          <span id="note-notebook-label">노트북</span>
+        </div>
+        <div class="meta-item" style="flex:1;">
+          <svg viewBox="0 0 24 24"><path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/></svg>
+          <div id="note-tags-input-wrap">
+            <div id="tags-container"></div>
+            <input type="text" id="tag-input" placeholder="태그 추가..." onkeydown="handleTagInput(event)">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="editor-content">
+      <div id="note-editor" contenteditable="true" spellcheck="true"
+        oninput="onEditorInput()"
+        onkeydown="handleEditorKey(event)"
+        onmouseup="updateToolbarState()"
+        onkeyup="updateToolbarState()">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div id="status-bar">
+  <span id="word-count">0단어</span>
+  <span id="char-count">0자</span>
+  <span id="save-indicator">저장됨</span>
+</div>
+
+<!-- MODALS -->
+<div id="notebook-modal" class="modal-overlay" style="display:none;">
+  <div class="modal">
+    <h3 id="nb-modal-title">새 노트북</h3>
+    <input type="text" id="nb-name-input" placeholder="노트북 이름..." maxlength="50">
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('notebook-modal')">취소</button>
+      <button class="btn btn-primary" onclick="saveNotebook()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div id="confirm-modal" class="modal-overlay" style="display:none;">
+  <div class="modal">
+    <h3 id="confirm-title">확인</h3>
+    <p id="confirm-message" style="font-size:14px; color:#555; line-height:1.5;"></p>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('confirm-modal')">취소</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">삭제</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA MODEL ──
+let state = {
+  notebooks: [],
+  notes: [],
+  currentNoteId: null,
+  currentView: 'all',
+  currentNotebook: null,
+  currentTag: null,
+  sortBy: 'updated',
+  editingNotebookId: null,
+  searchQuery: '',
+  saveTimer: null,
+};
+
+const COLORS = ['#4CAF50','#2196F3','#FF9800','#9C27B0','#F44336','#00BCD4'];
+
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+// ── PERSISTENCE ──
+function save() {
+  localStorage.setItem('memo_notebooks', JSON.stringify(state.notebooks));
+  localStorage.setItem('memo_notes', JSON.stringify(state.notes));
+}
+
+function load() {
+  try {
+    const nbs = localStorage.getItem('memo_notebooks');
+    const notes = localStorage.getItem('memo_notes');
+    if (nbs) state.notebooks = JSON.parse(nbs);
+    if (notes) state.notes = JSON.parse(notes);
+  } catch(e) {}
+
+  if (!state.notebooks.length) {
+    state.notebooks.push({ id: genId(), name: '내 노트북', color: 0 });
+    state.notebooks.push({ id: genId(), name: '아이디어', color: 1 });
+  }
+}
+
+// ── RENDER ──
+function renderAll() {
+  renderNotebooks();
+  renderTags();
+  renderNoteList();
+  updateCounts();
+}
+
+function renderNotebooks() {
+  const el = document.getElementById('notebook-list');
+  el.innerHTML = state.notebooks.map(nb => {
+    const count = state.notes.filter(n => n.notebookId === nb.id && !n.deleted).length;
+    const isActive = state.currentNotebook === nb.id && state.currentView === 'notebook';
+    return `<div class="notebook-item ${isActive ? 'active' : ''}" onclick="switchToNotebook('${nb.id}')">
+      <svg class="nb-color-${nb.color}" viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+      <span>${escHtml(nb.name)}</span>
+      <span class="nb-count">${count}</span>
+      <div class="nb-actions">
+        <button class="nb-action-btn" onclick="event.stopPropagation(); editNotebook('${nb.id}')" title="이름 변경">✏️</button>
+        <button class="nb-action-btn" onclick="event.stopPropagation(); deleteNotebook('${nb.id}')" title="삭제">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTags() {
+  const allTags = {};
+  state.notes.filter(n => !n.deleted).forEach(n => {
+    (n.tags || []).forEach(t => { allTags[t] = (allTags[t] || 0) + 1; });
+  });
+
+  const el = document.getElementById('tag-list');
+  el.innerHTML = Object.entries(allTags).map(([tag, count], i) => {
+    const isActive = state.currentTag === tag && state.currentView === 'tag';
+    return `<div class="tag-item ${isActive ? 'active' : ''}" onclick="switchToTag('${escHtml(tag)}')">
+      <div class="tag-dot" style="background:${COLORS[i % COLORS.length]}"></div>
+      ${escHtml(tag)} <span style="margin-left:auto;font-size:11px;color:#666;">${count}</span>
+    </div>`;
+  }).join('');
+}
+
+function getVisibleNotes() {
+  let notes = state.notes;
+
+  if (state.currentView === 'trash') {
+    notes = notes.filter(n => n.deleted);
+  } else {
+    notes = notes.filter(n => !n.deleted);
+    if (state.currentView === 'pinned') notes = notes.filter(n => n.pinned);
+    else if (state.currentView === 'notebook') notes = notes.filter(n => n.notebookId === state.currentNotebook);
+    else if (state.currentView === 'tag') notes = notes.filter(n => (n.tags || []).includes(state.currentTag));
+  }
+
+  if (state.searchQuery) {
+    const q = state.searchQuery.toLowerCase();
+    notes = notes.filter(n =>
+      (n.title || '').toLowerCase().includes(q) ||
+      (n.contentText || '').toLowerCase().includes(q) ||
+      (n.tags || []).some(t => t.toLowerCase().includes(q))
+    );
+  }
+
+  notes = [...notes].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    if (state.sortBy === 'title') return (a.title || '').localeCompare(b.title || '', 'ko');
+    if (state.sortBy === 'created') return b.createdAt - a.createdAt;
+    return b.updatedAt - a.updatedAt;
+  });
+
+  return notes;
+}
+
+function renderNoteList() {
+  const notes = getVisibleNotes();
+  const el = document.getElementById('note-list');
+
+  document.getElementById('note-count-label').textContent = `${notes.length}개 노트`;
+
+  if (!notes.length) {
+    el.innerHTML = `<div class="empty-list">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+      <span>${state.searchQuery ? '검색 결과 없음' : '노트가 없습니다'}</span>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = notes.map(n => {
+    const isActive = n.id === state.currentNoteId;
+    const date = formatDate(n.updatedAt);
+    const tags = (n.tags || []).slice(0, 3).map(t =>
+      `<span class="note-tag-chip">${escHtml(t)}</span>`
+    ).join('');
+    const preview = escHtml((n.contentText || '').slice(0, 80));
+
+    return `<div class="note-item ${isActive ? 'active' : ''}" onclick="openNote('${n.id}')">
+      ${n.pinned ? `<svg class="note-pin-icon" viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>` : ''}
+      <button class="note-item-delete" onclick="event.stopPropagation(); trashNote('${n.id}')">
+        <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+      </button>
+      <div class="note-item-inner">
+        <div class="note-item-title">${highlightSearch(escHtml(n.title || '제목 없음'))}</div>
+        <div class="note-item-preview">${preview || '내용 없음'}</div>
+        <div class="note-item-meta">
+          <span class="note-item-date">${date}</span>
+          <div class="note-item-tags">${tags}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function highlightSearch(text) {
+  if (!state.searchQuery) return text;
+  const q = escHtml(state.searchQuery);
+  return text.replace(new RegExp(q, 'gi'), m => `<mark>${m}</mark>`);
+}
+
+function updateCounts() {
+  const total = state.notes.filter(n => !n.deleted).length;
+  const pinned = state.notes.filter(n => n.pinned && !n.deleted).length;
+  document.getElementById('all-count').textContent = total;
+  document.getElementById('pin-count').textContent = pinned;
+}
+
+// ── NAVIGATION ──
+function switchView(view, el) {
+  state.currentView = view;
+  state.currentNotebook = null;
+  state.currentTag = null;
+  document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('.notebook-item').forEach(e => e.classList.remove('active'));
+  if (el) el.classList.add('active');
+
+  const titles = { all: '모든 노트', pinned: '고정된 노트', trash: '휴지통' };
+  document.getElementById('list-notebook-title').textContent = titles[view];
+  renderAll();
+}
+
+function switchToNotebook(nbId) {
+  state.currentView = 'notebook';
+  state.currentNotebook = nbId;
+  state.currentTag = null;
+  document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+  const nb = state.notebooks.find(n => n.id === nbId);
+  document.getElementById('list-notebook-title').textContent = nb ? nb.name : '노트북';
+  renderAll();
+}
+
+function switchToTag(tag) {
+  state.currentView = 'tag';
+  state.currentTag = tag;
+  state.currentNotebook = null;
+  document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+  document.getElementById('list-notebook-title').textContent = '#' + tag;
+  renderAll();
+}
+
+// ── NOTE CRUD ──
+function createNote() {
+  const notebookId = state.currentNotebook || state.notebooks[0]?.id;
+  const note = {
+    id: genId(),
+    title: '',
+    content: '',
+    contentText: '',
+    tags: [],
+    notebookId,
+    pinned: false,
+    deleted: false,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  state.notes.unshift(note);
+  save();
+  openNote(note.id);
+  renderNoteList();
+  updateCounts();
+  document.getElementById('note-title-input').focus();
+}
+
+function openNote(id) {
+  const note = state.notes.find(n => n.id === id);
+  if (!note) return;
+  state.currentNoteId = id;
+
+  document.getElementById('editor-placeholder').style.display = 'none';
+  document.getElementById('editor-main').style.display = 'flex';
+
+  document.getElementById('note-title-input').value = note.title || '';
+  autoResizeTitle(document.getElementById('note-title-input'));
+  document.getElementById('note-editor').innerHTML = note.content || '';
+  document.getElementById('note-date-display').textContent = formatDate(note.updatedAt);
+
+  const nb = state.notebooks.find(n => n.id === note.notebookId);
+  document.getElementById('note-notebook-label').textContent = nb ? nb.name : '';
+
+  renderTagChips(note.tags || []);
+  updatePinBtn(note.pinned);
+  updateWordCount();
+  renderNoteList();
+}
+
+function saveCurrentNote() {
+  const note = state.notes.find(n => n.id === state.currentNoteId);
+  if (!note) return;
+  note.content = document.getElementById('note-editor').innerHTML;
+  note.contentText = document.getElementById('note-editor').innerText;
+  note.title = document.getElementById('note-title-input').value;
+  note.updatedAt = Date.now();
+  document.getElementById('note-date-display').textContent = formatDate(note.updatedAt);
+  save();
+  renderNoteList();
+  updateCounts();
+  renderTags();
+  showSaveIndicator();
+}
+
+function onEditorInput() {
+  updateWordCount();
+  scheduleSave();
+}
+
+function onTitleChange() {
+  scheduleSave();
+}
+
+function scheduleSave() {
+  clearTimeout(state.saveTimer);
+  document.getElementById('save-indicator').textContent = '저장 중...';
+  state.saveTimer = setTimeout(saveCurrentNote, 800);
+}
+
+function showSaveIndicator() {
+  const el = document.getElementById('save-indicator');
+  el.textContent = '저장됨';
+  el.style.color = 'var(--green)';
+  setTimeout(() => { el.style.color = '#aaa'; }, 1500);
+}
+
+function trashNote(id) {
+  const note = state.notes.find(n => n.id === id);
+  if (!note) return;
+  note.deleted = true;
+  if (state.currentNoteId === id) {
+    state.currentNoteId = null;
+    document.getElementById('editor-placeholder').style.display = 'flex';
+    document.getElementById('editor-main').style.display = 'none';
+  }
+  save();
+  renderAll();
+}
+
+function deleteCurrentNote() {
+  const note = state.notes.find(n => n.id === state.currentNoteId);
+  if (!note) return;
+  if (note.deleted) {
+    showConfirm('영구 삭제', '이 노트를 영구적으로 삭제하시겠습니까?', () => {
+      state.notes = state.notes.filter(n => n.id !== state.currentNoteId);
+      state.currentNoteId = null;
+      document.getElementById('editor-placeholder').style.display = 'flex';
+      document.getElementById('editor-main').style.display = 'none';
+      save(); renderAll();
+    });
+  } else {
+    trashNote(state.currentNoteId);
+  }
+}
+
+function togglePin() {
+  const note = state.notes.find(n => n.id === state.currentNoteId);
+  if (!note) return;
+  note.pinned = !note.pinned;
+  updatePinBtn(note.pinned);
+  save(); renderAll();
+}
+
+function updatePinBtn(pinned) {
+  const btn = document.getElementById('pin-btn');
+  btn.classList.toggle('active', pinned);
+  btn.title = pinned ? '고정 해제' : '고정';
+}
+
+// ── TAGS ──
+function renderTagChips(tags) {
+  const container = document.getElementById('tags-container');
+  container.innerHTML = tags.map(t =>
+    `<span class="tag-chip">#${escHtml(t)}<button class="remove-tag" onclick="removeTag('${escHtml(t)}')">×</button></span>`
+  ).join('');
+}
+
+function handleTagInput(e) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.trim().replace(/,/g, '');
+    if (!val) return;
+    const note = state.notes.find(n => n.id === state.currentNoteId);
+    if (!note) return;
+    if (!note.tags) note.tags = [];
+    if (!note.tags.includes(val)) {
+      note.tags.push(val);
+      renderTagChips(note.tags);
+      renderTags();
+    }
+    e.target.value = '';
+    save();
+  } else if (e.key === 'Backspace' && !e.target.value) {
+    const note = state.notes.find(n => n.id === state.currentNoteId);
+    if (note && note.tags && note.tags.length) {
+      note.tags.pop();
+      renderTagChips(note.tags);
+      renderTags();
+      save();
+    }
+  }
+}
+
+function removeTag(tag) {
+  const note = state.notes.find(n => n.id === state.currentNoteId);
+  if (!note) return;
+  note.tags = (note.tags || []).filter(t => t !== tag);
+  renderTagChips(note.tags);
+  renderTags();
+  save();
+}
+
+// ── NOTEBOOKS ──
+function showNewNotebookModal() {
+  state.editingNotebookId = null;
+  document.getElementById('nb-modal-title').textContent = '새 노트북';
+  document.getElementById('nb-name-input').value = '';
+  document.getElementById('notebook-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('nb-name-input').focus(), 50);
+}
+
+function editNotebook(id) {
+  const nb = state.notebooks.find(n => n.id === id);
+  if (!nb) return;
+  state.editingNotebookId = id;
+  document.getElementById('nb-modal-title').textContent = '노트북 이름 변경';
+  document.getElementById('nb-name-input').value = nb.name;
+  document.getElementById('notebook-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('nb-name-input').focus(), 50);
+}
+
+function saveNotebook() {
+  const name = document.getElementById('nb-name-input').value.trim();
+  if (!name) return;
+  if (state.editingNotebookId) {
+    const nb = state.notebooks.find(n => n.id === state.editingNotebookId);
+    if (nb) nb.name = name;
+  } else {
+    state.notebooks.push({
+      id: genId(),
+      name,
+      color: state.notebooks.length % COLORS.length
+    });
+  }
+  closeModal('notebook-modal');
+  save(); renderAll();
+}
+
+function deleteNotebook(id) {
+  const noteCount = state.notes.filter(n => n.notebookId === id && !n.deleted).length;
+  const msg = noteCount ? `이 노트북에 ${noteCount}개의 노트가 있습니다. 삭제하면 노트가 모두 휴지통으로 이동됩니다.` : '이 노트북을 삭제하시겠습니까?';
+  showConfirm('노트북 삭제', msg, () => {
+    state.notes.filter(n => n.notebookId === id).forEach(n => n.deleted = true);
+    state.notebooks = state.notebooks.filter(n => n.id !== id);
+    if (state.currentNotebook === id) switchView('all', document.querySelector('[data-view="all"]'));
+    save(); renderAll();
+  });
+}
+
+// ── EDITOR COMMANDS ──
+function execCmd(cmd, val) {
+  document.getElementById('note-editor').focus();
+  document.execCommand(cmd, false, val || null);
+  updateToolbarState();
+}
+
+function formatBlock(tag) {
+  document.getElementById('note-editor').focus();
+  document.execCommand('formatBlock', false, '<' + tag + '>');
+  updateToolbarState();
+}
+
+function changeFontSize(size) {
+  document.getElementById('note-editor').focus();
+  document.execCommand('fontSize', false, size);
+}
+
+function changeFontColor(color) {
+  document.getElementById('note-editor').focus();
+  document.execCommand('foreColor', false, color);
+  document.getElementById('font-color-btn').style.setProperty('--current-color', color);
+}
+
+function changeHighlight(color) {
+  document.getElementById('note-editor').focus();
+  document.execCommand('backColor', false, color);
+}
+
+function insertCheckbox() {
+  document.getElementById('note-editor').focus();
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  const sel = window.getSelection();
+  if (sel.rangeCount) {
+    const range = sel.getRangeAt(0);
+    range.insertNode(checkbox);
+    range.setStartAfter(checkbox);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+}
+
+function insertHR() {
+  document.getElementById('note-editor').focus();
+  document.execCommand('insertHorizontalRule');
+}
+
+function insertTable() {
+  const rows = 3, cols = 3;
+  let html = '<table border="1"><tbody>';
+  for (let r = 0; r < rows; r++) {
+    html += '<tr>';
+    for (let c = 0; c < cols; c++) {
+      html += r === 0 ? '<th>&nbsp;</th>' : '<td>&nbsp;</td>';
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table><p><br></p>';
+  document.getElementById('note-editor').focus();
+  document.execCommand('insertHTML', false, html);
+}
+
+function insertImage() {
+  const url = prompt('이미지 URL을 입력하세요:');
+  if (url) {
+    document.getElementById('note-editor').focus();
+    document.execCommand('insertImage', false, url);
+  }
+}
+
+function insertLink() {
+  const url = prompt('링크 URL을 입력하세요:');
+  if (url) {
+    document.getElementById('note-editor').focus();
+    document.execCommand('createLink', false, url);
+  }
+}
+
+function updateToolbarState() {
+  const cmds = ['bold', 'italic', 'underline', 'strikeThrough'];
+  const ids = ['btn-bold', 'btn-italic', 'btn-underline', 'btn-strikethrough'];
+  cmds.forEach((cmd, i) => {
+    document.getElementById(ids[i])?.classList.toggle('active', document.queryCommandState(cmd));
+  });
+}
+
+function handleEditorKey(e) {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    document.execCommand('insertText', false, '    ');
+  }
+}
+
+// ── SEARCH ──
+document.getElementById('global-search').addEventListener('input', function() {
+  state.searchQuery = this.value.trim();
+  if (state.searchQuery) {
+    state.currentView = 'all';
+    state.currentNotebook = null;
+    state.currentTag = null;
+    document.getElementById('list-notebook-title').textContent = '검색 결과';
+  } else {
+    document.getElementById('list-notebook-title').textContent = '모든 노트';
+  }
+  renderNoteList();
+  renderTags();
+});
+
+// ── SORT ──
+function sortNotes() {
+  state.sortBy = document.getElementById('sort-select').value;
+  renderNoteList();
+}
+
+function toggleSortOrder() {
+  const sel = document.getElementById('sort-select');
+  const opts = ['updated', 'created', 'title'];
+  const idx = opts.indexOf(state.sortBy);
+  state.sortBy = opts[(idx + 1) % opts.length];
+  sel.value = state.sortBy;
+  renderNoteList();
+}
+
+// ── EXPORT ──
+function exportNote() {
+  const note = state.notes.find(n => n.id === state.currentNoteId);
+  if (!note) return;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${note.title || '노트'}</title>
+<style>body{font-family:sans-serif;max-width:800px;margin:40px auto;padding:0 20px;line-height:1.7;}</style>
+</head><body><h1>${escHtml(note.title || '제목 없음')}</h1>${note.content}</body></html>`;
+  const blob = new Blob([html], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (note.title || '노트') + '.html';
+  a.click();
+}
+
+// ── MODALS ──
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+function showConfirm(title, msg, onOk) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-message').textContent = msg;
+  const btn = document.getElementById('confirm-ok-btn');
+  btn.onclick = () => { closeModal('confirm-modal'); onOk(); };
+  document.getElementById('confirm-modal').style.display = 'flex';
+}
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.style.display = 'none';
+  });
+});
+
+document.getElementById('nb-name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveNotebook();
+  if (e.key === 'Escape') closeModal('notebook-modal');
+});
+
+// ── UTILS ──
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function formatDate(ts) {
+  if (!ts) return '';
+  const now = Date.now();
+  const diff = now - ts;
+  if (diff < 60000) return '방금 전';
+  if (diff < 3600000) return Math.floor(diff / 60000) + '분 전';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + '시간 전';
+  const d = new Date(ts);
+  const today = new Date();
+  if (d.getFullYear() === today.getFullYear()) {
+    return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+  }
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function autoResizeTitle(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+function updateWordCount() {
+  const text = document.getElementById('note-editor').innerText || '';
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const chars = text.length;
+  document.getElementById('word-count').textContent = words + '단어';
+  document.getElementById('char-count').textContent = chars + '자';
+}
+
+// ── KEYBOARD SHORTCUTS ──
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+    e.preventDefault(); createNote();
+  }
+});
+
+// ── INIT ──
+load();
+renderAll();
+
+// Auto-open last note
+if (state.notes.length) {
+  const lastNote = state.notes.filter(n => !n.deleted)
+    .sort((a, b) => b.updatedAt - a.updatedAt)[0];
+  if (lastNote) setTimeout(() => openNote(lastNote.id), 50);
+}
+</script>
+</body>
+</html>
