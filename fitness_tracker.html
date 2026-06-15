@@ -9,25 +9,25 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0d1117;
-      --card: #161b22;
-      --border: #30363d;
-      --text: #e6edf3;
-      --muted: #8b949e;
+      --bg: #f5f3ff;
+      --card: #ffffff;
+      --border: #e4d9ff;
+      --text: #1e1040;
+      --muted: #7c6fa0;
       --primary: #7c3aed;
-      --primary-light: #a78bfa;
+      --primary-light: #6d28d9;
       --cardio: #ef4444;
-      --cardio-bg: rgba(239,68,68,0.12);
-      --weight: #8b5cf6;
-      --weight-bg: rgba(139,92,246,0.12);
-      --bodyweight: #f59e0b;
-      --bodyweight-bg: rgba(245,158,11,0.12);
-      --male: #60a5fa;
-      --male-bg: rgba(96,165,250,0.15);
-      --female: #f472b6;
-      --female-bg: rgba(244,114,182,0.15);
-      --success: #22c55e;
-      --danger: #f43f5e;
+      --cardio-bg: rgba(239,68,68,0.1);
+      --weight: #7c3aed;
+      --weight-bg: rgba(124,58,237,0.1);
+      --bodyweight: #d97706;
+      --bodyweight-bg: rgba(217,119,6,0.1);
+      --male: #3b82f6;
+      --male-bg: rgba(59,130,246,0.12);
+      --female: #ec4899;
+      --female-bg: rgba(236,72,153,0.12);
+      --success: #16a34a;
+      --danger: #dc2626;
       --radius: 12px;
     }
 
@@ -40,34 +40,66 @@
     }
 
     header {
-      background: linear-gradient(135deg, #1a0a2e 0%, #16213e 100%);
-      border-bottom: 1px solid var(--border);
-      padding: 20px 16px 16px;
+      background: linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #3b82f6 100%);
+      padding: 20px 16px 18px;
+      box-shadow: 0 4px 20px rgba(124,58,237,0.3);
     }
 
     .header-inner {
       max-width: 640px;
       margin: 0 auto;
+    }
+
+    .header-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
+      margin-bottom: 10px;
     }
 
     .header-logo h1 {
-      font-size: 1.6rem;
+      font-size: 1.7rem;
       font-weight: 800;
-      background: linear-gradient(90deg, #a78bfa, #60a5fa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: #ffffff;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
 
-    .header-logo p { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .header-logo p { font-size: 0.75rem; color: rgba(255,255,255,0.75); margin-top: 2px; }
 
     .header-stats { text-align: right; }
-    .header-stats .today-cal { font-size: 1.4rem; font-weight: 700; color: var(--primary-light); }
-    .header-stats .today-label { font-size: 0.7rem; color: var(--muted); }
+    .header-stats .today-cal { font-size: 1.5rem; font-weight: 800; color: #fff; }
+    .header-stats .today-label { font-size: 0.7rem; color: rgba(255,255,255,0.75); }
+
+    /* ── 돼지 태그라인 ── */
+    .header-tagline {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 30px;
+      padding: 7px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      backdrop-filter: blur(4px);
+    }
+
+    .pig-character {
+      font-size: 1.4rem;
+      animation: pigBounce 2s ease-in-out infinite;
+    }
+
+    @keyframes pigBounce {
+      0%, 100% { transform: translateY(0) rotate(-5deg); }
+      50% { transform: translateY(-4px) rotate(5deg); }
+    }
+
+    .tagline-text {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.02em;
+    }
 
     .container { max-width: 640px; margin: 0 auto; padding: 16px; }
 
@@ -78,6 +110,7 @@
       border-radius: var(--radius);
       padding: 14px 16px;
       margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(124,58,237,0.07);
     }
 
     .profile-row {
@@ -144,6 +177,7 @@
       border-radius: var(--radius);
       padding: 4px;
       margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(124,58,237,0.07);
     }
 
     .tab-btn {
@@ -163,8 +197,8 @@
     }
 
     .tab-btn .tab-icon { font-size: 1.1rem; }
-    .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-    .tab-btn.active { color: var(--text); background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(96,165,250,0.2)); }
+    .tab-btn:hover { color: var(--primary); background: rgba(124,58,237,0.06); }
+    .tab-btn.active { color: var(--primary); background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(99,102,241,0.1)); font-weight: 700; }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -176,10 +210,11 @@
       border-radius: var(--radius);
       padding: 20px;
       margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(124,58,237,0.07);
     }
 
-    .card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; }
-    .card h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; }
+    .card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+    .card h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: var(--text); }
 
     /* ── 유산소 활동 버튼 ── */
     .activity-grid {
@@ -205,7 +240,7 @@
     }
 
     .activity-btn .icon { font-size: 1.4rem; }
-    .activity-btn:hover { border-color: var(--cardio); color: var(--text); }
+    .activity-btn:hover { border-color: var(--cardio); color: var(--cardio); background: var(--cardio-bg); }
     .activity-btn.active { background: var(--cardio-bg); border-color: var(--cardio); color: var(--cardio); }
 
     /* ── 운동 종류 토글 (3개) ── */
@@ -229,9 +264,9 @@
       white-space: nowrap;
     }
 
-    .type-btn:hover { border-color: var(--weight); color: var(--text); }
+    .type-btn:hover { border-color: var(--weight); color: var(--primary); }
     .type-btn[data-type="compound"].active  { background: var(--weight-bg); border-color: var(--weight); color: var(--weight); }
-    .type-btn[data-type="isolation"].active { background: rgba(59,130,246,0.12); border-color: #3b82f6; color: #3b82f6; }
+    .type-btn[data-type="isolation"].active { background: rgba(59,130,246,0.1); border-color: #3b82f6; color: #3b82f6; }
     .type-btn[data-type="bodyweight"].active { background: var(--bodyweight-bg); border-color: var(--bodyweight); color: var(--bodyweight); }
 
     /* ── 폼 ── */
@@ -262,18 +297,22 @@
       font-size: 0.92rem;
       padding: 9px 12px;
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s;
       width: 100%;
     }
 
     .form-group input:focus,
-    .form-group select:focus { border-color: var(--primary-light); }
-    .form-group select option { background: #1e1e2e; }
+    .form-group select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+    }
+
+    .form-group select option { background: #f5f3ff; color: var(--text); }
 
     /* 맨몸운동 안내 */
     .bw-note {
       background: var(--bodyweight-bg);
-      border: 1px solid rgba(245,158,11,0.4);
+      border: 1px solid rgba(217,119,6,0.4);
       border-radius: 8px;
       padding: 8px 12px;
       font-size: 0.78rem;
@@ -286,8 +325,8 @@
 
     /* ── 결과 카드 ── */
     .result-card {
-      background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(96,165,250,0.1));
-      border: 1px solid rgba(124,58,237,0.4);
+      background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(99,102,241,0.05));
+      border: 1px solid rgba(124,58,237,0.25);
       border-radius: 10px;
       padding: 16px;
       margin-bottom: 14px;
@@ -300,7 +339,7 @@
     .result-number {
       font-size: 2.2rem;
       font-weight: 800;
-      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      background: linear-gradient(90deg, #7c3aed, #3b82f6);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -323,10 +362,10 @@
       font-size: 0.76rem;
     }
 
-    .rm-table-header { background: rgba(255,255,255,0.05); color: var(--muted); font-weight: 600; }
+    .rm-table-header { background: rgba(124,58,237,0.07); color: var(--muted); font-weight: 600; }
     .rm-table-row { border-top: 1px solid var(--border); }
-    .rm-table-row.highlight { background: rgba(124,58,237,0.15); color: var(--primary-light); font-weight: 700; }
-    .rm-table-row span:last-child { color: var(--primary-light); font-weight: 600; }
+    .rm-table-row.highlight { background: rgba(124,58,237,0.1); color: var(--primary); font-weight: 700; }
+    .rm-table-row span:last-child { color: var(--primary); font-weight: 600; }
 
     /* ── 버튼 ── */
     .btn-save {
@@ -339,12 +378,13 @@
       font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
+      transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(124,58,237,0.3);
     }
 
-    .btn-save:hover { opacity: 0.9; }
+    .btn-save:hover { opacity: 0.9; box-shadow: 0 6px 18px rgba(124,58,237,0.4); }
     .btn-save:active { transform: scale(0.98); }
-    .btn-save:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .btn-save:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
 
     /* ── 필터 ── */
     .filter-section { margin-bottom: 12px; }
@@ -362,14 +402,15 @@
     }
 
     .filter-btn.active {
-      background: rgba(124,58,237,0.2);
-      border-color: var(--primary-light);
-      color: var(--primary-light);
+      background: rgba(124,58,237,0.12);
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: 600;
     }
 
     /* ── 요약 카드 ── */
     .summary-card {
-      background: linear-gradient(135deg, #1e1a2e, #1a1e30);
+      background: linear-gradient(135deg, #ede9fe, #dbeafe);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 14px 16px;
@@ -380,7 +421,7 @@
       text-align: center;
     }
 
-    .summary-item .val { font-size: 1.3rem; font-weight: 800; color: var(--primary-light); }
+    .summary-item .val { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
     .summary-item .lbl { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
 
     /* ── 기록 목록 ── */
@@ -394,7 +435,11 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      box-shadow: 0 1px 4px rgba(124,58,237,0.06);
+      transition: box-shadow 0.2s;
     }
+
+    .record-item:hover { box-shadow: 0 4px 12px rgba(124,58,237,0.12); }
 
     .record-icon { font-size: 1.6rem; flex-shrink: 0; }
     .record-body { flex: 1; min-width: 0; }
@@ -409,7 +454,7 @@
 
     .record-meta { font-size: 0.73rem; color: var(--muted); margin-top: 2px; }
     .record-right { text-align: right; flex-shrink: 0; }
-    .record-cal { font-size: 1rem; font-weight: 700; color: var(--primary-light); }
+    .record-cal { font-size: 1rem; font-weight: 700; color: var(--primary); }
     .record-date { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
 
     .record-delete {
@@ -439,13 +484,13 @@
       bottom: 24px;
       left: 50%;
       transform: translateX(-50%) translateY(80px);
-      background: #1e2030;
+      background: #fff;
       border: 1px solid var(--border);
       border-radius: 20px;
       padding: 10px 20px;
       font-size: 0.85rem;
       color: var(--text);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      box-shadow: 0 8px 24px rgba(124,58,237,0.2);
       transition: transform 0.3s ease;
       z-index: 999;
       white-space: nowrap;
@@ -453,6 +498,109 @@
 
     #toast.show { transform: translateX(-50%) translateY(0); }
     #toast.error { border-color: var(--danger); color: var(--danger); }
+
+    /* ── 500kcal 달성 팝업 ── */
+    .popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(30,16,64,0.55);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+      padding: 20px;
+    }
+
+    .popup-overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .popup-box {
+      background: linear-gradient(145deg, #fff 0%, #faf8ff 100%);
+      border: 2px solid rgba(124,58,237,0.3);
+      border-radius: 24px;
+      padding: 36px 28px 28px;
+      max-width: 320px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(124,58,237,0.25), 0 4px 16px rgba(0,0,0,0.1);
+      transform: scale(0.85) translateY(20px);
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    .popup-overlay.show .popup-box {
+      transform: scale(1) translateY(0);
+    }
+
+    .popup-pig-big {
+      font-size: 4rem;
+      display: block;
+      margin-bottom: 8px;
+      animation: pigJump 0.6s ease-out;
+    }
+
+    @keyframes pigJump {
+      0% { transform: scale(0.3) rotate(-20deg); opacity: 0; }
+      60% { transform: scale(1.2) rotate(8deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    .popup-confetti {
+      font-size: 1.6rem;
+      letter-spacing: 4px;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .popup-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #7c3aed, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+
+    .popup-msg {
+      font-size: 0.92rem;
+      color: #4a3a70;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .popup-kcal-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #7c3aed, #6366f1);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 800;
+      padding: 4px 16px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+    }
+
+    .popup-close {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(124,58,237,0.35);
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+
+    .popup-close:hover { box-shadow: 0 6px 18px rgba(124,58,237,0.45); }
+    .popup-close:active { transform: scale(0.97); }
 
     .c-cardio { color: var(--cardio); }
     .c-weight { color: var(--weight); }
@@ -470,13 +618,20 @@
 
 <header>
   <div class="header-inner">
-    <div class="header-logo">
-      <h1>💪 FitTrack</h1>
-      <p>운동 기록 &amp; 분석</p>
+    <div class="header-top">
+      <div class="header-logo">
+        <h1>💪 FitTrack</h1>
+        <p>운동 기록 &amp; 분석</p>
+      </div>
+      <div class="header-stats">
+        <div class="today-cal" id="today-cal">0</div>
+        <div class="today-label">오늘 소모 kcal</div>
+      </div>
     </div>
-    <div class="header-stats">
-      <div class="today-cal" id="today-cal">0</div>
-      <div class="today-label">오늘 소모 kcal</div>
+    <div class="header-tagline">
+      <span class="pig-character">🐷</span>
+      <span class="tagline-text">운동해서 건강한 돼지가 되자! 💪</span>
+      <span class="pig-character" style="animation-delay:0.5s">🏋️</span>
     </div>
   </div>
 </header>
@@ -692,6 +847,22 @@
 
 </div>
 
+<!-- ── 500kcal 달성 팝업 ── -->
+<div id="achievement-popup" class="popup-overlay">
+  <div class="popup-box">
+    <span class="popup-pig-big">🐷</span>
+    <span class="popup-confetti">🎉✨🎊</span>
+    <div class="popup-title">오늘 할당량 달성!</div>
+    <div class="popup-kcal-badge">500 kcal 🔥</div>
+    <p class="popup-msg">
+      대단해요! 오늘 목표 칼로리를 채웠어요.<br>
+      이렇게 꾸준히 운동하면<br>
+      건강한 돼지가 될 수 있어요! 오잉크~ 🐷💪
+    </p>
+    <button class="popup-close" onclick="closeAchievementPopup()">💪 최고야, 내일도 화이팅!</button>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -768,6 +939,20 @@ function calc1RM(wkg, reps, exType) {
   return Math.round(effectiveW * (1 + reps / 30) * 10) / 10;
 }
 
+// ── 500kcal 팝업 ──────────────────────────────────────────
+function todayStr() { return new Date().toISOString().slice(0,10); }
+
+function checkCalorieAchievement(cal) {
+  if (cal < 500) return;
+  if (localStorage.getItem('popup_shown_date') === todayStr()) return;
+  localStorage.setItem('popup_shown_date', todayStr());
+  document.getElementById('achievement-popup').classList.add('show');
+}
+
+function closeAchievementPopup() {
+  document.getElementById('achievement-popup').classList.remove('show');
+}
+
 // ── API ───────────────────────────────────────────────────
 async function loadRecords() {
   try {
@@ -825,6 +1010,7 @@ function updateHeaderStats() {
     ...records.weight.filter(r => r.date === today),
   ].reduce((s, r) => s + Number(r.calories), 0);
   document.getElementById('today-cal').textContent = Math.round(todayCal).toLocaleString();
+  checkCalorieAchievement(Math.round(todayCal));
 }
 
 function filterRecords() {
@@ -866,7 +1052,7 @@ function renderRecords() {
 
   const container = document.getElementById('records-list');
   if (!all.length) {
-    container.innerHTML = `<div class="empty-state"><div class="big">🏋️</div><p>기록이 없습니다.<br>운동을 시작해보세요!</p></div>`;
+    container.innerHTML = `<div class="empty-state"><div class="big">🐷</div><p>기록이 없습니다.<br>운동해서 건강한 돼지가 되어봐요!</p></div>`;
     return;
   }
 
@@ -939,18 +1125,18 @@ function renderCalChart() {
       datasets: [{
         label: 'kcal',
         data: last30.map(d => Math.round(calByDate[d])),
-        backgroundColor: 'rgba(124,58,237,0.5)',
+        backgroundColor: 'rgba(124,58,237,0.55)',
         borderColor: '#7c3aed',
         borderWidth: 1,
-        borderRadius: 3,
+        borderRadius: 4,
       }],
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { ticks: { color: '#8b949e', font: { size: 10 }, maxTicksLimit: 10 }, grid: { color: '#21262d' } },
-        y: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' } },
+        x: { ticks: { color: '#7c6fa0', font: { size: 10 }, maxTicksLimit: 10 }, grid: { color: '#e8e0fd' } },
+        y: { ticks: { color: '#7c6fa0', font: { size: 10 } }, grid: { color: '#e8e0fd' } },
       },
     },
   });
@@ -981,10 +1167,10 @@ function renderRMChart() {
       datasets: [{
         label: '1RM (kg)',
         data: filtered.map(r => Number(r.one_rm)),
-        borderColor: '#a78bfa',
-        backgroundColor: 'rgba(167,139,250,0.15)',
+        borderColor: '#7c3aed',
+        backgroundColor: 'rgba(124,58,237,0.12)',
         borderWidth: 2,
-        pointBackgroundColor: '#a78bfa',
+        pointBackgroundColor: '#7c3aed',
         pointRadius: 4,
         fill: true,
         tension: 0.3,
@@ -994,8 +1180,8 @@ function renderRMChart() {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' } },
-        y: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' } },
+        x: { ticks: { color: '#7c6fa0', font: { size: 10 } }, grid: { color: '#e8e0fd' } },
+        y: { ticks: { color: '#7c6fa0', font: { size: 10 } }, grid: { color: '#e8e0fd' } },
       },
     },
   });
@@ -1083,9 +1269,6 @@ function updateBodyweightUI() {
     input.placeholder = '0';
   }
 }
-
-// ── 날짜 헬퍼 ─────────────────────────────────────────────
-function todayStr() { return new Date().toISOString().slice(0,10); }
 
 // ── 토스트 ────────────────────────────────────────────────
 let toastTimer;
@@ -1250,6 +1433,11 @@ function init() {
 
   // ── 통계 운동 선택 ──
   document.getElementById('stats-ex-sel').addEventListener('change', renderRMChart);
+
+  // ── 팝업 바깥 클릭으로 닫기 ──
+  document.getElementById('achievement-popup').addEventListener('click', function(e) {
+    if (e.target === this) closeAchievementPopup();
+  });
 
   loadRecords();
 }
