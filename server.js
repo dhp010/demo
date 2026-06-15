@@ -352,7 +352,13 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Static files — 기본 페이지는 fitness_tracker.html
-  const filePath = path.join(BASE, urlPath === '/' ? 'fitness_tracker.html' : urlPath);
+  const PAGE_MAP = {
+    '/': 'fitness_tracker.html',
+    '/fitness': 'fitness_tracker.html',
+    '/exercises': 'exercise_guide.html',
+    '/guide': 'exercise_guide.html',
+  };
+  const filePath = path.join(BASE, PAGE_MAP[urlPath] || urlPath);
   if (!filePath.startsWith(BASE)) { res.writeHead(403); return res.end('Forbidden'); }
 
   fs.readFile(filePath, (err, data) => {
