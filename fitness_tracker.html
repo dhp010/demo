@@ -9,17 +9,17 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #f5f3ff;
-      --card: #ffffff;
-      --border: #e4d9ff;
-      --text: #1e1040;
-      --muted: #7c6fa0;
-      --primary: #7c3aed;
-      --primary-light: #6d28d9;
+      --bg: #FAF7F0;
+      --card: #FFFFFF;
+      --border: #EDE8DE;
+      --text: #1A1200;
+      --muted: #8B7F72;
+      --primary: #B07800;
+      --primary-light: #966400;
       --cardio: #ef4444;
       --cardio-bg: rgba(239,68,68,0.1);
-      --weight: #7c3aed;
-      --weight-bg: rgba(124,58,237,0.1);
+      --weight: #B07800;
+      --weight-bg: rgba(176,120,0,0.1);
       --bodyweight: #d97706;
       --bodyweight-bg: rgba(217,119,6,0.1);
       --male: #3b82f6;
@@ -28,7 +28,7 @@
       --female-bg: rgba(236,72,153,0.12);
       --success: #16a34a;
       --danger: #dc2626;
-      --radius: 12px;
+      --radius: 14px;
     }
 
     body {
@@ -40,9 +40,9 @@
     }
 
     header {
-      background: linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #3b82f6 100%);
+      background: linear-gradient(135deg, #FEE500 0%, #FFD600 100%);
       padding: 20px 16px 18px;
-      box-shadow: 0 4px 20px rgba(124,58,237,0.3);
+      box-shadow: 0 4px 20px rgba(254,229,0,0.45);
     }
 
     .header-inner {
@@ -61,20 +61,20 @@
     .header-logo h1 {
       font-size: 1.7rem;
       font-weight: 800;
-      color: #ffffff;
+      color: #1A1200;
       text-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
 
-    .header-logo p { font-size: 0.75rem; color: rgba(255,255,255,0.75); margin-top: 2px; }
+    .header-logo p { font-size: 0.75rem; color: rgba(26,18,0,0.6); margin-top: 2px; }
 
     .header-stats { text-align: right; }
-    .header-stats .today-cal { font-size: 1.5rem; font-weight: 800; color: #fff; }
-    .header-stats .today-label { font-size: 0.7rem; color: rgba(255,255,255,0.75); }
+    .header-stats .today-cal { font-size: 1.5rem; font-weight: 800; color: #1A1200; }
+    .header-stats .today-label { font-size: 0.7rem; color: rgba(26,18,0,0.6); }
 
     /* ── 돼지 태그라인 ── */
     .header-tagline {
-      background: rgba(255,255,255,0.18);
-      border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(0,0,0,0.08);
+      border: 1px solid rgba(0,0,0,0.12);
       border-radius: 30px;
       padding: 7px 16px;
       display: flex;
@@ -97,7 +97,7 @@
     .tagline-text {
       font-size: 0.82rem;
       font-weight: 700;
-      color: #ffffff;
+      color: #1A1200;
       letter-spacing: 0.02em;
     }
 
@@ -110,7 +110,7 @@
       border-radius: var(--radius);
       padding: 14px 16px;
       margin-bottom: 12px;
-      box-shadow: 0 2px 8px rgba(124,58,237,0.07);
+      box-shadow: 0 2px 8px rgba(176,120,0,0.07);
     }
 
     .profile-row {
@@ -177,7 +177,7 @@
       border-radius: var(--radius);
       padding: 10px 10px 8px;
       margin-bottom: 16px;
-      box-shadow: 0 2px 8px rgba(124,58,237,0.07);
+      box-shadow: 0 2px 8px rgba(176,120,0,0.07);
     }
     .tab-group { display: flex; flex-direction: column; gap: 4px; }
     .tab-group + .tab-group { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 8px; }
@@ -201,8 +201,8 @@
     }
 
     .tab-btn .tab-icon { font-size: 1.2rem; }
-    .tab-btn:hover { color: var(--primary); background: rgba(124,58,237,0.06); }
-    .tab-btn.active { color: var(--primary); background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(99,102,241,0.1)); font-weight: 700; }
+    .tab-btn:hover { color: var(--primary); background: rgba(176,120,0,0.06); }
+    .tab-btn.active { color: #8B6000; background: rgba(254,229,0,0.35); font-weight: 700; }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
@@ -214,7 +214,7 @@
       border-radius: var(--radius);
       padding: 20px;
       margin-bottom: 12px;
-      box-shadow: 0 2px 8px rgba(124,58,237,0.07);
+      box-shadow: 0 2px 8px rgba(176,120,0,0.07);
     }
 
     .card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; color: var(--text); }
@@ -308,10 +308,10 @@
     .form-group input:focus,
     .form-group select:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+      box-shadow: 0 0 0 3px rgba(176,120,0,0.12);
     }
 
-    .form-group select option { background: #f5f3ff; color: var(--text); }
+    .form-group select option { background: var(--bg); color: var(--text); }
 
     /* 맨몸운동 안내 */
     .bw-note {
@@ -329,8 +329,8 @@
 
     /* ── 결과 카드 ── */
     .result-card {
-      background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(99,102,241,0.05));
-      border: 1px solid rgba(124,58,237,0.25);
+      background: linear-gradient(135deg, rgba(176,120,0,0.08), rgba(192,144,0,0.05));
+      border: 1px solid rgba(176,120,0,0.25);
       border-radius: 10px;
       padding: 16px;
       margin-bottom: 14px;
@@ -343,7 +343,7 @@
     .result-number {
       font-size: 2.2rem;
       font-weight: 800;
-      background: linear-gradient(90deg, #7c3aed, #3b82f6);
+      background: linear-gradient(90deg, #B07800, #C08A00);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -366,27 +366,27 @@
       font-size: 0.76rem;
     }
 
-    .rm-table-header { background: rgba(124,58,237,0.07); color: var(--muted); font-weight: 600; }
+    .rm-table-header { background: rgba(176,120,0,0.07); color: var(--muted); font-weight: 600; }
     .rm-table-row { border-top: 1px solid var(--border); }
-    .rm-table-row.highlight { background: rgba(124,58,237,0.1); color: var(--primary); font-weight: 700; }
+    .rm-table-row.highlight { background: rgba(176,120,0,0.1); color: var(--primary); font-weight: 700; }
     .rm-table-row span:last-child { color: var(--primary); font-weight: 600; }
 
     /* ── 버튼 ── */
     .btn-save {
       width: 100%;
       padding: 12px;
-      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      background: #FEE500;
       border: none;
       border-radius: 10px;
-      color: #fff;
+      color: #1A1200;
       font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
       transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
-      box-shadow: 0 4px 14px rgba(124,58,237,0.3);
+      box-shadow: 0 4px 14px rgba(254,229,0,0.5);
     }
 
-    .btn-save:hover { opacity: 0.9; box-shadow: 0 6px 18px rgba(124,58,237,0.4); }
+    .btn-save:hover { opacity: 0.9; box-shadow: 0 6px 18px rgba(254,229,0,0.6); }
     .btn-save:active { transform: scale(0.98); }
     .btn-save:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
 
@@ -406,15 +406,15 @@
     }
 
     .filter-btn.active {
-      background: rgba(124,58,237,0.12);
-      border-color: var(--primary);
-      color: var(--primary);
+      background: rgba(254,229,0,0.5);
+      border-color: #C8A200;
+      color: #7A5000;
       font-weight: 600;
     }
 
     /* ── 요약 카드 ── */
     .summary-card {
-      background: linear-gradient(135deg, #ede9fe, #dbeafe);
+      background: linear-gradient(135deg, #FFF9D0, #FFFBEB);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 14px 16px;
@@ -439,11 +439,11 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      box-shadow: 0 1px 4px rgba(124,58,237,0.06);
+      box-shadow: 0 1px 4px rgba(176,120,0,0.06);
       transition: box-shadow 0.2s;
     }
 
-    .record-item:hover { box-shadow: 0 4px 12px rgba(124,58,237,0.12); }
+    .record-item:hover { box-shadow: 0 4px 12px rgba(176,120,0,0.12); }
 
     .record-icon { font-size: 1.6rem; flex-shrink: 0; }
     .record-body { flex: 1; min-width: 0; }
@@ -494,7 +494,7 @@
       padding: 10px 20px;
       font-size: 0.85rem;
       color: var(--text);
-      box-shadow: 0 8px 24px rgba(124,58,237,0.2);
+      box-shadow: 0 8px 24px rgba(176,120,0,0.2);
       transition: transform 0.3s ease;
       z-index: 999;
       white-space: nowrap;
@@ -525,14 +525,14 @@
     }
 
     .popup-box {
-      background: linear-gradient(145deg, #fff 0%, #faf8ff 100%);
-      border: 2px solid rgba(124,58,237,0.3);
+      background: linear-gradient(145deg, #fff 0%, #FFFEF7 100%);
+      border: 2px solid rgba(176,120,0,0.3);
       border-radius: 24px;
       padding: 36px 28px 28px;
       max-width: 320px;
       width: 100%;
       text-align: center;
-      box-shadow: 0 20px 60px rgba(124,58,237,0.25), 0 4px 16px rgba(0,0,0,0.1);
+      box-shadow: 0 20px 60px rgba(176,120,0,0.25), 0 4px 16px rgba(0,0,0,0.1);
       transform: scale(0.85) translateY(20px);
       transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
     }
@@ -564,7 +564,7 @@
     .popup-title {
       font-size: 1.4rem;
       font-weight: 800;
-      background: linear-gradient(90deg, #7c3aed, #3b82f6);
+      background: linear-gradient(90deg, #B07800, #C08A00);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -573,15 +573,15 @@
 
     .popup-msg {
       font-size: 0.92rem;
-      color: #4a3a70;
+      color: #5C4800;
       line-height: 1.6;
       margin-bottom: 20px;
     }
 
     .popup-kcal-badge {
       display: inline-block;
-      background: linear-gradient(135deg, #7c3aed, #6366f1);
-      color: #fff;
+      background: #FEE500;
+      color: #1A1200;
       font-size: 1.1rem;
       font-weight: 800;
       padding: 4px 16px;
@@ -592,18 +592,18 @@
     .popup-close {
       width: 100%;
       padding: 13px;
-      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      background: #FEE500;
       border: none;
       border-radius: 12px;
-      color: #fff;
+      color: #1A1200;
       font-size: 1rem;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(124,58,237,0.35);
+      box-shadow: 0 4px 14px rgba(254,229,0,0.5);
       transition: transform 0.1s, box-shadow 0.2s;
     }
 
-    .popup-close:hover { box-shadow: 0 6px 18px rgba(124,58,237,0.45); }
+    .popup-close:hover { box-shadow: 0 6px 18px rgba(254,229,0,0.6); }
     .popup-close:active { transform: scale(0.97); }
 
     .c-cardio { color: var(--cardio); }
@@ -613,24 +613,24 @@
     /* ── 운동 가이드 탭 ── */
     .guide-search-row { position: relative; margin-bottom: 10px; }
     .guide-search-row input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; color: var(--text); font-size: 0.83rem; padding: 8px 12px 8px 32px; outline: none; }
-    .guide-search-row input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(124,58,237,.1); }
+    .guide-search-row input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(176,120,0,.1); }
     .guide-search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; pointer-events: none; }
-    .guide-ex-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 8px; transition: all .2s; box-shadow: 0 1px 4px rgba(124,58,237,.05); }
-    .guide-ex-item:hover { border-color: var(--primary); box-shadow: 0 4px 14px rgba(124,58,237,.15); }
+    .guide-ex-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 8px; transition: all .2s; box-shadow: 0 1px 4px rgba(176,120,0,.05); }
+    .guide-ex-item:hover { border-color: var(--primary); box-shadow: 0 4px 14px rgba(176,120,0,.15); }
     .guide-ex-icon { font-size: 1.5rem; flex-shrink: 0; }
     .guide-ex-info { flex: 1; min-width: 0; }
     .guide-ex-name { font-size: 0.9rem; font-weight: 700; }
     .guide-ex-sub { font-size: 0.71rem; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .guide-ex-arrow { color: var(--muted); font-size: 0.8rem; flex-shrink: 0; }
     .guide-badge { font-size: 0.68rem; font-weight: 700; padding: 2px 9px; border-radius: 10px; }
-    .g-badge-compound  { background: rgba(124,58,237,.12); color: var(--primary); }
+    .g-badge-compound  { background: rgba(176,120,0,.12); color: var(--primary); }
     .g-badge-isolation { background: rgba(37,99,235,.12); color: #2563eb; }
     .g-badge-bodyweight{ background: rgba(217,119,6,.12); color: #d97706; }
     .guide-back-btn { display: flex; align-items: center; gap: 5px; background: none; border: none; color: var(--primary); font-size: 0.85rem; font-weight: 700; cursor: pointer; padding: 4px 0 12px; }
     .guide-back-btn:hover { opacity: .75; }
     .guide-detail-header { display: flex; align-items: flex-start; gap: 14px; padding-bottom: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
     .guide-detail-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.9rem; flex-shrink: 0; }
-    .guide-detail-icon.compound  { background: rgba(124,58,237,.1); }
+    .guide-detail-icon.compound  { background: rgba(176,120,0,.1); }
     .guide-detail-icon.isolation { background: rgba(37,99,235,.1); }
     .guide-detail-icon.bodyweight{ background: rgba(217,119,6,.1); }
     .guide-detail-title { font-size: 1.35rem; font-weight: 800; margin-bottom: 6px; }
@@ -643,46 +643,46 @@
     .g-chips { display: flex; flex-wrap: wrap; gap: 6px; }
     .g-chip { font-size: 0.78rem; font-weight: 600; padding: 5px 12px; border-radius: 16px; }
     .g-chip.primary { background: var(--primary); color: #fff; }
-    .g-chip.secondary { background: rgba(124,58,237,.1); color: var(--primary); border: 1px solid rgba(124,58,237,.2); }
+    .g-chip.secondary { background: rgba(176,120,0,.1); color: var(--primary); border: 1px solid rgba(176,120,0,.2); }
     .g-effects { display: flex; flex-direction: column; gap: 6px; }
     .g-effect { font-size: 0.83rem; display: flex; gap: 8px; line-height: 1.45; }
     .g-effect-icon { flex-shrink: 0; }
     .g-steps { display: flex; flex-direction: column; gap: 10px; }
     .g-step { display: flex; gap: 12px; align-items: flex-start; }
-    .g-step-num { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg,#7c3aed,#4f46e5); color: #fff; font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+    .g-step-num { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg,#B07800,#966400); color: #fff; font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
     .g-step-num.isolation  { background: linear-gradient(135deg,#2563eb,#1d4ed8); }
     .g-step-num.bodyweight { background: linear-gradient(135deg,#d97706,#b45309); }
     .g-step-text { font-size: 0.85rem; line-height: 1.6; padding-top: 3px; }
     .g-sets-table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
-    .g-sets-table thead tr { background: linear-gradient(135deg,rgba(124,58,237,.1),rgba(99,102,241,.07)); }
+    .g-sets-table thead tr { background: linear-gradient(135deg,rgba(176,120,0,.1),rgba(192,144,0,.07)); }
     .g-sets-table th { padding: 8px 10px; font-size: 0.69rem; font-weight: 700; color: var(--muted); text-align: left; }
     .g-sets-table td { padding: 9px 10px; font-size: 0.81rem; border-top: 1px solid var(--border); }
     .g-sets-table tr:hover td { background: var(--bg); }
     .g-goal { font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
     .g-goal-s { background: rgba(220,38,38,.1); color: #dc2626; }
-    .g-goal-h { background: rgba(124,58,237,.1); color: var(--primary); }
+    .g-goal-h { background: rgba(176,120,0,.1); color: var(--primary); }
     .g-goal-e { background: rgba(22,163,74,.1); color: #16a34a; }
     .g-tip { background: linear-gradient(135deg,#fffbeb,#fef3c7); border: 1px solid #fcd34d; border-radius: 10px; padding: 12px 14px; font-size: 0.82rem; color: #78350f; display: flex; gap: 8px; line-height: 1.55; }
 
     /* ── 루틴 탭 ── */
-    .rt-selector { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(124,58,237,.07); }
+    .rt-selector { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(176,120,0,.07); }
     .rt-label { font-size: 0.68rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
     .rt-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
-    .rt-gen-btn { width: 100%; padding: 13px; background: linear-gradient(135deg,#7c3aed,#4f46e5); border: none; border-radius: 10px; color: #fff; font-size: 0.95rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(124,58,237,.3); transition: transform .1s, box-shadow .2s; margin-top: 6px; }
-    .rt-gen-btn:hover { box-shadow: 0 6px 20px rgba(124,58,237,.45); }
+    .rt-gen-btn { width: 100%; padding: 13px; background: #FEE500; border: none; border-radius: 10px; color: #1A1200; font-size: 0.95rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(254,229,0,0.5); transition: transform .1s, box-shadow .2s; margin-top: 6px; }
+    .rt-gen-btn:hover { box-shadow: 0 6px 20px rgba(254,229,0,0.6); }
     .rt-gen-btn:active { transform: scale(.98); }
     .rt-result { display: none; }
     .rt-result.show { display: block; }
-    .rt-summary { background: linear-gradient(135deg,rgba(124,58,237,.09),rgba(99,102,241,.05)); border: 1px solid rgba(124,58,237,.22); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+    .rt-summary { background: linear-gradient(135deg,rgba(176,120,0,.09),rgba(192,144,0,.05)); border: 1px solid rgba(176,120,0,.22); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
     .rt-summary-title { font-size: 0.82rem; font-weight: 800; margin-bottom: 10px; }
     .rt-stats { display: flex; gap: 14px; flex-wrap: wrap; }
     .rt-stat { text-align: center; min-width: 55px; }
     .rt-stat-val { font-size: 1.25rem; font-weight: 800; color: var(--primary); }
     .rt-stat-lbl { font-size: 0.63rem; color: var(--muted); }
     .rt-tip { background: linear-gradient(135deg,#fffbeb,#fef3c7); border: 1px solid #fcd34d; border-radius: 10px; padding: 11px 14px; font-size: 0.8rem; color: #78350f; display: flex; gap: 7px; line-height: 1.55; margin-bottom: 12px; }
-    .rt-day-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(124,58,237,.06); }
+    .rt-day-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(176,120,0,.06); }
     .rt-day-header { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--border); }
-    .rt-day-badge { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg,#7c3aed,#6366f1); color: #fff; font-size: 0.8rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .rt-day-badge { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg,#B07800,#C08A00); color: #fff; font-size: 0.8rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .rt-day-badge.rest { background: var(--bg); color: var(--muted); font-size: 1rem; }
     .rt-day-title { font-size: 0.88rem; font-weight: 700; }
     .rt-day-sub { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
@@ -695,17 +695,53 @@
     .rt-ex-num { font-size: 0.68rem; font-weight: 700; color: var(--primary); }
     .rt-ex-name { font-weight: 600; }
     .rt-ex-note { font-size: 0.68rem; color: var(--muted); display: block; margin-top: 2px; }
-    .rt-month-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(124,58,237,.06); }
+    .rt-month-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(176,120,0,.06); }
     .rt-month-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
     .rt-month-week-title { font-size: 0.9rem; font-weight: 800; }
     .rt-week-tag { font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
-    .wk-base   { background: rgba(124,58,237,.12); color: var(--primary); }
+    .wk-base   { background: rgba(176,120,0,.12); color: var(--primary); }
     .wk-over   { background: rgba(37,99,235,.12);  color: #2563eb; }
     .wk-peak   { background: rgba(220,38,38,.12);   color: #dc2626; }
     .wk-deload { background: rgba(22,163,74,.12);   color: #16a34a; }
     .rt-prog-list { display: flex; flex-direction: column; gap: 7px; }
     .rt-prog-row { display: flex; align-items: flex-start; gap: 8px; font-size: 0.8rem; line-height: 1.45; }
     .rt-prog-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+
+    /* ── 다이어트 탭 ── */
+    .diet-label { font-size: 0.68rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .food-preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .food-preset-btn { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 8px 4px; font-size: 0.72rem; cursor: pointer; text-align: center; transition: all .2s; line-height: 1.4; }
+    .food-preset-btn:hover { border-color: #C8A200; background: rgba(254,229,0,0.2); }
+    .food-preset-btn .fp-icon { font-size: 1.3rem; display: block; margin-bottom: 2px; }
+    .food-preset-btn .fp-kcal { color: var(--muted); font-size: 0.65rem; }
+    .food-manual-row { display: flex; gap: 6px; align-items: center; }
+    .food-manual-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; font-size: 0.85rem; color: var(--text); outline: none; }
+    .food-manual-input:focus { border-color: #C8A200; box-shadow: 0 0 0 3px rgba(254,229,0,0.2); }
+    .food-kcal-input { width: 80px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 9px 8px; font-size: 0.85rem; color: var(--text); outline: none; text-align: center; }
+    .food-kcal-input:focus { border-color: #C8A200; box-shadow: 0 0 0 3px rgba(254,229,0,0.2); }
+    .food-add-btn { background: #FEE500; border: none; border-radius: 8px; padding: 9px 14px; font-size: 0.85rem; font-weight: 700; color: #1A1200; cursor: pointer; white-space: nowrap; transition: all .2s; }
+    .food-add-btn:hover { background: #FFD600; box-shadow: 0 2px 8px rgba(254,229,0,0.5); }
+    .food-log-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
+    .food-log-item:last-child { border-bottom: none; }
+    .food-log-name { font-size: 0.85rem; font-weight: 600; }
+    .food-log-kcal { font-size: 0.82rem; color: #B07800; font-weight: 700; margin-left: 8px; }
+    .food-log-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: 2px 6px; border-radius: 6px; }
+    .food-log-del:hover { background: var(--bg); color: var(--danger); }
+    .food-total-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0 0; border-top: 2px solid var(--border); margin-top: 4px; font-weight: 700; font-size: 0.9rem; }
+    .food-total-val { font-size: 1.1rem; font-weight: 800; color: #B07800; }
+    .diet-hint { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 20px; }
+    .balance-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+    .balance-row:last-child { border-bottom: none; }
+    .balance-row-label { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+    .balance-row-val { font-weight: 700; font-size: 0.95rem; }
+    .balance-net-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 12px; margin: 14px 0; }
+    .balance-net-label { font-weight: 800; font-size: 0.95rem; }
+    .balance-net-val { font-size: 1.4rem; font-weight: 800; }
+    .diet-status-box { border-radius: 14px; padding: 16px; text-align: center; margin-top: 6px; }
+    .diet-status-emoji { font-size: 2.5rem; margin-bottom: 6px; }
+    .diet-status-label { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
+    .diet-status-desc { font-size: 0.8rem; opacity: 0.8; }
+    .diet-status-tip { font-size: 0.75rem; margin-top: 10px; padding: 8px 12px; background: rgba(0,0,0,0.06); border-radius: 8px; line-height: 1.5; }
 
     @media (max-width: 400px) {
       .form-row.three { grid-template-columns: 1fr 1fr; }
@@ -793,6 +829,14 @@
         </button>
         <button class="tab-btn" data-tab="stats">
           <span class="tab-icon">📊</span>통계
+        </button>
+      </div>
+    </div>
+    <div class="tab-group">
+      <div class="tab-group-label">다이어트 관리</div>
+      <div class="tab-group-row">
+        <button class="tab-btn" data-tab="diet" style="grid-column: span 2">
+          <span class="tab-icon">🍽️</span>오늘의 칼로리
         </button>
       </div>
     </div>
@@ -1020,6 +1064,37 @@
     <div class="rt-result" id="rt-result"></div>
   </section>
 
+  <!-- ── 다이어트/칼로리 탭 ── -->
+  <section class="tab-content" id="tab-diet">
+    <!-- 음식 입력 -->
+    <div class="card" style="margin-bottom:12px">
+      <h2 style="font-size:1rem;font-weight:800;margin-bottom:12px">🍽️ 오늘 먹은 음식</h2>
+      <!-- Quick presets -->
+      <div class="diet-label">빠른 추가</div>
+      <div class="food-preset-grid" id="food-preset-grid"></div>
+      <!-- Manual -->
+      <div class="diet-label" style="margin-top:12px">직접 입력</div>
+      <div class="food-manual-row">
+        <input type="text" id="food-name-input" class="food-manual-input" placeholder="음식 이름">
+        <input type="number" id="food-kcal-input" class="food-kcal-input" placeholder="kcal" min="1" max="9999">
+        <button class="food-add-btn" onclick="addFoodItem()">추가</button>
+      </div>
+      <!-- Log list -->
+      <div id="food-log-list" style="margin-top:12px"></div>
+      <div id="food-total-row" style="display:none" class="food-total-row">
+        <span>오늘 총 섭취</span>
+        <span id="food-total-kcal" class="food-total-val">0 kcal</span>
+      </div>
+    </div>
+    <!-- Balance -->
+    <div class="card" id="diet-balance-card">
+      <h2 style="font-size:1rem;font-weight:800;margin-bottom:14px">⚖️ 오늘의 칼로리 밸런스</h2>
+      <div id="diet-balance-content">
+        <div class="diet-hint">음식을 추가하면 밸런스가 계산됩니다</div>
+      </div>
+    </div>
+  </section>
+
 </div>
 
 <!-- ── 500kcal 달성 팝업 ── -->
@@ -1084,6 +1159,7 @@ let gender = localStorage.getItem('gender') || 'male';
 let currentActivity = 'running';
 let currentExType = 'compound';
 let records = { cardio: [], weight: [] };
+window._records = records;
 let recTypeFilter = 'all';
 let recPeriodFilter = 'today';
 let charts = {};
@@ -1132,7 +1208,7 @@ function closeAchievementPopup() {
 async function loadRecords() {
   try {
     const r = await fetch('/api/fitness/records');
-    if (r.ok) { records = await r.json(); refreshAll(); }
+    if (r.ok) { records = await r.json(); window._records = records; refreshAll(); }
   } catch { /* 오프라인 */ }
 }
 
@@ -1144,7 +1220,7 @@ async function saveCardioRec(data) {
       body: JSON.stringify(data),
     });
     const j = await r.json();
-    if (j.ok) { records.cardio.unshift(j.record); refreshAll(); toast('🏃 유산소 기록 저장 완료!'); }
+    if (j.ok) { records.cardio.unshift(j.record); window._records = records; refreshAll(); toast('🏃 유산소 기록 저장 완료!'); }
   } catch { toast('저장 실패 — 네트워크를 확인하세요', true); }
 }
 
@@ -1156,7 +1232,7 @@ async function saveWeightRec(data) {
       body: JSON.stringify(data),
     });
     const j = await r.json();
-    if (j.ok) { records.weight.unshift(j.record); refreshAll(); toast('💪 웨이트 기록 저장 완료!'); }
+    if (j.ok) { records.weight.unshift(j.record); window._records = records; refreshAll(); toast('💪 웨이트 기록 저장 완료!'); }
   } catch { toast('저장 실패 — 네트워크를 확인하세요', true); }
 }
 
@@ -1300,8 +1376,8 @@ function renderCalChart() {
       datasets: [{
         label: 'kcal',
         data: last30.map(d => Math.round(calByDate[d])),
-        backgroundColor: 'rgba(124,58,237,0.55)',
-        borderColor: '#7c3aed',
+        backgroundColor: 'rgba(176,120,0,0.55)',
+        borderColor: '#B07800',
         borderWidth: 1,
         borderRadius: 4,
       }],
@@ -1310,8 +1386,8 @@ function renderCalChart() {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { ticks: { color: '#7c6fa0', font: { size: 10 }, maxTicksLimit: 10 }, grid: { color: '#e8e0fd' } },
-        y: { ticks: { color: '#7c6fa0', font: { size: 10 } }, grid: { color: '#e8e0fd' } },
+        x: { ticks: { color: '#8B7F72', font: { size: 10 }, maxTicksLimit: 10 }, grid: { color: '#EDE8DE' } },
+        y: { ticks: { color: '#8B7F72', font: { size: 10 } }, grid: { color: '#EDE8DE' } },
       },
     },
   });
@@ -1342,10 +1418,10 @@ function renderRMChart() {
       datasets: [{
         label: '1RM (kg)',
         data: filtered.map(r => Number(r.one_rm)),
-        borderColor: '#7c3aed',
-        backgroundColor: 'rgba(124,58,237,0.12)',
+        borderColor: '#B07800',
+        backgroundColor: 'rgba(176,120,0,0.12)',
         borderWidth: 2,
-        pointBackgroundColor: '#7c3aed',
+        pointBackgroundColor: '#B07800',
         pointRadius: 4,
         fill: true,
         tension: 0.3,
@@ -1355,8 +1431,8 @@ function renderRMChart() {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { ticks: { color: '#7c6fa0', font: { size: 10 } }, grid: { color: '#e8e0fd' } },
-        y: { ticks: { color: '#7c6fa0', font: { size: 10 } }, grid: { color: '#e8e0fd' } },
+        x: { ticks: { color: '#8B7F72', font: { size: 10 } }, grid: { color: '#EDE8DE' } },
+        y: { ticks: { color: '#8B7F72', font: { size: 10 } }, grid: { color: '#EDE8DE' } },
       },
     },
   });
@@ -1508,6 +1584,7 @@ function init() {
       if (btn.dataset.tab === 'stats') renderStats();
       if (btn.dataset.tab === 'guide') renderGuideList();
       if (btn.dataset.tab === 'routine') initRoutineSelectors();
+      if (btn.dataset.tab === 'diet') { initFoodPresets(); renderFoodTab(); }
     });
   });
 
@@ -2468,7 +2545,7 @@ function renderMonthRoutine(weekDays) {
           <div><strong>강도:</strong> ${w.intensity}</div>
         </div>
         <div class="rt-prog-row">
-          <div class="rt-prog-dot" style="background:#6366f1"></div>
+          <div class="rt-prog-dot" style="background:#C08A00"></div>
           <div><strong>볼륨:</strong> ${w.volume}</div>
         </div>
         <div class="rt-prog-row">
@@ -2478,6 +2555,163 @@ function renderMonthRoutine(weekDays) {
       </div>
     </div>`).join('');
   return html;
+}
+
+// ── 음식/칼로리 밸런스 ─────────────────────────────────────────
+const FOOD_PRESETS = [
+  { name:'공기밥', kcal:300, icon:'🍚' },
+  { name:'라면', kcal:500, icon:'🍜' },
+  { name:'치킨 반마리', kcal:700, icon:'🍗' },
+  { name:'삼겹살 1인분', kcal:600, icon:'🥩' },
+  { name:'피자 1조각', kcal:280, icon:'🍕' },
+  { name:'김치찌개', kcal:300, icon:'🍲' },
+  { name:'제육볶음', kcal:500, icon:'🥘' },
+  { name:'떡볶이', kcal:400, icon:'🌶️' },
+  { name:'햄버거', kcal:550, icon:'🍔' },
+  { name:'삼각김밥', kcal:200, icon:'🍙' },
+  { name:'컵라면', kcal:350, icon:'🍜' },
+  { name:'닭가슴살', kcal:100, icon:'🐔' },
+  { name:'고구마', kcal:130, icon:'🍠' },
+  { name:'바나나', kcal:100, icon:'🍌' },
+  { name:'콜라 500ml', kcal:210, icon:'🥤' },
+  { name:'아이스크림', kcal:250, icon:'🍦' },
+  { name:'빵/케이크', kcal:350, icon:'🍞' },
+  { name:'커피(라떼)', kcal:150, icon:'☕' },
+  { name:'프로틴 쉐이크', kcal:150, icon:'💪' },
+  { name:'단백질바', kcal:200, icon:'🍫' },
+  { name:'계란 2개', kcal:140, icon:'🥚' },
+  { name:'우유 200ml', kcal:120, icon:'🥛' },
+  { name:'샐러드', kcal:150, icon:'🥗' },
+  { name:'과자 1봉지', kcal:300, icon:'🍿' },
+];
+
+function todayFoodKey() { return 'food_log_' + todayStr(); }
+
+function loadFoodLog() {
+  try { return JSON.parse(localStorage.getItem(todayFoodKey()) || '[]'); }
+  catch { return []; }
+}
+
+function saveFoodLog(log) {
+  localStorage.setItem(todayFoodKey(), JSON.stringify(log));
+}
+
+function addFoodPreset(name, kcal) {
+  const log = loadFoodLog();
+  log.push({ id: Date.now().toString(), name, kcal });
+  saveFoodLog(log);
+  renderFoodTab();
+}
+
+function addFoodItem() {
+  const name = document.getElementById('food-name-input').value.trim();
+  const kcal = parseInt(document.getElementById('food-kcal-input').value, 10);
+  if (!name || !kcal || kcal <= 0) { toast('음식 이름과 칼로리를 입력하세요'); return; }
+  const log = loadFoodLog();
+  log.push({ id: Date.now().toString(), name, kcal });
+  saveFoodLog(log);
+  document.getElementById('food-name-input').value = '';
+  document.getElementById('food-kcal-input').value = '';
+  renderFoodTab();
+}
+
+function removeFoodItem(id) {
+  const log = loadFoodLog().filter(f => f.id !== id);
+  saveFoodLog(log);
+  renderFoodTab();
+}
+
+function getTodayExerciseKcal() {
+  const today = todayStr();
+  const cRecs = (window._records && window._records.cardio || []).filter(r => r.date === today);
+  const wRecs = (window._records && window._records.weight || []).filter(r => r.date === today);
+  const cKcal = cRecs.reduce((s, r) => s + (r.calories || 0), 0);
+  const wKcal = wRecs.reduce((s, r) => s + (r.calories || 0), 0);
+  return Math.round(cKcal + wKcal);
+}
+
+function estimateBMR() {
+  const factor = gender === 'female' ? 22 : 24;
+  return Math.round(bodyWeight * factor);
+}
+
+function getDietStatus(net) {
+  if (net <= -600) return { emoji:'🔥', label:'적극 다이어트 중!', color:'#1D4ED8', bg:'#EFF6FF', desc:'빠른 체중 감량 구간', tip:'너무 빠른 감량은 근손실 위험이 있어요. 단백질을 충분히 섭취하세요.' };
+  if (net <= -100) return { emoji:'✅', label:'다이어트 중', color:'#15803D', bg:'#F0FDF4', desc:'건강한 체중 감량 구간', tip:'이 속도를 유지하면 한 달에 약 1~2kg 감량 가능해요.' };
+  if (net <= +200) return { emoji:'⚖️', label:'칼로리 유지', color:'#B07800', bg:'#FFFBEB', desc:'현재 체중 유지 구간', tip:'체중 유지에 이상적인 칼로리 범위예요.' };
+  if (net <= +600) return { emoji:'💪', label:'린 벌크업', color:'#7E22CE', bg:'#F5F3FF', desc:'근육 성장을 위한 잉여 칼로리', tip:'적당한 잉여 칼로리로 근육 성장을 도울 수 있어요. 웨이트 훈련 병행 필수!' };
+  return { emoji:'⚠️', label:'살크업 주의', color:'#DC2626', bg:'#FEF2F2', desc:'과도한 칼로리 잉여 — 지방 축적 위험', tip:'칼로리 잉여가 너무 크면 지방이 쌓여요. 운동량을 늘리거나 식사량을 조절하세요.' };
+}
+
+function renderFoodTab() {
+  const log = loadFoodLog();
+  const totalFood = log.reduce((s, f) => s + f.kcal, 0);
+  const listEl = document.getElementById('food-log-list');
+  const totalRow = document.getElementById('food-total-row');
+  const totalVal = document.getElementById('food-total-kcal');
+
+  if (listEl) {
+    listEl.innerHTML = log.length ? log.map(f => `
+      <div class="food-log-item">
+        <div><span class="food-log-name">${f.name}</span><span class="food-log-kcal">${f.kcal} kcal</span></div>
+        <button class="food-log-del" onclick="removeFoodItem('${f.id}')">✕</button>
+      </div>`).join('') : '<div style="color:var(--muted);font-size:0.82rem;padding:8px 0">아직 추가된 음식이 없어요</div>';
+  }
+  if (totalRow) { totalRow.style.display = log.length ? 'flex' : 'none'; }
+  if (totalVal) totalVal.textContent = totalFood.toLocaleString() + ' kcal';
+
+  renderDietBalance(totalFood);
+}
+
+function renderDietBalance(totalFood) {
+  const bmr = estimateBMR();
+  const exKcal = getTodayExerciseKcal();
+  const totalBurn = bmr + exKcal;
+  const net = totalFood - totalBurn;
+  const st = getDietStatus(net);
+  const balEl = document.getElementById('diet-balance-content');
+  if (!balEl) return;
+
+  if (totalFood === 0) {
+    balEl.innerHTML = '<div class="diet-hint">음식을 추가하면 밸런스가 계산됩니다</div>';
+    return;
+  }
+
+  balEl.innerHTML = `
+    <div class="balance-row">
+      <div class="balance-row-label">🍽️ 오늘 섭취</div>
+      <div class="balance-row-val" style="color:#B07800">+${totalFood.toLocaleString()} kcal</div>
+    </div>
+    <div class="balance-row">
+      <div class="balance-row-label">🏃 운동 소모</div>
+      <div class="balance-row-val" style="color:#16a34a">-${exKcal.toLocaleString()} kcal</div>
+    </div>
+    <div class="balance-row">
+      <div class="balance-row-label">💤 기초대사량 (BMR 추정)</div>
+      <div class="balance-row-val" style="color:#64748b">-${bmr.toLocaleString()} kcal</div>
+    </div>
+    <div class="balance-net-row" style="background:${st.bg}">
+      <div class="balance-net-label" style="color:${st.color}">순 칼로리 밸런스</div>
+      <div class="balance-net-val" style="color:${st.color}">${net >= 0 ? '+' : ''}${net.toLocaleString()} kcal</div>
+    </div>
+    <div class="diet-status-box" style="background:${st.bg}; border: 2px solid ${st.color}20;">
+      <div class="diet-status-emoji">${st.emoji}</div>
+      <div class="diet-status-label" style="color:${st.color}">${st.label}</div>
+      <div class="diet-status-desc" style="color:${st.color}">${st.desc}</div>
+      <div class="diet-status-tip" style="color:${st.color}">${st.tip}</div>
+    </div>`;
+}
+
+function initFoodPresets() {
+  const grid = document.getElementById('food-preset-grid');
+  if (!grid || grid.dataset.init) return;
+  grid.dataset.init = '1';
+  grid.innerHTML = FOOD_PRESETS.map(f => `
+    <button class="food-preset-btn" onclick="addFoodPreset('${f.name}', ${f.kcal})">
+      <span class="fp-icon">${f.icon}</span>
+      <span>${f.name}</span>
+      <span class="fp-kcal">${f.kcal} kcal</span>
+    </button>`).join('');
 }
 
 document.addEventListener('DOMContentLoaded', init);
