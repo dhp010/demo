@@ -2950,6 +2950,9 @@ if ('serviceWorker' in navigator) {
       .then(() => console.log('FitTrack SW 등록 완료'))
       .catch(e => console.warn('SW 등록 실패:', e));
   });
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data && e.data.type === 'SW_UPDATED') window.location.reload();
+  });
 }
 
 // ── 데이터 내보내기 / 가져오기 ────────────────────────────
