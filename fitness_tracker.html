@@ -170,7 +170,7 @@
     /* ── 탭 ── */
     .tab-nav {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 4px;
       background: var(--card);
       border: 1px solid var(--border);
@@ -184,9 +184,9 @@
       background: none;
       border: none;
       color: var(--muted);
-      font-size: 0.78rem;
+      font-size: 0.68rem;
       font-weight: 500;
-      padding: 8px 4px;
+      padding: 8px 2px;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s;
@@ -606,6 +606,60 @@
     .c-weight { color: var(--weight); }
     .c-bodyweight { color: var(--bodyweight); }
 
+    /* ── 운동 가이드 탭 ── */
+    .guide-search-row { position: relative; margin-bottom: 10px; }
+    .guide-search-row input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; color: var(--text); font-size: 0.83rem; padding: 8px 12px 8px 32px; outline: none; }
+    .guide-search-row input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(124,58,237,.1); }
+    .guide-search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; pointer-events: none; }
+    .guide-ex-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 8px; transition: all .2s; box-shadow: 0 1px 4px rgba(124,58,237,.05); }
+    .guide-ex-item:hover { border-color: var(--primary); box-shadow: 0 4px 14px rgba(124,58,237,.15); }
+    .guide-ex-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .guide-ex-info { flex: 1; min-width: 0; }
+    .guide-ex-name { font-size: 0.9rem; font-weight: 700; }
+    .guide-ex-sub { font-size: 0.71rem; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .guide-ex-arrow { color: var(--muted); font-size: 0.8rem; flex-shrink: 0; }
+    .guide-badge { font-size: 0.68rem; font-weight: 700; padding: 2px 9px; border-radius: 10px; }
+    .g-badge-compound  { background: rgba(124,58,237,.12); color: var(--primary); }
+    .g-badge-isolation { background: rgba(37,99,235,.12); color: #2563eb; }
+    .g-badge-bodyweight{ background: rgba(217,119,6,.12); color: #d97706; }
+    .guide-back-btn { display: flex; align-items: center; gap: 5px; background: none; border: none; color: var(--primary); font-size: 0.85rem; font-weight: 700; cursor: pointer; padding: 4px 0 12px; }
+    .guide-back-btn:hover { opacity: .75; }
+    .guide-detail-header { display: flex; align-items: flex-start; gap: 14px; padding-bottom: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .guide-detail-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.9rem; flex-shrink: 0; }
+    .guide-detail-icon.compound  { background: rgba(124,58,237,.1); }
+    .guide-detail-icon.isolation { background: rgba(37,99,235,.1); }
+    .guide-detail-icon.bodyweight{ background: rgba(217,119,6,.1); }
+    .guide-detail-title { font-size: 1.35rem; font-weight: 800; margin-bottom: 6px; }
+    .guide-detail-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .guide-diff { font-size: 0.75rem; color: var(--muted); }
+    .g-star-on { color: #f59e0b; } .g-star-off { color: #d1d5db; }
+    .guide-sec-title { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .guide-sec-title::after { content:''; flex:1; height:1px; background: var(--border); }
+    .guide-section { margin-bottom: 20px; }
+    .g-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .g-chip { font-size: 0.78rem; font-weight: 600; padding: 5px 12px; border-radius: 16px; }
+    .g-chip.primary { background: var(--primary); color: #fff; }
+    .g-chip.secondary { background: rgba(124,58,237,.1); color: var(--primary); border: 1px solid rgba(124,58,237,.2); }
+    .g-effects { display: flex; flex-direction: column; gap: 6px; }
+    .g-effect { font-size: 0.83rem; display: flex; gap: 8px; line-height: 1.45; }
+    .g-effect-icon { flex-shrink: 0; }
+    .g-steps { display: flex; flex-direction: column; gap: 10px; }
+    .g-step { display: flex; gap: 12px; align-items: flex-start; }
+    .g-step-num { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg,#7c3aed,#4f46e5); color: #fff; font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+    .g-step-num.isolation  { background: linear-gradient(135deg,#2563eb,#1d4ed8); }
+    .g-step-num.bodyweight { background: linear-gradient(135deg,#d97706,#b45309); }
+    .g-step-text { font-size: 0.85rem; line-height: 1.6; padding-top: 3px; }
+    .g-sets-table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .g-sets-table thead tr { background: linear-gradient(135deg,rgba(124,58,237,.1),rgba(99,102,241,.07)); }
+    .g-sets-table th { padding: 8px 10px; font-size: 0.69rem; font-weight: 700; color: var(--muted); text-align: left; }
+    .g-sets-table td { padding: 9px 10px; font-size: 0.81rem; border-top: 1px solid var(--border); }
+    .g-sets-table tr:hover td { background: var(--bg); }
+    .g-goal { font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+    .g-goal-s { background: rgba(220,38,38,.1); color: #dc2626; }
+    .g-goal-h { background: rgba(124,58,237,.1); color: var(--primary); }
+    .g-goal-e { background: rgba(22,163,74,.1); color: #16a34a; }
+    .g-tip { background: linear-gradient(135deg,#fffbeb,#fef3c7); border: 1px solid #fcd34d; border-radius: 10px; padding: 12px 14px; font-size: 0.82rem; color: #78350f; display: flex; gap: 8px; line-height: 1.55; }
+
     @media (max-width: 400px) {
       .form-row.three { grid-template-columns: 1fr 1fr; }
       .activity-grid { grid-template-columns: repeat(2, 1fr); }
@@ -673,6 +727,9 @@
     </button>
     <button class="tab-btn" data-tab="stats">
       <span class="tab-icon">📊</span>통계
+    </button>
+    <button class="tab-btn" data-tab="guide">
+      <span class="tab-icon">📚</span>가이드
     </button>
   </nav>
 
@@ -841,6 +898,33 @@
       </div>
       <div class="chart-container">
         <canvas id="chart-rm"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 운동 가이드 탭 ── -->
+  <section class="tab-content" id="tab-guide">
+    <!-- 목록 뷰 -->
+    <div id="guide-list-view">
+      <div class="card" style="padding:12px;margin-bottom:10px">
+        <div class="guide-search-row">
+          <span class="guide-search-icon">🔍</span>
+          <input type="text" id="guide-search" placeholder="운동 이름 또는 타겟 부위 검색…">
+        </div>
+        <div class="filter-row" style="margin-bottom:0">
+          <button class="filter-btn active" data-gcat="all">전체</button>
+          <button class="filter-btn" data-gcat="compound">🔗 복합운동</button>
+          <button class="filter-btn" data-gcat="isolation">💡 고립운동</button>
+          <button class="filter-btn" data-gcat="bodyweight">🤸 맨몸운동</button>
+        </div>
+      </div>
+      <div id="guide-ex-list"></div>
+    </div>
+    <!-- 상세 뷰 -->
+    <div id="guide-detail-view" style="display:none">
+      <button class="guide-back-btn" onclick="guideShowList()">← 목록으로</button>
+      <div class="card">
+        <div id="guide-detail-content"></div>
       </div>
     </div>
   </section>
@@ -1331,6 +1415,7 @@ function init() {
       btn.classList.add('active');
       document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
       if (btn.dataset.tab === 'stats') renderStats();
+      if (btn.dataset.tab === 'guide') renderGuideList();
     });
   });
 
@@ -1440,6 +1525,315 @@ function init() {
   });
 
   loadRecords();
+}
+
+// ── 운동 가이드 ───────────────────────────────────────────
+const GUIDE_DATA = [
+  /* 복합운동 */
+  { name:'스쿼트',cat:'compound',icon:'🏋️',diff:3,primary:['대퇴사두근','둔근'],secondary:['햄스트링','척추기립근','코어'],
+    effects:[['🦵','하체 전체 근력 강화'],['🔥','기초 대사량 증가'],['⚖️','좌우 균형 발달'],['🏆','전신 호르몬 반응 극대화']],
+    steps:['발을 어깨너비로 벌리고 발끝을 15~30도 바깥으로 향하게 선다.','가슴을 펴고 시선을 정면 또는 약간 위로 유지한다.','무릎이 발끝 방향을 따르도록 엉덩이를 뒤로 빼며 천천히 앉는다.','허벅지가 바닥과 평행(또는 그 이하)이 될 때까지 내려간다.','발뒤꿈치로 바닥을 밀며 일어서고, 정점에서 둔근을 조인다.'],
+    sets:[['근력 강화','s','5세트','3~5회','3~5분','고중량 저반복'],['근비대','h','4세트','8~12회','90초','이심성 집중'],['근지구력','e','3세트','15~20회','45초','저중량 고반복']],
+    tip:'무릎이 발끝 안쪽으로 모이지 않도록 주의. 발뒤꿈치가 들리면 발목 유연성을 먼저 개선하세요.'},
+  { name:'데드리프트',cat:'compound',icon:'🏋️',diff:4,primary:['척추기립근','햄스트링','둔근'],secondary:['광배근','승모근','전완근'],
+    effects:[['💪','전신 후면 사슬 강화'],['📐','자세 교정 효과'],['✊','악력·코어 동시 강화'],['⚡','폭발적 근력 향상']],
+    steps:['바벨을 발등 위(정강이 가까이)에 두고 발을 엉덩이 너비로 선다.','힙 힌지 동작으로 허리를 곧게 펴고 바를 잡는다(오버 또는 믹스 그립).','복압을 높이고 바닥을 밀듯 다리를 펴며 일어선다.','바가 정강이를 스치듯 가까이 유지하며 엉덩이를 앞으로 밀어 일어선다.','완전히 선 뒤 반대 순서로 천천히 내린다.'],
+    sets:[['근력 강화','s','5세트','1~5회','3~5분','최대 근력 향상'],['근비대','h','4세트','6~10회','2분','주 1~2회 권장'],['근지구력','e','3세트','12~15회','60초','루마니안 DL 변형 추천']],
+    tip:'허리 라운딩은 부상의 주원인입니다. 중량보다 자세를 먼저 완성하세요.'},
+  { name:'벤치프레스',cat:'compound',icon:'🏋️',diff:3,primary:['대흉근'],secondary:['삼두근','전면 삼각근'],
+    effects:[['💪','상체 밀기 근력 향상'],['🫁','흉근 볼륨 발달'],['🔗','삼두·어깨 협응 강화']],
+    steps:['벤치에 누워 등 상부·둔근을 밀착, 발은 바닥에 평평하게 놓는다.','바를 어깨너비 1.5배로 잡고 랙에서 빼내어 젖꼭지 위로 든다.','천천히 가슴 하부에 바가 닿을 때까지 내린다(팔꿈치 약 75도).','흉근을 수축하며 폭발적으로 밀어올린다.','반복 시 살짝 긴장을 유지하며 내린다.'],
+    sets:[['근력 강화','s','5세트','3~5회','3~5분','스팟터 필수'],['근비대','h','4세트','8~12회','90초','이심성 3초'],['근지구력','e','3세트','15~20회','45초','덤벨 변형 병행']],
+    tip:'바를 너무 넓게 잡거나 팔꿈치를 90도 이상 벌리면 어깨에 부담이 됩니다.'},
+  { name:'오버헤드프레스',cat:'compound',icon:'🏋️',diff:4,primary:['삼각근 전면·측면'],secondary:['삼두근','승모근','코어'],
+    effects:[['🎯','어깨 전체 근력 강화'],['🏗️','상체 안정성 향상'],['⚖️','코어 연계 근력 발달']],
+    steps:['바를 쇄골 바로 위에 올리고 어깨너비로 잡는다.','발은 어깨너비, 코어와 둔근을 강하게 수축한다.','머리를 약간 뒤로 빼며 바를 수직으로 밀어올린다.','팔꿈치가 완전히 펴질 때 머리는 바 앞으로 나온다.','천천히 쇄골 위치로 내리며 반복한다.'],
+    sets:[['근력 강화','s','5세트','3~5회','3분','코어 긴장 필수'],['근비대','h','4세트','8~12회','90초','시티드 변형 가능'],['근지구력','e','3세트','15회','60초','덤벨로 가동범위 확대']],
+    tip:'허리가 과도하게 꺾이면 코어 강화가 먼저입니다. 무게를 줄이고 자세를 잡으세요.'},
+  { name:'바벨로우',cat:'compound',icon:'🏋️',diff:4,primary:['광배근','승모근 중부'],secondary:['후면 삼각근','이두근'],
+    effects:[['📐','등 두께 발달'],['🦴','자세 교정'],['💪','당기기 근력 강화']],
+    steps:['발을 엉덩이 너비로 서고 힙 힌지로 상체를 45~70도 숙인다.','바를 어깨너비(오버 그립)로 잡고 등을 평평하게 유지한다.','팔꿈치를 뒤쪽으로 당기며 바를 아랫배 방향으로 끌어당긴다.','광배근이 완전히 수축되면 잠시 정지한다.','천천히 내리며 어깨가 완전히 이완되도록 팔을 뻗는다.'],
+    sets:[['근력 강화','s','5세트','4~6회','3분','펜들레이로우 변형 추천'],['근비대','h','4세트','8~12회','90초','이심성 3초'],['근지구력','e','3세트','15회','60초','덤벨로우 대체 가능']],
+    tip:'반동을 이용하면 허리 부상 위험이 높습니다. 느린 속도로 근육을 자극하세요.'},
+  { name:'레그프레스',cat:'compound',icon:'🏋️',diff:2,primary:['대퇴사두근'],secondary:['햄스트링','둔근'],
+    effects:[['🦵','하체 근량 증가'],['🛡️','관절 부담 최소화'],['🔧','스쿼트 보조 운동']],
+    steps:['시트에 등을 밀착하고 발판에 어깨너비로 발을 올린다.','안전 잠금장치를 해제하고 발판을 천천히 가슴 쪽으로 내린다.','무릎이 90도 이상 구부러지면 멈춘다.','발뒤꿈치로 발판을 밀어 시작 자세로 돌아온다.','무릎을 완전히 잠그지 않고 약간 남겨두며 반복한다.'],
+    sets:[['근력 강화','s','4세트','6~8회','2분','고중량 적용 용이'],['근비대','h','4세트','10~15회','90초','발 위치로 자극 조절'],['근지구력','e','3세트','20~25회','60초','드롭셋 효과적']],
+    tip:'발판 위치가 낮을수록 대퇴사두, 높을수록 둔근·햄스트링에 자극됩니다.'},
+  { name:'인클라인벤치프레스',cat:'compound',icon:'🏋️',diff:3,primary:['상부 대흉근'],secondary:['전면 삼각근','삼두근'],
+    effects:[['🎯','상부 흉근 집중 발달'],['💎','쇄골 라인 선명화'],['📈','벤치프레스 보완']],
+    steps:['벤치를 30~45도 경사로 조절하고 등을 밀착시킨다.','바를 어깨너비보다 약간 넓게 잡고 랙에서 뺀다.','쇄골~상부 가슴 사이로 바를 내린다.','상부 흉근을 수축하며 밀어올린다.','천천히 제어하며 내리고 반복한다.'],
+    sets:[['근력 강화','s','4세트','5~7회','3분',''],['근비대','h','4세트','8~12회','90초','덤벨 변형으로 가동범위 확대'],['근지구력','e','3세트','15회','60초','']],
+    tip:'경사가 너무 가파르면 삼각근 운동이 됩니다. 30~45도가 적정 각도입니다.'},
+  { name:'덤벨로우',cat:'compound',icon:'🏋️',diff:2,primary:['광배근'],secondary:['승모근','후면 삼각근','이두근'],
+    effects:[['⚖️','좌우 대칭 등 발달'],['📏','가동범위 극대화'],['🔧','바벨로우 보완']],
+    steps:['한쪽 무릎과 손을 벤치에 올려 지지한다.','반대 손으로 덤벨을 잡고 팔을 아래로 뻗는다.','등을 평평하게 유지한 채 팔꿈치를 뒤로 당긴다.','덤벨을 옆구리까지 올리며 광배근을 수축한다.','천천히 내리며 반대쪽도 실시한다.'],
+    sets:[['근력 강화','s','4세트','6~8회','90초',''],['근비대','h','4세트','10~12회','75초','최대 수축 1초 정지 추천'],['근지구력','e','3세트','15~20회','45초','']],
+    tip:'팔의 힘이 아닌 등(광배근)으로 당기는 느낌에 집중하세요.'},
+  { name:'랫풀다운',cat:'compound',icon:'🏋️',diff:2,primary:['광배근'],secondary:['이두근','후면 삼각근'],
+    effects:[['📐','등 넓이 발달'],['🏋️','풀업 전 단계 훈련'],['💎','V자 체형 만들기']],
+    steps:['머신에 앉아 무릎 패드로 허벅지를 고정하고 넓은 오버그립으로 바를 잡는다.','상체를 약간 뒤로 기울이고 가슴을 편다.','팔꿈치를 아래·뒤로 당기며 쇄골 위로 바를 내린다.','광배근이 완전히 수축될 때 1초 정지한다.','천천히 팔을 펴며 시작 자세로 돌아간다.'],
+    sets:[['근력 강화','s','4세트','6~8회','2분',''],['근비대','h','4세트','10~12회','90초',''],['근지구력','e','3세트','15~20회','60초','언더그립 변형 병행']],
+    tip:'바를 목 뒤로 당기면 경추에 부담이 됩니다. 반드시 가슴 앞으로 당기세요.'},
+  { name:'케이블로우',cat:'compound',icon:'🏋️',diff:2,primary:['광배근','승모근 중부'],secondary:['후면 삼각근','이두근'],
+    effects:[['🎯','등 두께·중부 등 강화'],['📐','자세 교정'],['⚡','지속적 긴장감 제공']],
+    steps:['케이블 머신 발판에 발을 대고 무릎을 약간 구부려 앉는다.','상체를 곧게 세우고 핸들을 양손으로 잡는다.','팔꿈치를 뒤로 당기며 핸들을 배꼽 방향으로 끌어당긴다.','견갑골을 조이며 최대 수축 지점에서 1초 정지한다.','천천히 팔을 펴며 견갑골이 완전히 이완되도록 내린다.'],
+    sets:[['근력 강화','s','4세트','6~8회','90초',''],['근비대','h','4세트','10~12회','75초',''],['근지구력','e','3세트','15~20회','45초','']],
+    tip:'상체를 앞뒤로 흔들지 말고 등 근육의 수축·이완에만 집중하세요.'},
+  { name:'덤벨프레스',cat:'compound',icon:'🏋️',diff:2,primary:['대흉근'],secondary:['삼두근','전면 삼각근'],
+    effects:[['⚖️','좌우 균형 흉근 발달'],['📏','가동범위 극대화'],['🦴','관절 안정화 근육 강화']],
+    steps:['덤벨을 양손에 들고 벤치에 누운다.','덤벨을 가슴 옆 어깨 높이에 위치, 팔꿈치 약 90도.','흉근을 수축하며 덤벨을 위로 밀어올린다.','양 덤벨이 위쪽에서 서로 가까워지도록 움직인다.','천천히 내리며 가슴 근육의 스트레칭을 느낀다.'],
+    sets:[['근력 강화','s','4세트','6~8회','2분',''],['근비대','h','4세트','10~12회','90초',''],['근지구력','e','3세트','15~20회','60초','']],
+    tip:'바벨보다 안정성이 낮으므로 처음엔 가벼운 중량부터 시작하세요.'},
+  /* 고립운동 */
+  { name:'바이셉컬',cat:'isolation',icon:'💪',diff:1,primary:['이두근 장두·단두'],secondary:['전완근'],
+    effects:[['💪','팔뚝 앞쪽 볼륨 증가'],['🎯','이두근 피크 강화'],['🔗','당기기 운동 보완']],
+    steps:['바벨 또는 덤벨을 언더그립으로 잡고 팔을 몸통 옆에 늘어뜨린다.','팔꿈치를 고정하고 무게를 어깨 방향으로 들어올린다.','이두근이 완전히 수축되면 정점에서 1초 정지한다.','천천히(3~4초) 내리며 이두근 이완을 느낀다.','팔꿈치가 완전히 펴질 때까지 내린 후 반복한다.'],
+    sets:[['근력 강화','s','4세트','5~7회','2분','EZ바 추천'],['근비대','h','3세트','10~12회','60초','피크 수축 집중'],['근지구력','e','3세트','15~20회','30초','드롭셋 효과적']],
+    tip:'팔꿈치가 앞뒤로 움직이면 이두 자극이 줄어듭니다. 팔꿈치를 몸통 옆에 고정하세요.'},
+  { name:'해머컬',cat:'isolation',icon:'💪',diff:1,primary:['상완근','이두근'],secondary:['전완근'],
+    effects:[['💪','팔뚝 두께 증가'],['✊','전완근 강화'],['🛡️','손목 부담 경감']],
+    steps:['덤벨을 세로로(중립 그립) 잡고 양 옆에 늘어뜨린다.','엄지손가락이 위를 향하도록 유지하며 팔꿈치를 구부린다.','덤벨이 어깨 높이에 올 때까지 들어올린다.','1초 수축 후 천천히 내린다.','번갈아 또는 동시에 실시할 수 있다.'],
+    sets:[['근력 강화','s','4세트','6~8회','90초',''],['근비대','h','3세트','10~12회','60초','교대 수행 시 집중도 향상'],['근지구력','e','3세트','15~20회','30초','']],
+    tip:'바이셉컬보다 상완근·전완근 자극이 강해 팔뚝 두께를 채우는 데 효과적입니다.'},
+  { name:'트라이셉푸쉬다운',cat:'isolation',icon:'💪',diff:1,primary:['삼두근 외측두·내측두'],secondary:[],
+    effects:[['💪','팔뚝 뒤쪽 발달'],['💎','삼두 근육 선명도 향상'],['🔧','벤치프레스 보완']],
+    steps:['케이블 머신 높은 위치에 바 또는 로프 핸들을 연결한다.','양손으로 핸들을 잡고 팔꿈치를 몸통에 고정한다.','팔꿈치를 기준으로 팔뚝을 아래로 밀어 완전히 편다.','삼두근 최대 수축 시 1초 정지한다.','천천히 시작 자세로 돌아와 반복한다.'],
+    sets:[['근력 강화','s','4세트','6~8회','90초',''],['근비대','h','3세트','10~15회','60초','로프 변형으로 외측두 강조'],['근지구력','e','3세트','20회','30초','드롭셋 추천']],
+    tip:'팔꿈치가 앞으로 나오면 삼두 자극이 떨어집니다. 팔꿈치를 옆구리에 고정하세요.'},
+  { name:'스컬크러셔',cat:'isolation',icon:'💪',diff:3,primary:['삼두근 장두'],secondary:['삼두근 내측두'],
+    effects:[['🎯','삼두 장두 집중 발달'],['💪','팔 전체 볼륨 증가'],['⬆️','오버헤드 근력 강화']],
+    steps:['바벨 또는 EZ바를 들고 벤치에 누운다.','팔을 머리 위로 수직으로 들어올린다.','팔꿈치를 고정하고 바를 이마 방향으로 천천히 내린다.','삼두근 스트레칭을 느끼며 완전히 내린다.','삼두근을 수축하며 팔꿈치를 다시 펴 시작 자세로 돌아온다.'],
+    sets:[['근력 강화','s','4세트','6~8회','2분',''],['근비대','h','3세트','10~12회','90초','EZ바 사용 시 손목 부담 경감'],['근지구력','e','3세트','15회','60초','']],
+    tip:'팔꿈치가 바깥으로 벌어지면 자극이 분산됩니다. 팔꿈치를 모은 채 수행하세요.'},
+  { name:'레그익스텐션',cat:'isolation',icon:'💪',diff:1,primary:['대퇴사두근'],secondary:[],
+    effects:[['🎯','대퇴부 전면 집중 발달'],['🦴','무릎 안정화'],['🔧','스쿼트 보조']],
+    steps:['머신 시트에 앉아 발목 패드를 발목 앞쪽에 위치시킨다.','등받이에 등을 밀착하고 손잡이를 잡는다.','대퇴사두근을 수축하며 다리를 완전히 편다.','최대 수축 지점에서 1~2초 정지한다.','천천히 내리며 시작 자세로 돌아간다.'],
+    sets:[['근력 강화','s','4세트','8~10회','90초',''],['근비대','h','4세트','12~15회','60초','이심성 집중 추천'],['근지구력','e','3세트','20~25회','30초','드롭셋 효과적']],
+    tip:'무릎 통증이 있다면 완전한 가동범위 대신 부분 범위(60~90도)로 수행하세요.'},
+  { name:'레그컬',cat:'isolation',icon:'💪',diff:1,primary:['햄스트링'],secondary:['비복근'],
+    effects:[['🎯','대퇴부 후면 집중 발달'],['🦴','무릎 굴곡 근력 강화'],['🛡️','햄스트링 부상 예방']],
+    steps:['머신에 엎드려 발목 패드를 발뒤꿈치 위에 위치시킨다.','복부를 머신에 밀착하고 손잡이를 잡는다.','햄스트링을 수축하며 발뒤꿈치를 엉덩이 방향으로 당긴다.','최대 수축 지점에서 1초 정지한다.','천천히 다리를 펴며 시작 자세로 돌아간다.'],
+    sets:[['근력 강화','s','4세트','8~10회','90초',''],['근비대','h','4세트','12~15회','60초',''],['근지구력','e','3세트','20회','30초','']],
+    tip:'엉덩이가 들리면 햄스트링보다 둔근이 주도합니다. 복부를 머신에 밀착하세요.'},
+  { name:'사이드레터럴레이즈',cat:'isolation',icon:'💪',diff:2,primary:['삼각근 측면'],secondary:['승모근 상부'],
+    effects:[['📐','어깨 넓이 발달'],['💎','V라인 체형 형성'],['🎯','어깨 볼륨 향상']],
+    steps:['덤벨을 양손에 들고 몸통 옆에 위치시킨다.','팔꿈치를 약 15~20도 구부린 채 유지한다.','소지손가락 쪽이 위를 향하도록 약간 기울이며 팔을 옆으로 들어올린다.','어깨 높이(수평)까지 올리고 1초 정지한다.','천천히 내리며 반복한다.'],
+    sets:[['근력 강화','s','4세트','8~10회','90초','케이블 변형 추천'],['근비대','h','4세트','12~15회','60초','이심성 3초 집중'],['근지구력','e','3세트','20회','30초','드롭셋 효과적']],
+    tip:'너무 높이 들면 승모근이 개입됩니다. 어깨 높이에서 멈추는 것이 포인트입니다.'},
+  { name:'프론트레이즈',cat:'isolation',icon:'💪',diff:2,primary:['삼각근 전면'],secondary:['상부 대흉근'],
+    effects:[['🎯','어깨 앞쪽 발달'],['🔧','벤치프레스·OHP 보완']],
+    steps:['덤벨 또는 바를 양손에 들고 허벅지 앞에 위치시킨다.','팔꿈치를 살짝 구부린 채 팔을 앞으로 들어올린다.','어깨 높이까지 올리고 1초 정지한다.','천천히 내리며 반복한다.','번갈아 또는 동시에 수행할 수 있다.'],
+    sets:[['근력 강화','s','3세트','8~10회','90초',''],['근비대','h','3세트','12~15회','60초',''],['근지구력','e','3세트','15~20회','30초','']],
+    tip:'전면 삼각근은 벤치프레스 등에서 이미 많이 자극받으므로 과도한 볼륨은 피하세요.'},
+  { name:'케이블크로스오버',cat:'isolation',icon:'💪',diff:2,primary:['대흉근 내측'],secondary:['대흉근 전체'],
+    effects:[['💎','흉근 선명도·분리도 향상'],['🎯','흉근 내측 선 강화'],['⚡','지속적 긴장감']],
+    steps:['케이블 머신 양쪽 높은 위치에 핸들을 연결하고 사이에 선다.','양손으로 핸들을 잡고 한 발 내딛어 상체를 약간 기울인다.','팔꿈치를 약간 구부린 채 가슴 앞으로 호를 그리며 당긴다.','양손이 몸 중앙에서 교차할 때 흉근을 최대 수축한다.','천천히 원위치로 돌아가며 가슴이 스트레칭되는 것을 느낀다.'],
+    sets:[['근력 강화','s','4세트','8~10회','90초',''],['근비대','h','4세트','12~15회','60초','핸들 높이로 자극 조절'],['근지구력','e','3세트','20회','30초','드롭셋 효과적']],
+    tip:'핸들 높이를 조절하면 상·중·하부 흉근 자극을 달리할 수 있습니다.'},
+  { name:'힙쓰러스트',cat:'isolation',icon:'💪',diff:2,primary:['대둔근'],secondary:['중둔근','햄스트링'],
+    effects:[['🎯','둔근 집중 발달'],['✨','힙업 효과'],['💪','고관절 신전 근력 강화']],
+    steps:['벤치 가장자리에 등 상부를 기대고 바벨을 골반 위에 올린다.','발을 어깨너비로 벌리고 무릎을 약 90도로 구부린다.','둔근을 강하게 수축하며 골반을 위로 밀어올린다.','몸통이 바닥과 평행이 될 때 1~2초 정지한다.','천천히 골반을 내리며 반복한다.'],
+    sets:[['근력 강화','s','4세트','6~8회','2분',''],['근비대','h','4세트','10~15회','90초','정점 수축 2초 필수'],['근지구력','e','3세트','20회','60초','밴드 힙쓰러스트 변형 가능']],
+    tip:'발뒤꿈치로 바닥을 밀고 발끝을 약간 바깥으로 향하면 둔근 자극이 극대화됩니다.'},
+  { name:'시티드카프레이즈',cat:'isolation',icon:'💪',diff:1,primary:['가자미근'],secondary:['비복근'],
+    effects:[['💪','종아리 하부 발달'],['🦶','발목 안정성 향상']],
+    steps:['머신 또는 의자에 앉아 무릎 위에 중량을 올린다.','발 앞쪽을 발판 끝에 올리고 발뒤꿈치를 바닥 쪽으로 내린다.','발뒤꿈치를 최대한 높이 들어올리며 수축한다.','정점에서 1~2초 유지한다.','발뒤꿈치를 천천히 완전히 내리며 스트레칭한다.'],
+    sets:[['근력 강화','s','4세트','8~10회','90초',''],['근비대','h','4세트','15~20회','60초','이심성 3초 집중'],['근지구력','e','3세트','25~30회','30초','']],
+    tip:'서서 하는 카프레이즈(비복근 중심)와 병행하면 종아리 전체를 균형 있게 발달시킵니다.'},
+  { name:'페이스풀',cat:'isolation',icon:'💪',diff:2,primary:['후면 삼각근','회전근개'],secondary:['승모근 중·하부'],
+    effects:[['🛡️','어깨 건강 유지'],['📐','라운드숄더 교정'],['✅','자세 개선']],
+    steps:['케이블 머신을 얼굴 높이로 설정하고 로프 핸들을 연결한다.','양손으로 로프를 잡고 한 발 앞에 서거나 바닥에 앉는다.','팔꿈치를 어깨 높이로 높게 들며 로프를 얼굴 방향으로 당긴다.','후면 삼각근이 완전히 수축될 때 1초 정지한다.','천천히 시작 자세로 돌아가며 반복한다.'],
+    sets:[['근력 강화','s','4세트','10~12회','60초',''],['근비대','h','4세트','15회','45초',''],['근지구력','e','3세트','20회','30초','매 운동 세션 포함 권장']],
+    tip:'어깨 건강을 위해 매 운동 세션에 포함하길 권장합니다. 가벼운 중량으로 고반복이 효과적입니다.'},
+  /* 맨몸운동 */
+  { name:'풀업',cat:'bodyweight',icon:'🤸',diff:4,primary:['광배근'],secondary:['이두근','후면 삼각근'],
+    effects:[['📐','등 넓이·두께 발달'],['✊','매달리기 근력 향상'],['💎','V자 체형 완성']],
+    steps:['철봉을 어깨너비보다 약간 넓게 오버그립(손등이 앞)으로 잡는다.','팔을 완전히 펴고 매달린 채 코어를 수축한다.','팔꿈치를 아래·뒤로 당기며 턱이 철봉 위로 올라올 때까지 당긴다.','정점에서 1초 정지 후 천천히 팔을 펴며 내려간다.','완전히 팔이 펴지면 다시 반복한다.'],
+    sets:[['근력 강화','s','5세트','최대 반복','3분','가중 풀업으로 발전'],['근비대','h','4세트','8~12회','90초','밴드 보조로 반복 수 조절'],['근지구력','e','3세트','최대 반복','60초','고반복 도전']],
+    tip:'처음에는 네거티브(천천히 내리기)나 밴드 보조로 시작하세요.'},
+  { name:'친업',cat:'bodyweight',icon:'🤸',diff:3,primary:['이두근','광배근'],secondary:['전완근'],
+    effects:[['💪','이두근 강화'],['📐','등 발달'],['📈','풀업 입문 단계']],
+    steps:['철봉을 어깨너비로 언더그립(손바닥이 앞)으로 잡는다.','팔을 완전히 펴고 매달린다.','이두근을 수축하며 턱이 철봉 위로 올라올 때까지 당긴다.','정점에서 잠시 정지 후 천천히 내려간다.','완전히 팔이 펴지면 반복한다.'],
+    sets:[['근력 강화','s','5세트','최대 반복','2분',''],['근비대','h','4세트','8~12회','90초',''],['근지구력','e','3세트','최대 반복','60초','']],
+    tip:'풀업보다 이두근 자극이 강하고 난이도가 낮아 초보자에게 먼저 추천됩니다.'},
+  { name:'딥스',cat:'bodyweight',icon:'🤸',diff:3,primary:['삼두근','대흉근'],secondary:['전면 삼각근'],
+    effects:[['💪','상체 밀기 근력 강화'],['🎯','삼두·흉근 발달'],['⬆️','고강도 맨몸 운동']],
+    steps:['평행봉을 양손으로 잡고 팔을 펴 몸을 지지한다.','다리를 교차하거나 앞으로 내밀어 안정된 자세를 잡는다.','천천히 팔꿈치를 구부리며 몸을 내린다(90도 이상 구부리지 않는다).','삼두근을 수축하며 폭발적으로 밀어올린다.','팔꿈치를 완전히 펴며 시작 자세로 돌아간다.'],
+    sets:[['근력 강화','s','5세트','최대 반복','3분','가중 딥스 벨트 활용'],['근비대','h','4세트','10~15회','90초','밴드 보조로 반복 조절'],['근지구력','e','3세트','최대 반복','60초','']],
+    tip:'상체를 앞으로 기울이면 흉근, 수직으로 유지하면 삼두근에 더 자극됩니다.'},
+  { name:'푸쉬업',cat:'bodyweight',icon:'🤸',diff:2,primary:['대흉근'],secondary:['삼두근','코어'],
+    effects:[['✅','기초 상체 근력 향상'],['📍','장소 무관 수행 가능'],['🔗','코어 연계 강화']],
+    steps:['손을 어깨너비보다 약간 넓게 짚고 발끝을 세워 플랭크 자세를 취한다.','머리부터 발까지 일직선이 되도록 유지한다.','팔꿈치를 구부리며 가슴이 바닥에 거의 닿을 때까지 내린다.','흉근을 수축하며 폭발적으로 밀어올린다.','팔꿈치를 완전히 펴며 반복한다.'],
+    sets:[['근력 강화','s','5세트','최대 반복','2분','발 높이 올리면 상부 흉근 강조'],['근비대','h','4세트','15~20회','60초','체중 조끼 활용 가능'],['근지구력','e','3세트','최대 반복','30초','타이머 푸쉬업 도전']],
+    tip:'무릎을 바닥에 대고 수행하면 부하가 줄어 초보자에게 적합합니다.'},
+  { name:'파이크푸쉬업',cat:'bodyweight',icon:'🤸',diff:3,primary:['삼각근 전면·측면'],secondary:['삼두근'],
+    effects:[['🎯','어깨 근력 강화'],['🏆','핸드스탠드 준비 단계'],['🔧','오버헤드프레스 대체']],
+    steps:['손을 어깨너비로 짚고 엉덩이를 위로 높이 들어 역V자 자세를 만든다.','발을 손과 가까이 위치시킬수록 난이도가 높아진다.','팔꿈치를 구부리며 머리를 바닥 방향으로 내린다.','머리가 손 사이 바닥에 거의 닿으면 멈춘다.','삼각근을 수축하며 밀어올려 시작 자세로 돌아간다.'],
+    sets:[['근력 강화','s','4세트','6~10회','2분',''],['근비대','h','4세트','10~15회','90초','발을 박스 위에 올리면 난이도 증가'],['근지구력','e','3세트','최대 반복','60초','']],
+    tip:'발을 박스 위에 올리면 핸드스탠드 푸쉬업에 가까운 자극을 줄 수 있습니다.'},
+  { name:'링딥스',cat:'bodyweight',icon:'🤸',diff:5,primary:['삼두근','대흉근'],secondary:['코어 안정화 근육'],
+    effects:[['⚡','안정화 근육 강화'],['🎯','딥스보다 높은 자극'],['🏆','체조 기초 근력']],
+    steps:['체조링을 잡고 팔을 펴 몸을 지지한다.','링이 흔들리지 않도록 코어·둔근을 단단히 조인다.','팔꿈치를 구부리며 천천히 몸을 내린다.','링이 겨드랑이 옆에 올 때까지 내린 후 멈춘다.','삼두근을 수축하며 밀어올리고, 정점에서 링을 내측으로 잠근다.'],
+    sets:[['근력 강화','s','5세트','최대 반복','3분',''],['근비대','h','4세트','8~12회','2분',''],['근지구력','e','3세트','최대 반복','90초','']],
+    tip:'일반 딥스 15회 이상 가능할 때 도전하세요. 초보자는 발을 바닥에 댄 채 시작하세요.'},
+  { name:'머슬업',cat:'bodyweight',icon:'🤸',diff:5,primary:['광배근','이두근','삼두근'],secondary:['전면 삼각근'],
+    effects:[['🏆','풀업+딥스 복합 운동'],['⚡','폭발적 당기기 근력'],['💪','상체 종합 발달']],
+    steps:['철봉을 오버그립으로 잡고 매달린다.','몸을 약간 흔들어 반동을 만들고 폭발적으로 철봉 위로 당겨 올라간다.','팔꿈치가 철봉 위로 올라오면 상체를 앞으로 기울여 딥스 자세를 만든다.','삼두근을 수축하며 팔꿈치를 펴 몸을 위로 밀어올린다.','천천히 내려와 시작 자세로 돌아간다.'],
+    sets:[['근력 강화','s','5세트','최대 반복','5분',''],['근비대','h','4세트','5~8회','3분',''],['근지구력','e','3세트','최대 반복','2분','']],
+    tip:'풀업 10회 이상, 딥스 15회 이상 가능할 때 도전하세요.'},
+  { name:'레그레이즈',cat:'bodyweight',icon:'🤸',diff:3,primary:['하복부','장요근'],secondary:['복직근'],
+    effects:[['🎯','하복부 집중 강화'],['🏗️','코어 안정성'],['🛡️','척추 보호']],
+    steps:['철봉에 오버그립으로 매달린다.','코어를 수축하고 반동 없이 다리를 앞으로 들어올린다.','다리를 수평(또는 수직)이 될 때까지 올린다.','하복부를 수축한 채 1초 정지한다.','천천히 내리며 반복한다.'],
+    sets:[['근력 강화','s','4세트','10~12회','90초',''],['근비대','h','4세트','15회','60초',''],['근지구력','e','3세트','최대 반복','45초','']],
+    tip:'무릎을 구부리고 올리는 행잉니레이즈로 먼저 연습한 후 도전하세요.'},
+  { name:'행잉니레이즈',cat:'bodyweight',icon:'🤸',diff:2,primary:['복근 하부','장요근'],secondary:['전완근'],
+    effects:[['💪','복근 발달'],['📈','레그레이즈 진입 단계'],['🏗️','코어 강화']],
+    steps:['철봉에 어깨너비로 매달린다.','코어를 수축하고 무릎을 구부려 가슴 쪽으로 끌어올린다.','복근이 수축되는 것을 느끼며 올라온다.','정점에서 1초 정지한다.','천천히 내리며 발이 흔들리지 않도록 제어한다.'],
+    sets:[['근력 강화','s','4세트','10~15회','60초',''],['근비대','h','4세트','15~20회','45초',''],['근지구력','e','3세트','최대 반복','30초','']],
+    tip:'몸이 흔들리면 코어 힘이 아닌 반동을 사용하는 것입니다. 천천히 제어하세요.'},
+  { name:'버피',cat:'bodyweight',icon:'🤸',diff:3,primary:['전신','심폐계'],secondary:['코어','하체'],
+    effects:[['🔥','심폐 지구력 향상'],['⚡','전신 유산소 운동'],['💸','칼로리 소모 극대화']],
+    steps:['서 있는 자세에서 시작한다.','양손을 바닥에 짚으며 쪼그려 앉는다.','양발을 뒤로 점프해 플랭크 자세를 만든다.','푸쉬업 1회를 수행한다(선택).','다시 양발을 앞으로 당기고 점프하며 손을 머리 위로 올린다.'],
+    sets:[['근력 강화','s','5세트','10회','2분','속도보다 자세 중심'],['근비대','h','4세트','15회','90초',''],['근지구력','e','3세트','60초 최대','30초','HIIT 회로 훈련 추천']],
+    tip:'점프 없이 천천히 서는 no-jump 버피로 강도를 낮출 수 있습니다.'},
+  { name:'플랭크',cat:'bodyweight',icon:'🤸',diff:2,primary:['코어(복횡근·복직근)'],secondary:['척추기립근','어깨'],
+    effects:[['🏗️','코어 안정성 강화'],['🛡️','허리 통증 예방'],['📐','자세 개선']],
+    steps:['팔꿈치를 어깨 아래 바닥에 짚고 발끝을 세운다.','머리부터 발까지 완전한 일직선을 만든다.','복부·둔근을 단단히 수축하고 호흡을 유지한다.','엉덩이가 처지거나 하늘로 솟지 않도록 일직선을 유지한다.','목표 시간(30초~2분) 동안 자세를 유지한다.'],
+    sets:[['근력 강화','s','4세트','60~90초','60초',''],['근비대','h','4세트','45~60초','45초','사이드 플랭크 병행'],['근지구력','e','3세트','최대 시간','30초','']],
+    tip:'자세가 흐트러지기 시작하면 시간을 늘리는 것보다 자세 유지가 우선입니다.'},
+  { name:'마운틴클라이머',cat:'bodyweight',icon:'🤸',diff:2,primary:['코어','대퇴굴근'],secondary:['어깨 안정화 근육'],
+    effects:[['🔥','유산소 + 코어 동시 자극'],['💓','심박수 향상'],['⚡','민첩성 향상']],
+    steps:['양손을 어깨 아래 바닥에 짚고 플랭크 자세를 취한다.','코어를 수축하고 오른쪽 무릎을 가슴 쪽으로 빠르게 당긴다.','오른발을 원위치로 보내는 동시에 왼쪽 무릎을 당긴다.','달리는 것처럼 좌우 무릎을 번갈아 빠르게 수행한다.','허리가 꺾이지 않도록 코어를 계속 수축 유지한다.'],
+    sets:[['근력 강화','s','4세트','30초','60초',''],['근비대','h','4세트','45초','45초',''],['근지구력','e','3세트','60초','30초','HIIT 회로 훈련 추천']],
+    tip:'속도보다 자세가 우선입니다. 엉덩이가 들리면 속도를 줄이세요.'},
+  { name:'스쿼트(맨몸)',cat:'bodyweight',icon:'🤸',diff:1,primary:['대퇴사두근','둔근'],secondary:['햄스트링'],
+    effects:[['🦵','하체 근력 입문'],['📍','도구 없이 가능'],['🔧','중량 스쿼트 준비']],
+    steps:['발을 어깨너비로 벌리고 발끝을 바깥으로 살짝 향하게 선다.','양팔을 앞으로 뻗어 균형을 잡는다.','가슴을 펴고 무릎이 발끝 방향을 따르도록 천천히 앉는다.','허벅지가 바닥과 평행이 될 때까지 내려간다.','발뒤꿈치로 바닥을 밀며 일어선다.'],
+    sets:[['근력 강화','s','4세트','15~20회','60초','점프스쿼트로 강도 증가'],['근비대','h','4세트','20~30회','60초',''],['근지구력','e','3세트','50회 이상','30초','타바타 스쿼트 도전']],
+    tip:'중량 스쿼트 전 반드시 올바른 맨몸 스쿼트 자세를 먼저 완성하세요.'},
+  { name:'런지',cat:'bodyweight',icon:'🤸',diff:2,primary:['대퇴사두근','둔근'],secondary:['햄스트링','코어'],
+    effects:[['⚖️','좌우 균형 하체 발달'],['🎯','기능적 근력 향상'],['🦵','하체 협응력 강화']],
+    steps:['발을 모은 채 곧게 선다.','한 발을 앞으로 크게 내딛는다.','뒷무릎이 거의 바닥에 닿을 때까지 천천히 내린다.','앞발의 발뒤꿈치로 바닥을 밀며 원래 자리로 돌아온다.','반대쪽 발로 반복한다.'],
+    sets:[['근력 강화','s','4세트','10회(각)','90초','덤벨 런지로 부하 증가'],['근비대','h','4세트','12~15회(각)','60초','워킹런지 변형 효과적'],['근지구력','e','3세트','20회(각)','30초','']],
+    tip:'앞 무릎이 발끝보다 앞으로 나오지 않도록 보폭을 적절히 유지하세요.'},
+];
+
+const CAT_LABEL = { compound:'복합운동', isolation:'고립운동', bodyweight:'맨몸운동' };
+let guideCat = 'all';
+let guideSearch = '';
+
+function renderGuideList() {
+  const items = GUIDE_DATA.filter(ex => {
+    const catOk = guideCat === 'all' || ex.cat === guideCat;
+    if (!catOk) return false;
+    if (!guideSearch) return true;
+    const q = guideSearch.toLowerCase();
+    return ex.name.toLowerCase().includes(q)
+      || ex.primary.some(t => t.toLowerCase().includes(q))
+      || ex.secondary.some(t => t.toLowerCase().includes(q));
+  });
+
+  const listEl = document.getElementById('guide-ex-list');
+  if (!listEl) return;
+  listEl.innerHTML = items.length ? items.map(ex => {
+    const idx = GUIDE_DATA.indexOf(ex);
+    const diffStars = '★'.repeat(ex.diff) + '☆'.repeat(5 - ex.diff);
+    return `<div class="guide-ex-item" onclick="guideSelectEx(${idx})">
+      <div class="guide-ex-icon">${ex.icon}</div>
+      <div class="guide-ex-info">
+        <div class="guide-ex-name">${ex.name}</div>
+        <div class="guide-ex-sub"><span class="guide-badge g-badge-${ex.cat}">${CAT_LABEL[ex.cat]}</span> &nbsp; ${ex.primary.join(' · ')}</div>
+      </div>
+      <div class="guide-ex-arrow">›</div>
+    </div>`;
+  }).join('') : `<div class="empty-state"><div class="big">🔍</div><p>검색 결과가 없습니다.</p></div>`;
+
+  // 카테고리 필터 버튼 이벤트 (가이드 탭 활성화될 때마다 재등록)
+  document.querySelectorAll('[data-gcat]').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('[data-gcat]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      guideCat = btn.dataset.gcat;
+      renderGuideList();
+    };
+  });
+  const srch = document.getElementById('guide-search');
+  if (srch) srch.oninput = e => { guideSearch = e.target.value.trim(); renderGuideList(); };
+}
+
+function guideSelectEx(idx) {
+  const ex = GUIDE_DATA[idx];
+  document.getElementById('guide-list-view').style.display = 'none';
+  document.getElementById('guide-detail-view').style.display = 'block';
+
+  const diffStarsFilled = '<span class="g-star-on">' + '★'.repeat(ex.diff) + '</span>';
+  const diffStarsEmpty  = '<span class="g-star-off">' + '☆'.repeat(5 - ex.diff) + '</span>';
+  const diffLabel = ['','입문','초급','중급','고급','전문가'][ex.diff];
+
+  document.getElementById('guide-detail-content').innerHTML = `
+    <div class="guide-detail-header">
+      <div class="guide-detail-icon ${ex.cat}">${ex.icon}</div>
+      <div>
+        <div class="guide-detail-title">${ex.name}</div>
+        <div class="guide-detail-meta">
+          <span class="guide-badge g-badge-${ex.cat}">${CAT_LABEL[ex.cat]}</span>
+          <span class="guide-diff">${diffStarsFilled}${diffStarsEmpty} ${diffLabel}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-sec-title">🎯 타겟 부위</div>
+      <div class="g-chips">
+        ${ex.primary.map(t => `<span class="g-chip primary">⭐ ${t}</span>`).join('')}
+        ${ex.secondary.map(t => `<span class="g-chip secondary">${t}</span>`).join('')}
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-sec-title">✨ 주요 효과</div>
+      <div class="g-effects">
+        ${ex.effects.map(([icon, text]) => `<div class="g-effect"><span class="g-effect-icon">${icon}</span><span>${text}</span></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-sec-title">📋 운동 방법</div>
+      <div class="g-steps">
+        ${ex.steps.map((s, i) => `<div class="g-step">
+          <div class="g-step-num ${ex.cat}">${i+1}</div>
+          <div class="g-step-text">${s}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-sec-title">📊 추천 세트 & 반복 수</div>
+      <table class="g-sets-table">
+        <thead><tr><th>목표</th><th>세트</th><th>반복 수</th><th>휴식</th><th>포인트</th></tr></thead>
+        <tbody>
+          ${ex.sets.map(([goal, gc, sets, reps, rest, note]) => `<tr>
+            <td><span class="g-goal g-goal-${gc}">${goal}</span></td>
+            <td><strong>${sets}</strong></td>
+            <td>${reps}</td>
+            <td>${rest}</td>
+            <td style="color:var(--muted);font-size:.76rem">${note}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    ${ex.tip ? `<div class="guide-section">
+      <div class="guide-sec-title">💡 팁 & 주의사항</div>
+      <div class="g-tip">💡 <span>${ex.tip}</span></div>
+    </div>` : ''}
+  `;
+}
+
+function guideShowList() {
+  document.getElementById('guide-list-view').style.display = 'block';
+  document.getElementById('guide-detail-view').style.display = 'none';
 }
 
 document.addEventListener('DOMContentLoaded', init);
