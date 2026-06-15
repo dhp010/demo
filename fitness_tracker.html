@@ -1212,7 +1212,12 @@ function calc1RM(wkg, reps, exType) {
 }
 
 // ── 500kcal 팝업 ──────────────────────────────────────────
-function todayStr() { return new Date().toISOString().slice(0,10); }
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
 
 function checkCalorieAchievement(cal) {
   if (cal < 500) return;
@@ -1290,7 +1295,7 @@ function filterRecords() {
   const todayS = todayStr();
   const monday = new Date(now);
   monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-  const mondayS = monday.toISOString().slice(0,10);
+  const mondayS = monday.getFullYear() + '-' + String(monday.getMonth()+1).padStart(2,'0') + '-' + String(monday.getDate()).padStart(2,'0');
   const firstDay = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
 
   function inPeriod(d) {
@@ -1379,7 +1384,7 @@ function renderCalChart() {
   const today = new Date();
   for (let i = 29; i >= 0; i--) {
     const d = new Date(today); d.setDate(today.getDate() - i);
-    last30.push(d.toISOString().slice(0,10));
+    last30.push(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'));
   }
 
   const calByDate = {};
