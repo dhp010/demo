@@ -170,7 +170,7 @@
     /* ── 탭 ── */
     .tab-nav {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(6, 1fr);
       gap: 4px;
       background: var(--card);
       border: 1px solid var(--border);
@@ -660,6 +660,49 @@
     .g-goal-e { background: rgba(22,163,74,.1); color: #16a34a; }
     .g-tip { background: linear-gradient(135deg,#fffbeb,#fef3c7); border: 1px solid #fcd34d; border-radius: 10px; padding: 12px 14px; font-size: 0.82rem; color: #78350f; display: flex; gap: 8px; line-height: 1.55; }
 
+    /* ── 루틴 탭 ── */
+    .rt-selector { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(124,58,237,.07); }
+    .rt-label { font-size: 0.68rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .rt-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .rt-gen-btn { width: 100%; padding: 13px; background: linear-gradient(135deg,#7c3aed,#4f46e5); border: none; border-radius: 10px; color: #fff; font-size: 0.95rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(124,58,237,.3); transition: transform .1s, box-shadow .2s; margin-top: 6px; }
+    .rt-gen-btn:hover { box-shadow: 0 6px 20px rgba(124,58,237,.45); }
+    .rt-gen-btn:active { transform: scale(.98); }
+    .rt-result { display: none; }
+    .rt-result.show { display: block; }
+    .rt-summary { background: linear-gradient(135deg,rgba(124,58,237,.09),rgba(99,102,241,.05)); border: 1px solid rgba(124,58,237,.22); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+    .rt-summary-title { font-size: 0.82rem; font-weight: 800; margin-bottom: 10px; }
+    .rt-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+    .rt-stat { text-align: center; min-width: 55px; }
+    .rt-stat-val { font-size: 1.25rem; font-weight: 800; color: var(--primary); }
+    .rt-stat-lbl { font-size: 0.63rem; color: var(--muted); }
+    .rt-tip { background: linear-gradient(135deg,#fffbeb,#fef3c7); border: 1px solid #fcd34d; border-radius: 10px; padding: 11px 14px; font-size: 0.8rem; color: #78350f; display: flex; gap: 7px; line-height: 1.55; margin-bottom: 12px; }
+    .rt-day-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(124,58,237,.06); }
+    .rt-day-header { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+    .rt-day-badge { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg,#7c3aed,#6366f1); color: #fff; font-size: 0.8rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .rt-day-badge.rest { background: var(--bg); color: var(--muted); font-size: 1rem; }
+    .rt-day-title { font-size: 0.88rem; font-weight: 700; }
+    .rt-day-sub { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+    .rt-rest-row { padding: 11px 14px; color: var(--muted); font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
+    .rt-ex-table { width: 100%; border-collapse: collapse; }
+    .rt-ex-table th { font-size: 0.63rem; font-weight: 700; color: var(--muted); padding: 5px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+    .rt-ex-table td { font-size: 0.8rem; padding: 7px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .rt-ex-table tr:last-child td { border-bottom: none; }
+    .rt-ex-table tr:hover td { background: var(--bg); }
+    .rt-ex-num { font-size: 0.68rem; font-weight: 700; color: var(--primary); }
+    .rt-ex-name { font-weight: 600; }
+    .rt-ex-note { font-size: 0.68rem; color: var(--muted); display: block; margin-top: 2px; }
+    .rt-month-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(124,58,237,.06); }
+    .rt-month-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .rt-month-week-title { font-size: 0.9rem; font-weight: 800; }
+    .rt-week-tag { font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
+    .wk-base   { background: rgba(124,58,237,.12); color: var(--primary); }
+    .wk-over   { background: rgba(37,99,235,.12);  color: #2563eb; }
+    .wk-peak   { background: rgba(220,38,38,.12);   color: #dc2626; }
+    .wk-deload { background: rgba(22,163,74,.12);   color: #16a34a; }
+    .rt-prog-list { display: flex; flex-direction: column; gap: 7px; }
+    .rt-prog-row { display: flex; align-items: flex-start; gap: 8px; font-size: 0.8rem; line-height: 1.45; }
+    .rt-prog-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+
     @media (max-width: 400px) {
       .form-row.three { grid-template-columns: 1fr 1fr; }
       .activity-grid { grid-template-columns: repeat(2, 1fr); }
@@ -730,6 +773,9 @@
     </button>
     <button class="tab-btn" data-tab="guide">
       <span class="tab-icon">📚</span>가이드
+    </button>
+    <button class="tab-btn" data-tab="routine">
+      <span class="tab-icon">📅</span>루틴
     </button>
   </nav>
 
@@ -927,6 +973,32 @@
         <div id="guide-detail-content"></div>
       </div>
     </div>
+  </section>
+
+  <!-- ── 루틴 탭 ── -->
+  <section class="tab-content" id="tab-routine">
+    <div class="rt-selector">
+      <div class="rt-label">⏱ 기간 선택</div>
+      <div class="rt-row" id="rt-period-row">
+        <button class="filter-btn active" data-rp="day">일단위</button>
+        <button class="filter-btn" data-rp="week">주단위</button>
+        <button class="filter-btn" data-rp="month">월단위</button>
+      </div>
+      <div class="rt-label">🎯 운동 목표</div>
+      <div class="rt-row" id="rt-goal-row">
+        <button class="filter-btn active" data-rg="hypertrophy">💪 근비대</button>
+        <button class="filter-btn" data-rg="strength">⚡ 근력</button>
+        <button class="filter-btn" data-rg="endurance">🏃 근지구력</button>
+      </div>
+      <div class="rt-label">🏋️ 운동 부위</div>
+      <div class="rt-row" id="rt-focus-row">
+        <button class="filter-btn active" data-rf="upper">상체</button>
+        <button class="filter-btn" data-rf="lower">하체</button>
+        <button class="filter-btn" data-rf="full">전신</button>
+      </div>
+      <button class="rt-gen-btn" onclick="generateRoutine()">✨ 루틴 생성하기</button>
+    </div>
+    <div class="rt-result" id="rt-result"></div>
   </section>
 
 </div>
@@ -1416,6 +1488,7 @@ function init() {
       document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
       if (btn.dataset.tab === 'stats') renderStats();
       if (btn.dataset.tab === 'guide') renderGuideList();
+      if (btn.dataset.tab === 'routine') initRoutineSelectors();
     });
   });
 
@@ -1834,6 +1907,558 @@ function guideSelectEx(idx) {
 function guideShowList() {
   document.getElementById('guide-list-view').style.display = 'block';
   document.getElementById('guide-detail-view').style.display = 'none';
+}
+
+// ── 루틴 생성기 ──────────────────────────────────────────────
+let rtPeriod = 'day';
+let rtGoal   = 'hypertrophy';
+let rtFocus  = 'upper';
+
+function E(name, sets, reps, rest, note) {
+  return { name, sets, reps, rest, note: note || '' };
+}
+function D(day, label, exs) {
+  return { day, label, rest: false, exercises: exs };
+}
+function R(day) {
+  return { day, label: '휴식', rest: true, exercises: [] };
+}
+
+const ROUTINE_PLANS = {
+  hypertrophy: {
+    upper: {
+      meta: { goal:'근비대', focus:'상체', tip:'세트 사이 90~120초 휴식. 마지막 세트는 실패 직전까지 수행하여 근육 성장 자극을 극대화하세요.' },
+      stats: { days:4, sets:26, totalReps:'8~12회', rest:'90~120초' },
+      day: [D('오늘의 운동','Push + Pull 상체', [
+        E('벤치프레스',4,'8~12회','90초','가슴 수평 주동'),
+        E('인클라인벤치프레스',4,'10~12회','90초','상부 가슴 집중'),
+        E('바벨로우',4,'8~12회','90초','등 두께 핵심'),
+        E('오버헤드프레스',3,'10~12회','90초','어깨 삼각근'),
+        E('랫풀다운',3,'10~12회','75초','광배근 너비'),
+        E('바이셉컬',3,'10~12회','60초','이두 고립'),
+        E('트라이셉푸쉬다운',3,'12~15회','60초','삼두 마무리'),
+      ])],
+      week: [
+        D('월','Push Day — 가슴·어깨·삼두',[
+          E('벤치프레스',4,'8~12회','90초','메인 리프트'),
+          E('인클라인벤치프레스',4,'10~12회','90초'),
+          E('오버헤드프레스',3,'10~12회','90초'),
+          E('딥스',3,'최대(8~12)','75초'),
+          E('사이드레터럴레이즈',4,'12~15회','45초'),
+          E('트라이셉푸쉬다운',3,'12~15회','60초'),
+        ]),
+        R('화'),
+        D('수','Pull Day — 등·이두',[
+          E('바벨로우',4,'8~12회','90초','등 두께'),
+          E('랫풀다운',4,'10~12회','90초','등 너비'),
+          E('케이블로우',3,'10~12회','75초'),
+          E('덤벨로우',3,'10~12회','75초'),
+          E('바이셉컬',3,'10~12회','60초'),
+          E('페이스풀',3,'15회','45초','후면 삼각·회전근개'),
+        ]),
+        R('목'),
+        D('금','Push Day 2 — 가슴·어깨',[
+          E('덤벨프레스',4,'10~12회','90초'),
+          E('케이블크로스오버',4,'12~15회','75초'),
+          E('오버헤드프레스',4,'10~12회','90초'),
+          E('프론트레이즈',3,'12~15회','45초'),
+          E('스컬크러셔',3,'10~12회','60초'),
+        ]),
+        D('토','Pull Day 2 — 등·이두',[
+          E('친업',4,'최대(6~10)','90초','풀업 대체 가능'),
+          E('랫풀다운',3,'12회','75초'),
+          E('케이블로우',3,'12회','75초'),
+          E('해머컬',3,'12~15회','60초'),
+          E('페이스풀',3,'15회','45초'),
+        ]),
+        R('일'),
+      ],
+    },
+    lower: {
+      meta: { goal:'근비대', focus:'하체', tip:'스쿼트·레그프레스는 깊이를 충분히 내려 대퇴사두와 둔근을 최대 스트레치하세요. 데드리프트는 허리를 펴고 복압을 유지하세요.' },
+      stats: { days:3, sets:23, totalReps:'8~15회', rest:'75~90초' },
+      day: [D('오늘의 운동','전면·후면 하체 통합',[
+        E('스쿼트',4,'8~12회','90초','하체 핵심 리프트'),
+        E('레그프레스',4,'10~15회','90초','대퇴사두 볼륨'),
+        E('레그익스텐션',3,'12~15회','60초','사두 고립'),
+        E('레그컬',3,'12~15회','60초','햄스트링 고립'),
+        E('힙쓰러스트',3,'10~15회','75초','둔근 집중'),
+        E('런지',3,'12회(각다리)','60초'),
+        E('시티드카프레이즈',4,'15~20회','45초','종아리'),
+      ])],
+      week: [
+        D('월','Quad Focus — 대퇴사두·전면',[
+          E('스쿼트',4,'8~12회','90초','주동 리프트'),
+          E('레그프레스',4,'10~15회','90초'),
+          E('레그익스텐션',3,'12~15회','60초'),
+          E('런지',3,'12회(각)','60초'),
+          E('시티드카프레이즈',3,'15~20회','45초'),
+        ]),
+        R('화'),
+        D('수','Hip & Ham Focus — 둔근·햄스트링',[
+          E('데드리프트',4,'8~10회','90초','후면 체인'),
+          E('힙쓰러스트',4,'10~15회','75초','둔근 메인'),
+          E('레그컬',3,'12~15회','60초'),
+          E('스쿼트(맨몸)',3,'20회','45초','마무리 펌핑'),
+          E('시티드카프레이즈',3,'15~20회','45초'),
+        ]),
+        R('목'),
+        D('금','Volume Day — 전체 하체',[
+          E('레그프레스',4,'12~15회','90초'),
+          E('레그익스텐션',3,'15회','60초'),
+          E('레그컬',3,'15회','60초'),
+          E('힙쓰러스트',3,'12~15회','75초'),
+          E('런지',3,'12회(각)','60초'),
+          E('시티드카프레이즈',4,'20회','45초'),
+        ]),
+        R('토'),
+        R('일'),
+      ],
+    },
+    full: {
+      meta: { goal:'근비대', focus:'전신', tip:'A/B/C 3분할 전신 루틴. 매 운동마다 복합운동 → 고립운동 순서로 진행하여 에너지 효율을 높이세요.' },
+      stats: { days:3, sets:21, totalReps:'8~12회', rest:'75~90초' },
+      day: [D('오늘의 운동','전신 균형 루틴',[
+        E('스쿼트',4,'8~12회','90초','하체 복합'),
+        E('벤치프레스',4,'8~12회','90초','상체 복합 A'),
+        E('바벨로우',4,'8~12회','90초','등 복합'),
+        E('오버헤드프레스',3,'10~12회','75초','어깨'),
+        E('레그컬',3,'12~15회','60초','햄스트링'),
+        E('바이셉컬',3,'10~12회','60초'),
+        E('트라이셉푸쉬다운',3,'12~15회','60초'),
+      ])],
+      week: [
+        D('월','Day A — 스쿼트 패턴',[
+          E('스쿼트',4,'8~12회','90초'),
+          E('벤치프레스',4,'8~12회','90초'),
+          E('바벨로우',3,'8~12회','90초'),
+          E('바이셉컬',3,'10~12회','60초'),
+          E('레그컬',3,'12~15회','60초'),
+        ]),
+        R('화'),
+        D('수','Day B — 힙 힌지 패턴',[
+          E('데드리프트',4,'6~10회','120초','핵심 리프트'),
+          E('인클라인벤치프레스',4,'10~12회','90초'),
+          E('랫풀다운',3,'10~12회','90초'),
+          E('오버헤드프레스',3,'10~12회','75초'),
+          E('힙쓰러스트',3,'10~15회','75초'),
+        ]),
+        R('목'),
+        D('금','Day C — 볼륨 데이',[
+          E('레그프레스',4,'12~15회','90초'),
+          E('덤벨프레스',4,'10~12회','90초'),
+          E('케이블로우',3,'10~12회','75초'),
+          E('런지',3,'12회(각)','60초'),
+          E('트라이셉푸쉬다운',3,'12~15회','60초'),
+          E('해머컬',3,'12회','60초'),
+        ]),
+        R('토'),
+        R('일'),
+      ],
+    },
+  },
+
+  strength: {
+    upper: {
+      meta: { goal:'근력', focus:'상체', tip:'고중량 저반복. 세트 사이 3~5분 충분히 휴식하여 신경계를 회복시키세요. 마지막 반복은 기술이 무너지기 직전까지만 수행하세요.' },
+      stats: { days:3, sets:17, totalReps:'3~5회', rest:'3~5분' },
+      day: [D('오늘의 운동','상체 강도 훈련',[
+        E('벤치프레스',5,'3~5회','3~5분','1RM 80~90%'),
+        E('오버헤드프레스',5,'3~5회','3~5분'),
+        E('바벨로우',5,'4~6회','3분','등 지지력'),
+        E('딥스',4,'최대(5~8)','2분','삼두·하부 가슴'),
+        E('풀업',4,'최대(5~8)','2분'),
+      ])],
+      week: [
+        D('월','Bench Focus',[
+          E('벤치프레스',5,'3~5회','4분','메인 리프트'),
+          E('오버헤드프레스',3,'5회','3분','보조 리프트'),
+          E('바벨로우',4,'5회','3분'),
+          E('딥스',3,'최대','2분'),
+        ]),
+        R('화'),
+        D('수','OHP Focus',[
+          E('오버헤드프레스',5,'3~5회','4분','메인'),
+          E('벤치프레스',3,'5회','3분','보조'),
+          E('랫풀다운',4,'6~8회','2분'),
+          E('바이셉컬',3,'6~8회','90초'),
+        ]),
+        R('목'),
+        D('금','Row Focus',[
+          E('바벨로우',5,'3~5회','4분','등 강도'),
+          E('인클라인벤치프레스',4,'5회','3분'),
+          E('풀업',4,'최대','2분'),
+          E('트라이셉푸쉬다운',3,'8회','90초'),
+        ]),
+        R('토'),
+        R('일'),
+      ],
+    },
+    lower: {
+      meta: { goal:'근력', focus:'하체', tip:'스쿼트와 데드리프트는 충분한 워밍업 세트(50%→70%→80%→작업중량)를 거친 후 작업 세트에 임하세요.' },
+      stats: { days:3, sets:16, totalReps:'3~5회', rest:'3~5분' },
+      day: [D('오늘의 운동','하체 최대 근력',[
+        E('스쿼트',5,'3~5회','4~5분','1RM 85~90%'),
+        E('데드리프트',4,'3~5회','4~5분'),
+        E('레그프레스',3,'6~8회','2분','보조 볼륨'),
+        E('런지',3,'8회(각)','90초'),
+      ])],
+      week: [
+        D('월','Squat Day',[
+          E('스쿼트',5,'3~5회','4~5분','메인'),
+          E('레그프레스',3,'6~8회','2분','보조'),
+          E('레그컬',3,'8회','90초'),
+          E('런지',3,'8회(각)','90초'),
+        ]),
+        R('화'),
+        D('목','Deadlift Day',[
+          E('데드리프트',5,'3~5회','4~5분','메인'),
+          E('스쿼트',3,'5회','3분','보조'),
+          E('힙쓰러스트',3,'8회','2분'),
+        ]),
+        R('수'),
+        D('금','Volume Lower',[
+          E('레그프레스',4,'6~8회','2분'),
+          E('레그익스텐션',3,'8~10회','90초'),
+          E('레그컬',3,'8~10회','90초'),
+          E('시티드카프레이즈',3,'10~12회','60초'),
+        ]),
+        R('토'),
+        R('일'),
+      ],
+    },
+    full: {
+      meta: { goal:'근력', focus:'전신', tip:'StrongLifts 5×5 스타일. 스쿼트는 매 운동마다 수행. 세 가지 대근육군 복합 리프트에 집중하여 신경계 효율을 극대화하세요.' },
+      stats: { days:3, sets:15, totalReps:'5회', rest:'3~5분' },
+      day: [D('오늘의 운동','Big 3 전신 강도',[
+        E('스쿼트',5,'5회','3~5분','필수 기반'),
+        E('벤치프레스',5,'5회','3~5분'),
+        E('바벨로우',5,'5회','3~5분'),
+      ])],
+      week: [
+        D('월','Day A',[
+          E('스쿼트',5,'5회','3~5분'),
+          E('벤치프레스',5,'5회','3~5분'),
+          E('바벨로우',5,'5회','3~5분'),
+        ]),
+        R('화'),
+        D('수','Day B',[
+          E('스쿼트',5,'5회','3~5분'),
+          E('오버헤드프레스',5,'5회','3~5분'),
+          E('데드리프트',1,'5회','5분','1세트 최대 강도'),
+        ]),
+        R('목'),
+        D('금','Day A 반복',[
+          E('스쿼트',5,'5회','3~5분'),
+          E('벤치프레스',5,'5회','3~5분'),
+          E('바벨로우',5,'5회','3~5분'),
+        ]),
+        R('토'),
+        R('일'),
+      ],
+    },
+  },
+
+  endurance: {
+    upper: {
+      meta: { goal:'근지구력', focus:'상체', tip:'세트 사이 30~45초 짧은 휴식. 가벼운 중량으로 천천히 제어하며 근육을 지속적으로 수축하세요. 호흡을 절대 멈추지 마세요.' },
+      stats: { days:3, sets:21, totalReps:'15~20회', rest:'30~45초' },
+      day: [D('오늘의 운동','상체 지구력 서킷',[
+        E('푸쉬업',3,'최대','30초','흉근·삼두'),
+        E('풀업/친업',3,'최대','30초','광배근·이두'),
+        E('케이블로우',3,'15~20회','30초'),
+        E('바이셉컬',3,'15~20회','30초','가벼운 중량'),
+        E('트라이셉푸쉬다운',3,'15~20회','30초'),
+        E('사이드레터럴레이즈',3,'20회','30초'),
+        E('페이스풀',3,'20회','30초','후면 삼각'),
+      ])],
+      week: [
+        D('월','Upper Circuit A',[
+          E('푸쉬업',3,'최대','30초'),
+          E('딥스',3,'최대','30초'),
+          E('랫풀다운',3,'15~20회','30초'),
+          E('사이드레터럴레이즈',3,'20회','30초'),
+          E('바이셉컬',3,'15~20회','30초'),
+          E('트라이셉푸쉬다운',3,'15~20회','30초'),
+        ]),
+        R('화'),
+        D('수','Upper Circuit B',[
+          E('친업',3,'최대','30초'),
+          E('케이블로우',3,'15~20회','30초'),
+          E('프론트레이즈',3,'15~20회','30초'),
+          E('해머컬',3,'15~20회','30초'),
+          E('페이스풀',3,'20회','30초'),
+          E('딥스',2,'최대','30초'),
+        ]),
+        R('목'),
+        D('금','Full Upper 서킷',[
+          E('푸쉬업',2,'최대','30초'),
+          E('친업',2,'최대','30초'),
+          E('오버헤드프레스',3,'15회','30초','경중량'),
+          E('바이셉컬',3,'15~20회','30초'),
+          E('사이드레터럴레이즈',3,'20회','30초'),
+          E('트라이셉푸쉬다운',3,'20회','30초'),
+          E('페이스풀',3,'20회','30초'),
+        ]),
+        R('토'),
+        R('일'),
+      ],
+    },
+    lower: {
+      meta: { goal:'근지구력', focus:'하체', tip:'맨몸 또는 가벼운 중량으로 고반복 수행. 둔근과 대퇴사두가 타오르는 느낌을 유지하며 세트를 이어가세요.' },
+      stats: { days:3, sets:21, totalReps:'15~30회', rest:'30~45초' },
+      day: [D('오늘의 운동','하체 지구력 서킷',[
+        E('스쿼트(맨몸)',3,'20~30회','30초'),
+        E('런지',3,'20회(각다리)','30초'),
+        E('레그익스텐션',3,'20~25회','30초','경중량'),
+        E('레그컬',3,'20회','30초'),
+        E('힙쓰러스트',3,'20회','30초','자체중량'),
+        E('버피',3,'10회','45초','전신 지구력'),
+        E('마운틴클라이머',3,'30초','30초'),
+      ])],
+      week: [
+        D('월','Quad 지구력',[
+          E('스쿼트(맨몸)',3,'25~30회','30초'),
+          E('런지',3,'20회(각)','30초'),
+          E('레그익스텐션',3,'20~25회','30초'),
+          E('버피',3,'10회','45초'),
+          E('마운틴클라이머',3,'30초','30초'),
+        ]),
+        R('화'),
+        D('수','Hip & Ham 지구력',[
+          E('힙쓰러스트',3,'20회','30초'),
+          E('레그프레스',3,'20회','30초','경중량'),
+          E('레그컬',3,'20회','30초'),
+          E('런지',3,'15회(각)','30초'),
+          E('시티드카프레이즈',3,'25회','30초'),
+        ]),
+        R('목'),
+        D('금','Full Lower 서킷',[
+          E('스쿼트(맨몸)',3,'25회','30초'),
+          E('레그익스텐션',3,'20회','30초'),
+          E('레그컬',3,'20회','30초'),
+          E('힙쓰러스트',3,'20회','30초'),
+          E('버피',3,'10회','45초'),
+          E('마운틴클라이머',3,'30초','30초'),
+          E('런지',3,'15회(각)','30초'),
+        ]),
+        R('토'),
+        R('일'),
+      ],
+    },
+    full: {
+      meta: { goal:'근지구력', focus:'전신', tip:'전신 서킷 방식으로 상체→하체 교대. 심박수를 높게 유지하면서 호흡을 안정적으로 유지하세요. 유산소 효과도 함께 얻을 수 있어요.' },
+      stats: { days:4, sets:21, totalReps:'15~20회', rest:'30~45초' },
+      day: [D('오늘의 운동','전신 지구력 서킷',[
+        E('버피',3,'15회','30초','전신 워밍업'),
+        E('푸쉬업',3,'최대','30초'),
+        E('스쿼트(맨몸)',3,'20회','30초'),
+        E('풀업/친업',3,'최대','30초'),
+        E('플랭크',3,'60초','30초'),
+        E('런지',3,'15회(각)','30초'),
+        E('마운틴클라이머',3,'30초','30초'),
+      ])],
+      week: [
+        D('월','Upper 지구력',[
+          E('푸쉬업',3,'최대','30초'),
+          E('친업',3,'최대','30초'),
+          E('사이드레터럴레이즈',3,'20회','30초'),
+          E('바이셉컬',3,'20회','30초','경중량'),
+          E('트라이셉푸쉬다운',3,'20회','30초'),
+        ]),
+        D('화','Lower 지구력',[
+          E('스쿼트(맨몸)',3,'25회','30초'),
+          E('런지',3,'20회(각)','30초'),
+          E('레그컬',3,'20회','30초'),
+          E('힙쓰러스트',3,'20회','30초'),
+          E('버피',3,'10회','45초'),
+        ]),
+        D('수','Active Recovery',[
+          E('플랭크',3,'60초','30초'),
+          E('마운틴클라이머',3,'30초','30초'),
+          E('행잉니레이즈',3,'15회','30초'),
+        ]),
+        D('목','Full Body 서킷',[
+          E('버피',3,'15회','30초'),
+          E('푸쉬업',3,'최대','30초'),
+          E('풀업',3,'최대','30초'),
+          E('스쿼트(맨몸)',3,'25회','30초'),
+          E('런지',3,'15회(각)','30초'),
+          E('플랭크',3,'45초','30초'),
+        ]),
+        D('금','Cardio + Core',[
+          E('마운틴클라이머',3,'30초','30초'),
+          E('버피',3,'15회','30초'),
+          E('플랭크',3,'60초','30초'),
+          E('행잉니레이즈',3,'15회','30초'),
+        ]),
+        R('토'),
+        R('일'),
+      ],
+    },
+  },
+};
+
+const MONTH_WEEKS = [
+  { week:1, label:'1주차 — 기초 (Base)',      tag:'base',   cls:'wk-base',
+    intensity:'70~75% 1RM', volume:'기본 세트 수',
+    focus:'자세와 가동범위 완성. 가벼운 중량으로 근육을 깨우는 단계.' },
+  { week:2, label:'2주차 — 점진적 과부하',    tag:'over',   cls:'wk-over',
+    intensity:'75~80% 1RM', volume:'세트 수 +1 또는 중량 5% 증가',
+    focus:'작업 중량을 높이거나 세트를 추가해 훈련 볼륨을 점진적으로 높이세요.' },
+  { week:3, label:'3주차 — 피크 (Peak)',       tag:'peak',   cls:'wk-peak',
+    intensity:'80~87.5% 1RM', volume:'최대 볼륨',
+    focus:'최고 강도로 훈련. 마지막 세트는 1~2회 여유만 남기고 실패 직전까지 수행하세요.' },
+  { week:4, label:'4주차 — 디로드 (Deload)',  tag:'deload', cls:'wk-deload',
+    intensity:'60~65% 1RM', volume:'볼륨 30~40% 감소',
+    focus:'회복과 부상 예방. 가벼운 중량으로 자세를 다시 점검하고 다음 사이클을 준비하세요.' },
+];
+
+const GOAL_LABEL  = { hypertrophy:'근비대 💪', strength:'근력 ⚡', endurance:'근지구력 🏃' };
+const FOCUS_LABEL = { upper:'상체', lower:'하체', full:'전신' };
+const PERIOD_LABEL = { day:'일단위', week:'주단위', month:'월단위' };
+
+function initRoutineSelectors() {
+  ['[data-rp]','[data-rg]','[data-rf]'].forEach(sel => {
+    document.querySelectorAll(sel).forEach(btn => {
+      btn.onclick = () => {
+        const row = btn.parentElement;
+        row.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (btn.dataset.rp) rtPeriod = btn.dataset.rp;
+        if (btn.dataset.rg) rtGoal   = btn.dataset.rg;
+        if (btn.dataset.rf) rtFocus  = btn.dataset.rf;
+      };
+    });
+  });
+}
+
+function generateRoutine() {
+  const plan = ROUTINE_PLANS[rtGoal][rtFocus];
+  const result = document.getElementById('rt-result');
+  result.classList.add('show');
+  const meta = plan.meta;
+  const stats = plan.stats;
+  let html = `
+    <div class="rt-summary">
+      <div class="rt-summary-title">📋 ${GOAL_LABEL[rtGoal]} · ${FOCUS_LABEL[rtFocus]} · ${PERIOD_LABEL[rtPeriod]} 루틴</div>
+      <div class="rt-stats">
+        <div class="rt-stat"><div class="rt-stat-val">${stats.days}</div><div class="rt-stat-lbl">훈련일/주</div></div>
+        <div class="rt-stat"><div class="rt-stat-val">${stats.sets}</div><div class="rt-stat-lbl">총 세트</div></div>
+        <div class="rt-stat"><div class="rt-stat-val">${stats.totalReps}</div><div class="rt-stat-lbl">목표 반복수</div></div>
+        <div class="rt-stat"><div class="rt-stat-val">${stats.rest}</div><div class="rt-stat-lbl">세트 휴식</div></div>
+      </div>
+    </div>
+    <div class="rt-tip">💡 <span>${meta.tip}</span></div>
+  `;
+  if (rtPeriod === 'day') {
+    html += renderDayRoutine(plan.day);
+  } else if (rtPeriod === 'week') {
+    html += renderWeekRoutine(plan.week);
+  } else {
+    html += renderMonthRoutine(plan.week);
+  }
+  result.innerHTML = html;
+  result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function exTableHTML(exercises) {
+  if (!exercises.length) return '';
+  return `<div style="padding:10px 14px 14px">
+    <table class="rt-ex-table">
+      <thead><tr>
+        <th>#</th><th>운동</th><th>세트</th><th>반복</th><th>휴식</th>
+      </tr></thead>
+      <tbody>
+        ${exercises.map((e, i) => `<tr>
+          <td><span class="rt-ex-num">${i+1}</span></td>
+          <td><span class="rt-ex-name">${e.name}</span>${e.note ? `<span class="rt-ex-note">${e.note}</span>` : ''}</td>
+          <td>${e.sets}</td>
+          <td>${e.reps}</td>
+          <td>${e.rest}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function renderDayRoutine(sessions) {
+  return sessions.map((s, i) => `
+    <div class="rt-day-card">
+      <div class="rt-day-header">
+        <div class="rt-day-badge">${['A','B','C'][i] || (i+1)}</div>
+        <div>
+          <div class="rt-day-title">${s.label}</div>
+          <div class="rt-day-sub">${s.exercises.length}가지 운동 · ${s.exercises.reduce((sum, e) => sum + e.sets, 0)}세트</div>
+        </div>
+      </div>
+      ${exTableHTML(s.exercises)}
+    </div>`).join('');
+}
+
+function renderWeekRoutine(days) {
+  const WEEKDAYS = ['월','화','수','목','금','토','일'];
+  return days.map((d, i) => {
+    if (d.rest) return `
+      <div class="rt-day-card">
+        <div class="rt-rest-row">
+          <div class="rt-day-badge rest" style="width:38px;height:38px">😴</div>
+          <div><strong>${d.day}요일</strong> — 휴식일 · 충분한 수면과 단백질 보충을 권장해요</div>
+        </div>
+      </div>`;
+    const setCount = d.exercises.reduce((s, e) => s + e.sets, 0);
+    return `
+      <div class="rt-day-card">
+        <div class="rt-day-header">
+          <div class="rt-day-badge">${d.day}</div>
+          <div>
+            <div class="rt-day-title">${d.label}</div>
+            <div class="rt-day-sub">${d.exercises.length}가지 운동 · ${setCount}세트</div>
+          </div>
+        </div>
+        ${exTableHTML(d.exercises)}
+      </div>`;
+  }).join('');
+}
+
+function renderMonthRoutine(weekDays) {
+  const trainingDays = weekDays.filter(d => !d.rest);
+  const weekPreview = trainingDays.map(d => `${d.day}요일: ${d.label.split('—')[0].trim()}`).join(' · ');
+  let html = `
+    <div class="rt-day-card" style="margin-bottom:14px">
+      <div class="rt-day-header">
+        <div class="rt-day-badge" style="font-size:1.1rem;width:38px;height:38px">📆</div>
+        <div>
+          <div class="rt-day-title">주간 스케줄 기준</div>
+          <div class="rt-day-sub">${weekPreview}</div>
+        </div>
+      </div>
+      <div style="padding:0 14px 14px">
+        ${exTableHTML(trainingDays.length ? trainingDays[0].exercises : [])}
+      </div>
+    </div>`;
+  html += MONTH_WEEKS.map(w => `
+    <div class="rt-month-card">
+      <div class="rt-month-header">
+        <div class="rt-month-week-title">${w.label}</div>
+        <div class="rt-week-tag ${w.cls}">${w.intensity}</div>
+      </div>
+      <div class="rt-prog-list">
+        <div class="rt-prog-row">
+          <div class="rt-prog-dot" style="background:var(--primary)"></div>
+          <div><strong>강도:</strong> ${w.intensity}</div>
+        </div>
+        <div class="rt-prog-row">
+          <div class="rt-prog-dot" style="background:#6366f1"></div>
+          <div><strong>볼륨:</strong> ${w.volume}</div>
+        </div>
+        <div class="rt-prog-row">
+          <div class="rt-prog-dot" style="background:#64748b"></div>
+          <div>${w.focus}</div>
+        </div>
+      </div>
+    </div>`).join('');
+  return html;
 }
 
 document.addEventListener('DOMContentLoaded', init);
