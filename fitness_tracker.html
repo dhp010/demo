@@ -169,34 +169,38 @@
 
     /* ── 탭 ── */
     .tab-nav {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 4px;
+      padding: 10px 10px 8px;
       margin-bottom: 16px;
       box-shadow: 0 2px 8px rgba(124,58,237,0.07);
     }
+    .tab-group { display: flex; flex-direction: column; gap: 4px; }
+    .tab-group + .tab-group { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 8px; }
+    .tab-group-label { font-size: 0.6rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; padding: 0 4px 5px; }
+    .tab-group-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }
 
     .tab-btn {
       background: none;
       border: none;
       color: var(--muted);
-      font-size: 0.68rem;
+      font-size: 0.82rem;
       font-weight: 500;
-      padding: 8px 2px;
+      padding: 9px 4px;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 2px;
+      gap: 3px;
     }
 
-    .tab-btn .tab-icon { font-size: 1.1rem; }
+    .tab-btn .tab-icon { font-size: 1.2rem; }
     .tab-btn:hover { color: var(--primary); background: rgba(124,58,237,0.06); }
     .tab-btn.active { color: var(--primary); background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(99,102,241,0.1)); font-weight: 700; }
 
@@ -759,24 +763,39 @@
 
   <!-- ── 탭 네비게이션 ── -->
   <nav class="tab-nav">
-    <button class="tab-btn active" data-tab="cardio">
-      <span class="tab-icon">🏃</span>유산소
-    </button>
-    <button class="tab-btn" data-tab="weight">
-      <span class="tab-icon">💪</span>웨이트
-    </button>
-    <button class="tab-btn" data-tab="records">
-      <span class="tab-icon">📋</span>기록
-    </button>
-    <button class="tab-btn" data-tab="stats">
-      <span class="tab-icon">📊</span>통계
-    </button>
-    <button class="tab-btn" data-tab="guide">
-      <span class="tab-icon">📚</span>가이드
-    </button>
-    <button class="tab-btn" data-tab="routine">
-      <span class="tab-icon">📅</span>루틴
-    </button>
+    <div class="tab-group">
+      <div class="tab-group-label">운동 입력</div>
+      <div class="tab-group-row">
+        <button class="tab-btn active" data-tab="cardio">
+          <span class="tab-icon">🏃</span>유산소
+        </button>
+        <button class="tab-btn" data-tab="weight">
+          <span class="tab-icon">💪</span>웨이트
+        </button>
+      </div>
+    </div>
+    <div class="tab-group">
+      <div class="tab-group-label">운동 가이드</div>
+      <div class="tab-group-row">
+        <button class="tab-btn" data-tab="guide">
+          <span class="tab-icon">📚</span>가이드
+        </button>
+        <button class="tab-btn" data-tab="routine">
+          <span class="tab-icon">📅</span>루틴
+        </button>
+      </div>
+    </div>
+    <div class="tab-group">
+      <div class="tab-group-label">기록 &amp; 분석</div>
+      <div class="tab-group-row">
+        <button class="tab-btn" data-tab="records">
+          <span class="tab-icon">📋</span>기록
+        </button>
+        <button class="tab-btn" data-tab="stats">
+          <span class="tab-icon">📊</span>통계
+        </button>
+      </div>
+    </div>
   </nav>
 
   <!-- ── 유산소 탭 ── -->
