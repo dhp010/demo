@@ -790,7 +790,7 @@
       </div>
       <div class="header-stats">
         <div class="today-cal" id="today-cal">0</div>
-        <div class="today-label">오늘 소모 kcal</div>
+        <div class="today-label" id="today-date-label">오늘 소모 kcal</div>
       </div>
     </div>
     <div class="header-tagline">
@@ -1243,6 +1243,25 @@ function todayStr() {
     String(d.getDate()).padStart(2, '0');
 }
 
+function updateTodayLabel() {
+  const d = new Date();
+  const label = document.getElementById('today-date-label');
+  if (label) label.textContent = `${d.getMonth() + 1}월 ${d.getDate()}일 소모 kcal`;
+}
+
+function scheduleMidnightRefresh() {
+  const now = new Date();
+  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const ms = next - now;
+  setTimeout(() => {
+    updateTodayLabel();
+    renderStats();
+    renderRecords();
+    renderFoodTab();
+    scheduleMidnightRefresh();
+  }, ms);
+}
+
 function checkCalorieAchievement(cal) {
   if (cal < 500) return;
   if (localStorage.getItem('popup_shown_date') === todayStr()) return;
@@ -1650,9 +1669,11 @@ async function init() {
   const bwInput = document.getElementById('bw-input');
   bwInput.value = bodyWeight;
 
-  // 날짜 기본값
+  // 날짜 기본값 및 헤더 날짜 표시
   document.getElementById('c-date').value = todayStr();
   document.getElementById('w-date').value = todayStr();
+  updateTodayLabel();
+  scheduleMidnightRefresh();
 
   // ── 성별 버튼 ──
   document.querySelectorAll('.gender-btn').forEach(btn => {

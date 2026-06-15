@@ -1,6 +1,5 @@
-const CACHE_NAME = 'fittrack-v1';
+const CACHE_NAME = 'fittrack-v2';
 const PRECACHE = [
-  './fitness_pwa.html',
   './fitness_pwa_manifest.json',
   './fitness_pwa_icon.svg',
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
@@ -23,10 +22,16 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // navigation: 항상 캐시 우선, 실패 시 네트워크
+  // HTML 페이지: 네트워크 우선 → 실패 시 캐시 (항상 최신 날짜 코드 로드)
   if (e.request.mode === 'navigate') {
     e.respondWith(
-      caches.match(e.request).then(cached => cached || fetch(e.request))
+      fetch(e.request)
+        .then(res => {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+          return res;
+        })
+        .catch(() => caches.match(e.request))
     );
     return;
   }
