@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitTrack - 운동 기록</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --card: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --primary: #7c3aed;
+      --primary-light: #a78bfa;
+      --cardio: #ef4444;
+      --cardio-bg: rgba(239,68,68,0.12);
+      --weight: #8b5cf6;
+      --weight-bg: rgba(139,92,246,0.12);
+      --success: #22c55e;
+      --danger: #f43f5e;
+      --radius: 12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1a0a2e 0%, #16213e 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 16px 16px;
+    }
+
+    .header-inner {
+      max-width: 640px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .header-logo h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-logo p { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    .header-stats {
+      text-align: right;
+    }
+
+    .header-stats .today-cal {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--primary-light);
+    }
+
+    .header-stats .today-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .bw-banner {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .bw-banner label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .bw-input-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .bw-input-row input {
+      width: 80px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      text-align: center;
+    }
+
+    .bw-input-row span { font-size: 0.85rem; color: var(--muted); }
+
+    .bw-saved-badge {
+      font-size: 0.7rem;
+      color: var(--success);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .bw-saved-badge.show { opacity: 1; }
+
+    .tab-nav {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 4px;
+      margin-bottom: 16px;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 8px 4px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .tab-btn .tab-icon { font-size: 1.1rem; }
+
+    .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+    .tab-btn.active {
+      color: var(--text);
+      background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(96,165,250,0.2));
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .card h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    /* Activity buttons */
+    .activity-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .activity-btn {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 10px 4px;
+      font-size: 0.72rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .activity-btn .icon { font-size: 1.4rem; }
+
+    .activity-btn:hover { border-color: var(--cardio); color: var(--text); }
+
+    .activity-btn.active {
+      background: var(--cardio-bg);
+      border-color: var(--cardio);
+      color: var(--cardio);
+    }
+
+    /* Exercise type toggle */
+    .ex-type-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .type-btn {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 8px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .type-btn:hover { border-color: var(--weight); color: var(--text); }
+
+    .type-btn.active {
+      background: var(--weight-bg);
+      border-color: var(--weight);
+      color: var(--weight);
+    }
+
+    /* Form */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .form-group input,
+    .form-group select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.92rem;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: var(--primary-light);
+    }
+
+    .form-group select option { background: #1e1e2e; }
+
+    /* Result card */
+    .result-card {
+      background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(96,165,250,0.1));
+      border: 1px solid rgba(124,58,237,0.4);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .result-main {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .result-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .result-number {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .result-unit {
+      font-size: 1rem;
+      color: var(--muted);
+    }
+
+    .result-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .result-item { display: flex; flex-direction: column; }
+
+    /* 1RM table */
+    .rm-table {
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .rm-table-header,
+    .rm-table-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      padding: 6px 10px;
+      font-size: 0.76rem;
+    }
+
+    .rm-table-header {
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .rm-table-row { border-top: 1px solid var(--border); }
+    .rm-table-row.highlight { background: rgba(124,58,237,0.15); color: var(--primary-light); font-weight: 700; }
+    .rm-table-row span:last-child { color: var(--primary-light); font-weight: 600; }
+
+    /* Buttons */
+    .btn-save {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn-save:hover { opacity: 0.9; }
+    .btn-save:active { transform: scale(0.98); }
+    .btn-save:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* Filter row */
+    .filter-section {
+      margin-bottom: 12px;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .filter-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      transition: all 0.2s;
+    }
+
+    .filter-btn.active {
+      background: rgba(124,58,237,0.2);
+      border-color: var(--primary-light);
+      color: var(--primary-light);
+    }
+
+    /* Summary card */
+    .summary-card {
+      background: linear-gradient(135deg, #1e1a2e, #1a1e30);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      text-align: center;
+    }
+
+    .summary-item .val {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--primary-light);
+    }
+
+    .summary-item .lbl {
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* Records list */
+    .records-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .record-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .record-icon {
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
+
+    .record-body { flex: 1; min-width: 0; }
+
+    .record-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .record-meta {
+      font-size: 0.73rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .record-right { text-align: right; flex-shrink: 0; }
+
+    .record-cal {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--primary-light);
+    }
+
+    .record-date {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .record-delete {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 4px;
+      font-size: 1rem;
+      flex-shrink: 0;
+      opacity: 0.5;
+      transition: opacity 0.2s;
+    }
+
+    .record-delete:hover { opacity: 1; color: var(--danger); }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+    }
+
+    .empty-state .big { font-size: 2.5rem; margin-bottom: 8px; }
+    .empty-state p { font-size: 0.85rem; }
+
+    /* Chart */
+    .chart-container {
+      position: relative;
+      height: 200px;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1e2030;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-size: 0.85rem;
+      color: var(--text);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      transition: transform 0.3s ease;
+      z-index: 999;
+      white-space: nowrap;
+    }
+
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.error { border-color: var(--danger); color: var(--danger); }
+
+    .badge-cardio { color: var(--cardio); }
+    .badge-weight { color: var(--weight); }
+
+    @media (max-width: 400px) {
+      .form-row.three { grid-template-columns: 1fr 1fr; }
+      .activity-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-logo">
+      <h1>💪 FitTrack</h1>
+      <p>운동 기록 & 분석</p>
+    </div>
+    <div class="header-stats">
+      <div class="today-cal" id="today-cal">0</div>
+      <div class="today-label">오늘 소모 kcal</div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- 체중 입력 -->
+  <div class="bw-banner">
+    <label>내 체중</label>
+    <div class="bw-input-row">
+      <input type="number" id="bw-input" value="70" step="0.5" min="30" max="300">
+      <span>kg</span>
+    </div>
+    <span class="bw-saved-badge" id="bw-badge">✓ 저장됨</span>
+  </div>
+
+  <!-- 탭 네비게이션 -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="cardio">
+      <span class="tab-icon">🏃</span>유산소
+    </button>
+    <button class="tab-btn" data-tab="weight">
+      <span class="tab-icon">💪</span>웨이트
+    </button>
+    <button class="tab-btn" data-tab="records">
+      <span class="tab-icon">📋</span>기록
+    </button>
+    <button class="tab-btn" data-tab="stats">
+      <span class="tab-icon">📊</span>통계
+    </button>
+  </nav>
+
+  <!-- ── 유산소 탭 ─────────────────────────────── -->
+  <section class="tab-content active" id="tab-cardio">
+    <div class="card">
+      <h2>유산소 운동 기록</h2>
+
+      <div class="activity-grid">
+        <button class="activity-btn active" data-activity="running">
+          <span class="icon">🏃</span>달리기
+        </button>
+        <button class="activity-btn" data-activity="walking">
+          <span class="icon">🚶</span>걷기
+        </button>
+        <button class="activity-btn" data-activity="cycling">
+          <span class="icon">🚴</span>자전거
+        </button>
+        <button class="activity-btn" data-activity="swimming">
+          <span class="icon">🏊</span>수영
+        </button>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0">
+          <label>거리 (km)</label>
+          <input type="number" id="c-dist" step="0.1" min="0" placeholder="0.0">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>시간 (분, 선택)</label>
+          <input type="number" id="c-dur" step="1" min="0" placeholder="입력 시 정확↑">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:12px">
+        <label>날짜</label>
+        <input type="date" id="c-date">
+      </div>
+
+      <div id="c-result" class="result-card" style="display:none">
+        <div class="result-label">예상 소모 칼로리</div>
+        <div class="result-main">
+          <span class="result-number" id="c-cal">0</span>
+          <span class="result-unit">kcal</span>
+        </div>
+        <div class="result-sub" id="c-sub"></div>
+      </div>
+
+      <button class="btn-save" id="btn-c-save" disabled>저장하기</button>
+    </div>
+  </section>
+
+  <!-- ── 웨이트 탭 ─────────────────────────────── -->
+  <section class="tab-content" id="tab-weight">
+    <div class="card">
+      <h2>웨이트 트레이닝 기록</h2>
+
+      <div class="ex-type-toggle">
+        <button class="type-btn active" data-type="compound">🔗 복합 운동</button>
+        <button class="type-btn" data-type="isolation">💡 고립 운동</button>
+      </div>
+
+      <div class="form-group">
+        <label>운동 종목</label>
+        <select id="w-exercise"></select>
+      </div>
+
+      <div class="form-row three">
+        <div class="form-group" style="margin-bottom:0">
+          <label>무게 (kg)</label>
+          <input type="number" id="w-kg" step="0.5" min="0" placeholder="0">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>세트 수</label>
+          <input type="number" id="w-sets" min="1" value="3">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>반복 횟수</label>
+          <input type="number" id="w-reps" min="1" placeholder="0">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:12px">
+        <label>날짜</label>
+        <input type="date" id="w-date">
+      </div>
+
+      <div id="w-result" class="result-card" style="display:none">
+        <div class="result-grid" style="margin-bottom:12px">
+          <div class="result-item">
+            <div class="result-label">예상 소모 칼로리</div>
+            <div class="result-main" style="margin-bottom:0">
+              <span class="result-number" id="w-cal">0</span>
+              <span class="result-unit">kcal</span>
+            </div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">예상 최대 1RM</div>
+            <div class="result-main" style="margin-bottom:0">
+              <span class="result-number" id="w-1rm">0</span>
+              <span class="result-unit">kg</span>
+            </div>
+          </div>
+        </div>
+        <div id="rm-table"></div>
+      </div>
+
+      <button class="btn-save" id="btn-w-save" disabled>저장하기</button>
+    </div>
+  </section>
+
+  <!-- ── 기록 탭 ───────────────────────────────── -->
+  <section class="tab-content" id="tab-records">
+    <div class="filter-section">
+      <div class="filter-row">
+        <button class="filter-btn active" data-type-filter="all">전체</button>
+        <button class="filter-btn" data-type-filter="cardio">🏃 유산소</button>
+        <button class="filter-btn" data-type-filter="weight">💪 웨이트</button>
+      </div>
+      <div class="filter-row">
+        <button class="filter-btn active" data-period-filter="today">오늘</button>
+        <button class="filter-btn" data-period-filter="week">이번 주</button>
+        <button class="filter-btn" data-period-filter="month">이번 달</button>
+        <button class="filter-btn" data-period-filter="all">전체</button>
+      </div>
+    </div>
+
+    <div class="summary-card" id="rec-summary">
+      <div class="summary-item">
+        <div class="val" id="sum-cal">0</div>
+        <div class="lbl">총 kcal</div>
+      </div>
+      <div class="summary-item">
+        <div class="val" id="sum-count">0</div>
+        <div class="lbl">운동 횟수</div>
+      </div>
+      <div class="summary-item">
+        <div class="val" id="sum-dist">0</div>
+        <div class="lbl">총 km (유산소)</div>
+      </div>
+    </div>
+
+    <div id="records-list"></div>
+  </section>
+
+  <!-- ── 통계 탭 ───────────────────────────────── -->
+  <section class="tab-content" id="tab-stats">
+    <div class="card">
+      <h3>📈 칼로리 소모 추이 (최근 30일)</h3>
+      <div class="chart-container">
+        <canvas id="chart-cal"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <h3>🏋️ 최대 1RM 성장 그래프</h3>
+      <div class="form-group">
+        <label>운동 종목 선택</label>
+        <select id="stats-ex-sel"></select>
+      </div>
+      <div class="chart-container">
+        <canvas id="chart-rm"></canvas>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+// ── 상수 ─────────────────────────────────────────────────
+const ACTIVITIES = {
+  running:  { name: '달리기', icon: '🏃', distFactor: 1.036, met: 9 },
+  walking:  { name: '걷기',   icon: '🚶', distFactor: 0.55,  met: 3.5 },
+  cycling:  { name: '자전거', icon: '🚴', distFactor: 0.45,  met: 8 },
+  swimming: { name: '수영',   icon: '🏊', distFactor: 8.5,   met: 8 },
+};
+
+const EXERCISES = {
+  compound: [
+    '스쿼트', '데드리프트', '벤치프레스', '오버헤드프레스', '바벨로우',
+    '풀업', '딥스', '레그프레스', '인클라인벤치프레스', '덤벨로우', '랫풀다운',
+  ],
+  isolation: [
+    '바이셉컬', '해머컬', '트라이셉푸쉬다운', '스컬크러셔',
+    '레그익스텐션', '레그컬', '사이드레터럴레이즈', '프론트레이즈',
+    '케이블크로스오버', '케이블로우', '힙쓰러스트', '레그레이즈', '시티드카프레이즈',
+  ],
+};
+
+// Epley 1RM 퍼센트 테이블
+const RM_TABLE = [
+  [1,100],[2,97],[3,93],[4,90],[5,87],
+  [6,85],[7,82],[8,80],[10,75],[12,70],[15,65],
+];
+
+// ── 상태 ─────────────────────────────────────────────────
+let bodyWeight = parseFloat(localStorage.getItem('bw_kg')) || 70;
+let currentActivity = 'running';
+let currentExType = 'compound';
+let records = { cardio: [], weight: [] };
+let recTypeFilter = 'all';
+let recPeriodFilter = 'today';
+let charts = {};
+
+// ── 계산 함수 ─────────────────────────────────────────────
+function calcCardio(activity, dist, dur) {
+  const a = ACTIVITIES[activity];
+  if (dur > 0) return Math.round(a.met * bodyWeight * (dur / 60));
+  if (dist > 0) return Math.round(a.distFactor * dist * bodyWeight);
+  return 0;
+}
+
+function calcWeight(exType, wkg, sets, reps) {
+  const f = exType === 'compound' ? 0.05 : 0.03;
+  return Math.round(wkg * sets * reps * f);
+}
+
+function calc1RM(wkg, reps) {
+  if (!wkg || !reps || reps < 1) return 0;
+  if (reps === 1) return wkg;
+  return Math.round(wkg * (1 + reps / 30) * 10) / 10;
+}
+
+// ── API ───────────────────────────────────────────────────
+async function loadRecords() {
+  try {
+    const r = await fetch('/api/fitness/records');
+    if (r.ok) { records = await r.json(); refreshAll(); }
+  } catch { /* 오프라인 */ }
+}
+
+async function saveCardioRec(data) {
+  try {
+    const r = await fetch('/api/fitness/cardio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const j = await r.json();
+    if (j.ok) { records.cardio.unshift(j.record); refreshAll(); toast('🏃 유산소 기록 저장 완료!'); }
+  } catch { toast('저장 실패 — 네트워크를 확인하세요', true); }
+}
+
+async function saveWeightRec(data) {
+  try {
+    const r = await fetch('/api/fitness/weight', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const j = await r.json();
+    if (j.ok) { records.weight.unshift(j.record); refreshAll(); toast('💪 웨이트 기록 저장 완료!'); }
+  } catch { toast('저장 실패 — 네트워크를 확인하세요', true); }
+}
+
+async function deleteRec(type, id) {
+  if (!confirm('이 기록을 삭제하시겠습니까?')) return;
+  try {
+    await fetch(`/api/fitness/${type}/${id}`, { method: 'DELETE' });
+    if (type === 'cardio') records.cardio = records.cardio.filter(r => r.id !== id);
+    else records.weight = records.weight.filter(r => r.id !== id);
+    refreshAll();
+    toast('삭제되었습니다');
+  } catch { toast('삭제 실패', true); }
+}
+
+// ── UI 렌더링 ─────────────────────────────────────────────
+function refreshAll() {
+  updateHeaderStats();
+  renderRecords();
+  renderStats();
+}
+
+function updateHeaderStats() {
+  const today = todayStr();
+  const todayCal = [
+    ...records.cardio.filter(r => r.date === today),
+    ...records.weight.filter(r => r.date === today),
+  ].reduce((s, r) => s + Number(r.calories), 0);
+  document.getElementById('today-cal').textContent = Math.round(todayCal).toLocaleString();
+}
+
+function filterRecords() {
+  const now = new Date();
+  const todayS = todayStr();
+  const monday = new Date(now); monday.setDate(now.getDate() - now.getDay() + 1); const mondayS = monday.toISOString().slice(0,10);
+  const firstDay = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+
+  function inPeriod(dateStr) {
+    if (recPeriodFilter === 'today') return dateStr === todayS;
+    if (recPeriodFilter === 'week') return dateStr >= mondayS;
+    if (recPeriodFilter === 'month') return dateStr >= firstDay;
+    return true;
+  }
+
+  const cardio = records.cardio.filter(r => inPeriod(r.date));
+  const weight = records.weight.filter(r => inPeriod(r.date));
+
+  if (recTypeFilter === 'cardio') return { cardio, weight: [] };
+  if (recTypeFilter === 'weight') return { cardio: [], weight };
+  return { cardio, weight };
+}
+
+function renderRecords() {
+  const { cardio, weight } = filterRecords();
+
+  const totalCal = [...cardio, ...weight].reduce((s, r) => s + Number(r.calories), 0);
+  const totalDist = cardio.reduce((s, r) => s + Number(r.distance_km), 0);
+  document.getElementById('sum-cal').textContent = Math.round(totalCal).toLocaleString();
+  document.getElementById('sum-count').textContent = cardio.length + weight.length;
+  document.getElementById('sum-dist').textContent = totalDist.toFixed(1);
+
+  // 날짜순 정렬 (두 배열 합쳐서)
+  const all = [
+    ...cardio.map(r => ({ ...r, _type: 'cardio' })),
+    ...weight.map(r => ({ ...r, _type: 'weight' })),
+  ].sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : 0));
+
+  const container = document.getElementById('records-list');
+  if (!all.length) {
+    container.innerHTML = `<div class="empty-state"><div class="big">🏋️</div><p>기록이 없습니다.<br>운동을 시작해보세요!</p></div>`;
+    return;
+  }
+
+  container.innerHTML = all.map(r => {
+    if (r._type === 'cardio') {
+      const a = ACTIVITIES[r.activity] || { name: r.activity, icon: '🏃' };
+      const meta = `${Number(r.distance_km).toFixed(1)}km${Number(r.duration_min) > 0 ? ` · ${r.duration_min}분` : ''}`;
+      return `<div class="record-item">
+        <div class="record-icon">${a.icon}</div>
+        <div class="record-body">
+          <div class="record-title badge-cardio">${a.name}</div>
+          <div class="record-meta">${meta} · 체중 ${r.body_weight_kg}kg</div>
+        </div>
+        <div class="record-right">
+          <div class="record-cal">${Math.round(r.calories)} kcal</div>
+          <div class="record-date">${r.date}</div>
+        </div>
+        <button class="record-delete" onclick="deleteRec('cardio','${r.id}')">🗑</button>
+      </div>`;
+    } else {
+      const oneRM = r.one_rm ? ` · 1RM ${Number(r.one_rm).toFixed(1)}kg` : '';
+      return `<div class="record-item">
+        <div class="record-icon">🏋️</div>
+        <div class="record-body">
+          <div class="record-title badge-weight">${r.exercise}</div>
+          <div class="record-meta">${r.weight_kg}kg × ${r.sets}세트 × ${r.reps}회${oneRM}</div>
+        </div>
+        <div class="record-right">
+          <div class="record-cal">${Math.round(r.calories)} kcal</div>
+          <div class="record-date">${r.date}</div>
+        </div>
+        <button class="record-delete" onclick="deleteRec('weight','${r.id}')">🗑</button>
+      </div>`;
+    }
+  }).join('');
+}
+
+function renderStats() {
+  renderCalChart();
+  populateStatsExSelect();
+  renderRMChart();
+}
+
+function renderCalChart() {
+  const last30 = [];
+  const today = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    last30.push(d.toISOString().slice(0,10));
+  }
+
+  const calByDate = {};
+  last30.forEach(d => { calByDate[d] = 0; });
+  [...records.cardio, ...records.weight].forEach(r => {
+    if (calByDate[r.date] !== undefined) calByDate[r.date] += Number(r.calories);
+  });
+
+  const labels = last30.map(d => d.slice(5));
+  const data = last30.map(d => Math.round(calByDate[d]));
+
+  if (charts.cal) charts.cal.destroy();
+  const ctx = document.getElementById('chart-cal').getContext('2d');
+  charts.cal = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'kcal',
+        data,
+        backgroundColor: 'rgba(124,58,237,0.5)',
+        borderColor: '#7c3aed',
+        borderWidth: 1,
+        borderRadius: 3,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8b949e', font: { size: 10 }, maxTicksLimit: 10 }, grid: { color: '#21262d' } },
+        y: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' } },
+      },
+    },
+  });
+}
+
+function populateStatsExSelect() {
+  const sel = document.getElementById('stats-ex-sel');
+  const allExercises = [...new Set(records.weight.map(r => r.exercise))];
+  const prev = sel.value;
+  sel.innerHTML = allExercises.length
+    ? allExercises.map(e => `<option value="${e}">${e}</option>`).join('')
+    : '<option value="">기록 없음</option>';
+  if (prev && allExercises.includes(prev)) sel.value = prev;
+}
+
+function renderRMChart() {
+  const ex = document.getElementById('stats-ex-sel').value;
+  const filtered = records.weight
+    .filter(r => r.exercise === ex && r.one_rm)
+    .sort((a, b) => a.date > b.date ? 1 : -1);
+
+  if (charts.rm) charts.rm.destroy();
+  const ctx = document.getElementById('chart-rm').getContext('2d');
+  charts.rm = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: filtered.map(r => r.date.slice(5)),
+      datasets: [{
+        label: '1RM (kg)',
+        data: filtered.map(r => Number(r.one_rm)),
+        borderColor: '#a78bfa',
+        backgroundColor: 'rgba(167,139,250,0.15)',
+        borderWidth: 2,
+        pointBackgroundColor: '#a78bfa',
+        pointRadius: 4,
+        fill: true,
+        tension: 0.3,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' } },
+        y: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#21262d' } },
+      },
+    },
+  });
+}
+
+// ── 유산소 라이브 계산 ────────────────────────────────────
+function liveCardio() {
+  const dist = parseFloat(document.getElementById('c-dist').value) || 0;
+  const dur = parseFloat(document.getElementById('c-dur').value) || 0;
+  const resultEl = document.getElementById('c-result');
+  const saveBtn = document.getElementById('btn-c-save');
+
+  if (!dist && !dur) { resultEl.style.display = 'none'; saveBtn.disabled = true; return; }
+
+  const cal = calcCardio(currentActivity, dist, dur);
+  document.getElementById('c-cal').textContent = cal.toLocaleString();
+  const a = ACTIVITIES[currentActivity];
+  const basis = dur > 0
+    ? `MET ${a.met} × 체중 ${bodyWeight}kg × ${dur}분 기준`
+    : `${a.distFactor} × ${dist}km × 체중 ${bodyWeight}kg 기준`;
+  document.getElementById('c-sub').textContent = basis;
+  resultEl.style.display = '';
+  saveBtn.disabled = !dist;
+}
+
+// ── 웨이트 라이브 계산 ────────────────────────────────────
+function liveWeight() {
+  const wkg = parseFloat(document.getElementById('w-kg').value) || 0;
+  const sets = parseInt(document.getElementById('w-sets').value) || 0;
+  const reps = parseInt(document.getElementById('w-reps').value) || 0;
+  const resultEl = document.getElementById('w-result');
+  const saveBtn = document.getElementById('btn-w-save');
+
+  if (!wkg || !reps) { resultEl.style.display = 'none'; saveBtn.disabled = true; return; }
+
+  const cal = calcWeight(currentExType, wkg, sets || 1, reps);
+  const oneRM = calc1RM(wkg, reps);
+
+  document.getElementById('w-cal').textContent = cal.toLocaleString();
+  document.getElementById('w-1rm').textContent = oneRM;
+  resultEl.style.display = '';
+  saveBtn.disabled = false;
+  render1RMTable(wkg, reps, oneRM);
+}
+
+function render1RMTable(wkg, reps, oneRM) {
+  document.getElementById('rm-table').innerHTML = `
+    <div class="rm-table">
+      <div class="rm-table-header">
+        <span>반복 수</span><span>1RM의 %</span><span>권장 무게</span>
+      </div>
+      ${RM_TABLE.map(([r, pct]) => `
+        <div class="rm-table-row${r === reps ? ' highlight' : ''}">
+          <span>${r}회</span>
+          <span>${pct}%</span>
+          <span>${(oneRM * pct / 100).toFixed(1)}kg</span>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ── 운동 종목 옵션 생성 ───────────────────────────────────
+function populateExercises() {
+  const sel = document.getElementById('w-exercise');
+  sel.innerHTML = EXERCISES[currentExType].map(e => `<option value="${e}">${e}</option>`).join('');
+}
+
+// ── 날짜 헬퍼 ────────────────────────────────────────────
+function todayStr() { return new Date().toISOString().slice(0,10); }
+
+// ── 토스트 ────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (isError ? ' error' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ''; }, 2500);
+}
+
+// ── 이벤트 바인딩 ─────────────────────────────────────────
+function init() {
+  // 체중 입력
+  const bwInput = document.getElementById('bw-input');
+  bwInput.value = bodyWeight;
+  bwInput.addEventListener('change', () => {
+    bodyWeight = parseFloat(bwInput.value) || 70;
+    localStorage.setItem('bw_kg', bodyWeight);
+    const badge = document.getElementById('bw-badge');
+    badge.classList.add('show');
+    setTimeout(() => badge.classList.remove('show'), 1500);
+    liveCardio();
+    liveWeight();
+  });
+
+  // 탭 전환
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + tab).classList.add('active');
+      if (tab === 'stats') renderStats();
+    });
+  });
+
+  // 활동 선택 (유산소)
+  document.querySelectorAll('.activity-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentActivity = btn.dataset.activity;
+      liveCardio();
+    });
+  });
+
+  // 유산소 입력
+  document.getElementById('c-dist').addEventListener('input', liveCardio);
+  document.getElementById('c-dur').addEventListener('input', liveCardio);
+  document.getElementById('c-date').value = todayStr();
+
+  // 유산소 저장
+  document.getElementById('btn-c-save').addEventListener('click', () => {
+    const dist = parseFloat(document.getElementById('c-dist').value) || 0;
+    const dur = parseFloat(document.getElementById('c-dur').value) || 0;
+    if (!dist) return;
+    saveCardioRec({
+      date: document.getElementById('c-date').value || todayStr(),
+      activity: currentActivity,
+      distance_km: dist,
+      duration_min: dur,
+      body_weight_kg: bodyWeight,
+      calories: calcCardio(currentActivity, dist, dur),
+    });
+    document.getElementById('c-dist').value = '';
+    document.getElementById('c-dur').value = '';
+    liveCardio();
+  });
+
+  // 운동 종류 토글 (웨이트)
+  document.querySelectorAll('.type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentExType = btn.dataset.type;
+      populateExercises();
+      liveWeight();
+    });
+  });
+
+  // 웨이트 입력
+  ['w-kg','w-sets','w-reps'].forEach(id => {
+    document.getElementById(id).addEventListener('input', liveWeight);
+  });
+  document.getElementById('w-date').value = todayStr();
+  populateExercises();
+
+  // 웨이트 저장
+  document.getElementById('btn-w-save').addEventListener('click', () => {
+    const wkg = parseFloat(document.getElementById('w-kg').value) || 0;
+    const sets = parseInt(document.getElementById('w-sets').value) || 1;
+    const reps = parseInt(document.getElementById('w-reps').value) || 0;
+    const ex = document.getElementById('w-exercise').value;
+    if (!wkg || !reps || !ex) return;
+    const oneRM = calc1RM(wkg, reps);
+    saveWeightRec({
+      date: document.getElementById('w-date').value || todayStr(),
+      exercise: ex,
+      exercise_type: currentExType,
+      weight_kg: wkg,
+      sets,
+      reps,
+      one_rm: oneRM || null,
+      calories: calcWeight(currentExType, wkg, sets, reps),
+    });
+    document.getElementById('w-kg').value = '';
+    document.getElementById('w-reps').value = '';
+    document.getElementById('w-sets').value = '3';
+    liveWeight();
+  });
+
+  // 기록 필터
+  document.querySelectorAll('[data-type-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-type-filter]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      recTypeFilter = btn.dataset.typeFilter;
+      renderRecords();
+    });
+  });
+
+  document.querySelectorAll('[data-period-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-period-filter]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      recPeriodFilter = btn.dataset.periodFilter;
+      renderRecords();
+    });
+  });
+
+  // 통계 운동 선택
+  document.getElementById('stats-ex-sel').addEventListener('change', renderRMChart);
+
+  loadRecords();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

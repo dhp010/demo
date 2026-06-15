@@ -1,11 +1,11 @@
 services:
   - type: web
-    name: memopad
+    name: fitness-tracker
     env: node
     plan: free
     buildCommand: npm install
     startCommand: node server.js
-    healthCheckPath: /api/data
+    healthCheckPath: /api/fitness/records
     envVars:
       - key: NODE_ENV
         value: production
