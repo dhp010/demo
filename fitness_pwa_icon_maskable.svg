@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- maskable: 전체 배경 채움 (safe zone = 중앙 80%) -->
+  <rect width="512" height="512" fill="#FEE500"/>
+  <!-- 덤벨 바 -->
+  <rect x="168" y="236" width="176" height="40" rx="20" fill="#1A1200"/>
+  <!-- 왼쪽 플레이트 큰 것 -->
+  <rect x="96" y="196" width="52" height="120" rx="14" fill="#1A1200"/>
+  <!-- 왼쪽 플레이트 작은 것 -->
+  <rect x="136" y="216" width="44" height="80" rx="10" fill="#1A1200"/>
+  <!-- 오른쪽 플레이트 큰 것 -->
+  <rect x="364" y="196" width="52" height="120" rx="14" fill="#1A1200"/>
+  <!-- 오른쪽 플레이트 작은 것 -->
+  <rect x="332" y="216" width="44" height="80" rx="10" fill="#1A1200"/>
+  <!-- 돼지 코 -->
+  <ellipse cx="256" cy="368" rx="22" ry="16" fill="#FF8C69" opacity="0.9"/>
+  <circle cx="248" cy="368" r="5" fill="#1A1200" opacity="0.5"/>
+  <circle cx="264" cy="368" r="5" fill="#1A1200" opacity="0.5"/>
+</svg>

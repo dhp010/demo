@@ -1,0 +1,27 @@
+{
+  "name": "FitTrack - 운동 기록",
+  "short_name": "FitTrack",
+  "description": "운동 기록 & 칼로리 분석 앱 — 건강한 돼지가 됩시다!",
+  "start_url": "./fitness_pwa.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FEE500",
+  "theme_color": "#FEE500",
+  "lang": "ko",
+  "categories": ["health", "fitness"],
+  "icons": [
+    {
+      "src": "./fitness_pwa_icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./fitness_pwa_icon_maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

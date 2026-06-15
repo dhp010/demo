@@ -1,0 +1,2982 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitTrack - 운동 기록</title>
+  <link rel="manifest" href="./fitness_pwa_manifest.json">
+  <meta name="theme-color" content="#FEE500">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="FitTrack">
+  <link rel="apple-touch-icon" href="./fitness_pwa_icon.svg">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #FAF7F0;
+      --card: #FFFFFF;
+      --border: #EDE8DE;
+      --text: #1A1200;
+      --muted: #8B7F72;
+      --primary: #B07800;
+      --primary-light: #966400;
+      --cardio: #ef4444;
+      --cardio-bg: rgba(239,68,68,0.1);
+      --weight: #B07800;
+      --weight-bg: rgba(176,120,0,0.1);
+      --bodyweight: #d97706;
+      --bodyweight-bg: rgba(217,119,6,0.1);
+      --male: #3b82f6;
+      --male-bg: rgba(59,130,246,0.12);
+      --female: #ec4899;
+      --female-bg: rgba(236,72,153,0.12);
+      --success: #16a34a;
+      --danger: #dc2626;
+      --radius: 14px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    header {
+      background: linear-gradient(135deg, #FEE500 0%, #FFD600 100%);
+      padding: 20px 16px 18px;
+      box-shadow: 0 4px 20px rgba(254,229,0,0.45);
+    }
+
+    .header-inner {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .header-logo h1 {
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: #1A1200;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .header-logo p { font-size: 0.75rem; color: rgba(26,18,0,0.6); margin-top: 2px; }
+
+    .header-stats { text-align: right; }
+    .header-stats .today-cal { font-size: 1.5rem; font-weight: 800; color: #1A1200; }
+    .header-stats .today-label { font-size: 0.7rem; color: rgba(26,18,0,0.6); }
+
+    /* ── 돼지 태그라인 ── */
+    .header-tagline {
+      background: rgba(0,0,0,0.08);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 30px;
+      padding: 7px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      backdrop-filter: blur(4px);
+    }
+
+    .pig-character {
+      font-size: 1.4rem;
+      animation: pigBounce 2s ease-in-out infinite;
+    }
+
+    @keyframes pigBounce {
+      0%, 100% { transform: translateY(0) rotate(-5deg); }
+      50% { transform: translateY(-4px) rotate(5deg); }
+    }
+
+    .tagline-text {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #1A1200;
+      letter-spacing: 0.02em;
+    }
+
+    .container { max-width: 640px; margin: 0 auto; padding: 16px; }
+
+    /* ── 프로필 배너 ── */
+    .profile-banner {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(176,120,0,0.07);
+    }
+
+    .profile-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .gender-group { display: flex; flex-direction: column; gap: 4px; }
+    .gender-group label { font-size: 0.7rem; color: var(--muted); }
+
+    .gender-toggle { display: flex; gap: 6px; }
+
+    .gender-btn {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 6px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .gender-btn[data-gender="male"]:hover  { border-color: var(--male); color: var(--male); }
+    .gender-btn[data-gender="female"]:hover { border-color: var(--female); color: var(--female); }
+    .gender-btn[data-gender="male"].active  { background: var(--male-bg); border-color: var(--male); color: var(--male); }
+    .gender-btn[data-gender="female"].active { background: var(--female-bg); border-color: var(--female); color: var(--female); }
+
+    .divider-v { width: 1px; height: 36px; background: var(--border); }
+
+    .bw-group { display: flex; flex-direction: column; gap: 4px; }
+    .bw-group label { font-size: 0.7rem; color: var(--muted); }
+
+    .bw-input-row { display: flex; align-items: center; gap: 6px; }
+
+    .bw-input-row input {
+      width: 80px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 5px 8px;
+      text-align: center;
+      outline: none;
+    }
+
+    .bw-input-row span { font-size: 0.85rem; color: var(--muted); }
+
+    .bw-saved-badge { font-size: 0.7rem; color: var(--success); opacity: 0; transition: opacity 0.3s; }
+    .bw-saved-badge.show { opacity: 1; }
+
+    /* ── 탭 ── */
+    .tab-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 10px 8px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(176,120,0,0.07);
+    }
+    .tab-group { display: flex; flex-direction: column; gap: 4px; }
+    .tab-group + .tab-group { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 8px; }
+    .tab-group-label { font-size: 0.6rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; padding: 0 4px 5px; }
+    .tab-group-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 9px 4px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .tab-btn .tab-icon { font-size: 1.2rem; }
+    .tab-btn:hover { color: var(--primary); background: rgba(176,120,0,0.06); }
+    .tab-btn.active { color: #8B6000; background: rgba(254,229,0,0.35); font-weight: 700; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── 카드 ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(176,120,0,0.07);
+    }
+
+    .card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+    .card h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: var(--text); }
+
+    /* ── 유산소 활동 버튼 ── */
+    .activity-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .activity-btn {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 10px 4px;
+      font-size: 0.72rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .activity-btn .icon { font-size: 1.4rem; }
+    .activity-btn:hover { border-color: var(--cardio); color: var(--cardio); background: var(--cardio-bg); }
+    .activity-btn.active { background: var(--cardio-bg); border-color: var(--cardio); color: var(--cardio); }
+
+    /* ── 운동 종류 토글 (3개) ── */
+    .ex-type-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .type-btn {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 8px 4px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .type-btn:hover { border-color: var(--weight); color: var(--primary); }
+    .type-btn[data-type="compound"].active  { background: var(--weight-bg); border-color: var(--weight); color: var(--weight); }
+    .type-btn[data-type="isolation"].active { background: rgba(59,130,246,0.1); border-color: #3b82f6; color: #3b82f6; }
+    .type-btn[data-type="bodyweight"].active { background: var(--bodyweight-bg); border-color: var(--bodyweight); color: var(--bodyweight); }
+
+    /* ── 폼 ── */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+
+    .form-group label { font-size: 0.75rem; color: var(--muted); font-weight: 500; }
+
+    .form-group input,
+    .form-group select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.92rem;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(176,120,0,0.12);
+    }
+
+    .form-group select option { background: var(--bg); color: var(--text); }
+
+    /* 맨몸운동 안내 */
+    .bw-note {
+      background: var(--bodyweight-bg);
+      border: 1px solid rgba(217,119,6,0.4);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.78rem;
+      color: var(--bodyweight);
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    .bw-note.show { display: block; }
+
+    /* ── 결과 카드 ── */
+    .result-card {
+      background: linear-gradient(135deg, rgba(176,120,0,0.08), rgba(192,144,0,0.05));
+      border: 1px solid rgba(176,120,0,0.25);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .result-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 4px; }
+
+    .result-main { display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; }
+
+    .result-number {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #B07800, #C08A00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .result-unit { font-size: 1rem; color: var(--muted); }
+    .result-sub { font-size: 0.75rem; color: var(--muted); }
+
+    .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .result-item { display: flex; flex-direction: column; }
+
+    /* 1RM 테이블 */
+    .rm-table { margin-top: 12px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+
+    .rm-table-header,
+    .rm-table-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      padding: 6px 10px;
+      font-size: 0.76rem;
+    }
+
+    .rm-table-header { background: rgba(176,120,0,0.07); color: var(--muted); font-weight: 600; }
+    .rm-table-row { border-top: 1px solid var(--border); }
+    .rm-table-row.highlight { background: rgba(176,120,0,0.1); color: var(--primary); font-weight: 700; }
+    .rm-table-row span:last-child { color: var(--primary); font-weight: 600; }
+
+    /* ── 버튼 ── */
+    .btn-save {
+      width: 100%;
+      padding: 12px;
+      background: #FEE500;
+      border: none;
+      border-radius: 10px;
+      color: #1A1200;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(254,229,0,0.5);
+    }
+
+    .btn-save:hover { opacity: 0.9; box-shadow: 0 6px 18px rgba(254,229,0,0.6); }
+    .btn-save:active { transform: scale(0.98); }
+    .btn-save:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ── 필터 ── */
+    .filter-section { margin-bottom: 12px; }
+    .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+
+    .filter-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      transition: all 0.2s;
+    }
+
+    .filter-btn.active {
+      background: rgba(254,229,0,0.5);
+      border-color: #C8A200;
+      color: #7A5000;
+      font-weight: 600;
+    }
+
+    /* ── 요약 카드 ── */
+    .summary-card {
+      background: linear-gradient(135deg, #FFF9D0, #FFFBEB);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      text-align: center;
+    }
+
+    .summary-item .val { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
+    .summary-item .lbl { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── 기록 목록 ── */
+    .records-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .record-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 1px 4px rgba(176,120,0,0.06);
+      transition: box-shadow 0.2s;
+    }
+
+    .record-item:hover { box-shadow: 0 4px 12px rgba(176,120,0,0.12); }
+
+    .record-icon { font-size: 1.6rem; flex-shrink: 0; }
+    .record-body { flex: 1; min-width: 0; }
+
+    .record-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .record-meta { font-size: 0.73rem; color: var(--muted); margin-top: 2px; }
+    .record-right { text-align: right; flex-shrink: 0; }
+    .record-cal { font-size: 1rem; font-weight: 700; color: var(--primary); }
+    .record-date { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+
+    .record-delete {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 4px;
+      font-size: 1rem;
+      flex-shrink: 0;
+      opacity: 0.5;
+      transition: opacity 0.2s;
+    }
+
+    .record-delete:hover { opacity: 1; color: var(--danger); }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+    .empty-state .big { font-size: 2.5rem; margin-bottom: 8px; }
+    .empty-state p { font-size: 0.85rem; }
+
+    /* ── 차트 ── */
+    .chart-container { position: relative; height: 200px; }
+
+    /* ── 토스트 ── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-size: 0.85rem;
+      color: var(--text);
+      box-shadow: 0 8px 24px rgba(176,120,0,0.2);
+      transition: transform 0.3s ease;
+      z-index: 999;
+      white-space: nowrap;
+    }
+
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.error { border-color: var(--danger); color: var(--danger); }
+
+    /* ── 500kcal 달성 팝업 ── */
+    .popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(30,16,64,0.55);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+      padding: 20px;
+    }
+
+    .popup-overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .popup-box {
+      background: linear-gradient(145deg, #fff 0%, #FFFEF7 100%);
+      border: 2px solid rgba(176,120,0,0.3);
+      border-radius: 24px;
+      padding: 36px 28px 28px;
+      max-width: 320px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(176,120,0,0.25), 0 4px 16px rgba(0,0,0,0.1);
+      transform: scale(0.85) translateY(20px);
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    .popup-overlay.show .popup-box {
+      transform: scale(1) translateY(0);
+    }
+
+    .popup-pig-big {
+      font-size: 4rem;
+      display: block;
+      margin-bottom: 8px;
+      animation: pigJump 0.6s ease-out;
+    }
+
+    @keyframes pigJump {
+      0% { transform: scale(0.3) rotate(-20deg); opacity: 0; }
+      60% { transform: scale(1.2) rotate(8deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    .popup-confetti {
+      font-size: 1.6rem;
+      letter-spacing: 4px;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .popup-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #B07800, #C08A00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+
+    .popup-msg {
+      font-size: 0.92rem;
+      color: #5C4800;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .popup-kcal-badge {
+      display: inline-block;
+      background: #FEE500;
+      color: #1A1200;
+      font-size: 1.1rem;
+      font-weight: 800;
+      padding: 4px 16px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+    }
+
+    .popup-close {
+      width: 100%;
+      padding: 13px;
+      background: #FEE500;
+      border: none;
+      border-radius: 12px;
+      color: #1A1200;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(254,229,0,0.5);
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+
+    .popup-close:hover { box-shadow: 0 6px 18px rgba(254,229,0,0.6); }
+    .popup-close:active { transform: scale(0.97); }
+
+    .c-cardio { color: var(--cardio); }
+    .c-weight { color: var(--weight); }
+    .c-bodyweight { color: var(--bodyweight); }
+
+    /* ── 운동 가이드 탭 ── */
+    .guide-search-row { position: relative; margin-bottom: 10px; }
+    .guide-search-row input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; color: var(--text); font-size: 0.83rem; padding: 8px 12px 8px 32px; outline: none; }
+    .guide-search-row input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(176,120,0,.1); }
+    .guide-search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; pointer-events: none; }
+    .guide-ex-item { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 8px; transition: all .2s; box-shadow: 0 1px 4px rgba(176,120,0,.05); }
+    .guide-ex-item:hover { border-color: var(--primary); box-shadow: 0 4px 14px rgba(176,120,0,.15); }
+    .guide-ex-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .guide-ex-info { flex: 1; min-width: 0; }
+    .guide-ex-name { font-size: 0.9rem; font-weight: 700; }
+    .guide-ex-sub { font-size: 0.71rem; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .guide-ex-arrow { color: var(--muted); font-size: 0.8rem; flex-shrink: 0; }
+    .guide-badge { font-size: 0.68rem; font-weight: 700; padding: 2px 9px; border-radius: 10px; }
+    .g-badge-compound  { background: rgba(176,120,0,.12); color: var(--primary); }
+    .g-badge-isolation { background: rgba(37,99,235,.12); color: #2563eb; }
+    .g-badge-bodyweight{ background: rgba(217,119,6,.12); color: #d97706; }
+    .guide-back-btn { display: flex; align-items: center; gap: 5px; background: none; border: none; color: var(--primary); font-size: 0.85rem; font-weight: 700; cursor: pointer; padding: 4px 0 12px; }
+    .guide-back-btn:hover { opacity: .75; }
+    .guide-detail-header { display: flex; align-items: flex-start; gap: 14px; padding-bottom: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .guide-detail-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.9rem; flex-shrink: 0; }
+    .guide-detail-icon.compound  { background: rgba(176,120,0,.1); }
+    .guide-detail-icon.isolation { background: rgba(37,99,235,.1); }
+    .guide-detail-icon.bodyweight{ background: rgba(217,119,6,.1); }
+    .guide-detail-title { font-size: 1.35rem; font-weight: 800; margin-bottom: 6px; }
+    .guide-detail-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .guide-diff { font-size: 0.75rem; color: var(--muted); }
+    .g-star-on { color: #f59e0b; } .g-star-off { color: #d1d5db; }
+    .guide-sec-title { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .guide-sec-title::after { content:''; flex:1; height:1px; background: var(--border); }
+    .guide-section { margin-bottom: 20px; }
+    .g-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .g-chip { font-size: 0.78rem; font-weight: 600; padding: 5px 12px; border-radius: 16px; }
+    .g-chip.primary { background: var(--primary); color: #fff; }
+    .g-chip.secondary { background: rgba(176,120,0,.1); color: var(--primary); border: 1px solid rgba(176,120,0,.2); }
+    .g-effects { display: flex; flex-direction: column; gap: 6px; }
+    .g-effect { font-size: 0.83rem; display: flex; gap: 8px; line-height: 1.45; }
+    .g-effect-icon { flex-shrink: 0; }
+    .g-steps { display: flex; flex-direction: column; gap: 10px; }
+    .g-step { display: flex; gap: 12px; align-items: flex-start; }
+    .g-step-num { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg,#B07800,#966400); color: #fff; font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+    .g-step-num.isolation  { background: linear-gradient(135deg,#2563eb,#1d4ed8); }
+    .g-step-num.bodyweight { background: linear-gradient(135deg,#d97706,#b45309); }
+    .g-step-text { font-size: 0.85rem; line-height: 1.6; padding-top: 3px; }
+    .g-sets-table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .g-sets-table thead tr { background: linear-gradient(135deg,rgba(176,120,0,.1),rgba(192,144,0,.07)); }
+    .g-sets-table th { padding: 8px 10px; font-size: 0.69rem; font-weight: 700; color: var(--muted); text-align: left; }
+    .g-sets-table td { padding: 9px 10px; font-size: 0.81rem; border-top: 1px solid var(--border); }
+    .g-sets-table tr:hover td { background: var(--bg); }
+    .g-goal { font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+    .g-goal-s { background: rgba(220,38,38,.1); color: #dc2626; }
+    .g-goal-h { background: rgba(176,120,0,.1); color: var(--primary); }
+    .g-goal-e { background: rgba(22,163,74,.1); color: #16a34a; }
+    .g-tip { background: linear-gradient(135deg,#fffbeb,#fef3c7); border: 1px solid #fcd34d; border-radius: 10px; padding: 12px 14px; font-size: 0.82rem; color: #78350f; display: flex; gap: 8px; line-height: 1.55; }
+
+    /* ── 가이드 1RM 계산기 ── */
+    .rm-calc-box { background: linear-gradient(135deg,rgba(254,229,0,0.14),rgba(254,229,0,0.04)); border: 1.5px solid rgba(200,162,0,0.35); border-radius: 13px; padding: 14px 16px; margin-bottom: 18px; }
+    .rm-calc-title { font-size: 0.8rem; font-weight: 800; color: #8B6000; margin-bottom: 10px; letter-spacing: .01em; display: flex; align-items: center; gap: 6px; }
+    .rm-bw-note { font-size: 0.7rem; color: #8B6000; background: rgba(0,0,0,0.05); border-radius: 7px; padding: 5px 9px; margin-bottom: 9px; line-height: 1.5; }
+    .rm-input-row { display: flex; gap: 8px; align-items: stretch; }
+    .rm-input { flex: 1; background: #fff; border: 1.5px solid #C8A200; border-radius: 9px; padding: 11px 12px; font-size: 1.05rem; font-weight: 700; color: var(--text); outline: none; text-align: center; min-width: 0; }
+    .rm-input:focus { border-color: #B07800; box-shadow: 0 0 0 3px rgba(254,229,0,0.35); }
+    .rm-input::placeholder { font-size: 0.78rem; font-weight: 400; color: #bbb; }
+    .rm-calc-btn { background: #FEE500; border: none; border-radius: 9px; padding: 11px 18px; font-size: 0.88rem; font-weight: 800; color: #1A1200; cursor: pointer; white-space: nowrap; transition: all .18s; flex-shrink: 0; }
+    .rm-calc-btn:hover { background: #FFD600; box-shadow: 0 3px 10px rgba(254,229,0,0.6); }
+    .rm-calc-btn:active { transform: scale(.97); }
+    .rm-results { margin-top: 12px; display: flex; flex-direction: column; gap: 7px; }
+    .rm-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 13px; border-radius: 11px; }
+    .rm-row-left { display: flex; flex-direction: column; gap: 2px; }
+    .rm-row-goal { font-size: 0.88rem; font-weight: 800; }
+    .rm-row-reps { font-size: 0.69rem; color: var(--muted); }
+    .rm-row-right { display: flex; align-items: baseline; gap: 7px; }
+    .rm-pct { font-size: 0.68rem; font-weight: 700; padding: 2px 7px; background: rgba(0,0,0,0.07); border-radius: 6px; color: #555; }
+    .rm-kg { font-size: 1.5rem; font-weight: 900; line-height: 1; }
+    .rm-kg-unit { font-size: 0.72rem; font-weight: 700; opacity: .8; }
+
+    /* ── 루틴 탭 ── */
+    .rt-selector { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(176,120,0,.07); }
+    .rt-label { font-size: 0.68rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .rt-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .rt-gen-btn { width: 100%; padding: 13px; background: #FEE500; border: none; border-radius: 10px; color: #1A1200; font-size: 0.95rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(254,229,0,0.5); transition: transform .1s, box-shadow .2s; margin-top: 6px; }
+    .rt-gen-btn:hover { box-shadow: 0 6px 20px rgba(254,229,0,0.6); }
+    .rt-gen-btn:active { transform: scale(.98); }
+    .rt-result { display: none; }
+    .rt-result.show { display: block; }
+    .rt-summary { background: linear-gradient(135deg,rgba(176,120,0,.09),rgba(192,144,0,.05)); border: 1px solid rgba(176,120,0,.22); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+    .rt-summary-title { font-size: 0.82rem; font-weight: 800; margin-bottom: 10px; }
+    .rt-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+    .rt-stat { text-align: center; min-width: 55px; }
+    .rt-stat-val { font-size: 1.25rem; font-weight: 800; color: var(--primary); }
+    .rt-stat-lbl { font-size: 0.63rem; color: var(--muted); }
+    .rt-tip { background: linear-gradient(135deg,#fffbeb,#fef3c7); border: 1px solid #fcd34d; border-radius: 10px; padding: 11px 14px; font-size: 0.8rem; color: #78350f; display: flex; gap: 7px; line-height: 1.55; margin-bottom: 12px; }
+    .rt-day-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(176,120,0,.06); }
+    .rt-day-header { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+    .rt-day-badge { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg,#B07800,#C08A00); color: #fff; font-size: 0.8rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .rt-day-badge.rest { background: var(--bg); color: var(--muted); font-size: 1rem; }
+    .rt-day-title { font-size: 0.88rem; font-weight: 700; }
+    .rt-day-sub { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+    .rt-rest-row { padding: 11px 14px; color: var(--muted); font-size: 0.8rem; display: flex; align-items: center; gap: 6px; }
+    .rt-ex-table { width: 100%; border-collapse: collapse; }
+    .rt-ex-table th { font-size: 0.63rem; font-weight: 700; color: var(--muted); padding: 5px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+    .rt-ex-table td { font-size: 0.8rem; padding: 7px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .rt-ex-table tr:last-child td { border-bottom: none; }
+    .rt-ex-table tr:hover td { background: var(--bg); }
+    .rt-ex-num { font-size: 0.68rem; font-weight: 700; color: var(--primary); }
+    .rt-ex-name { font-weight: 600; }
+    .rt-ex-note { font-size: 0.68rem; color: var(--muted); display: block; margin-top: 2px; }
+    .rt-month-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(176,120,0,.06); }
+    .rt-month-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .rt-month-week-title { font-size: 0.9rem; font-weight: 800; }
+    .rt-week-tag { font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
+    .wk-base   { background: rgba(176,120,0,.12); color: var(--primary); }
+    .wk-over   { background: rgba(37,99,235,.12);  color: #2563eb; }
+    .wk-peak   { background: rgba(220,38,38,.12);   color: #dc2626; }
+    .wk-deload { background: rgba(22,163,74,.12);   color: #16a34a; }
+    .rt-prog-list { display: flex; flex-direction: column; gap: 7px; }
+    .rt-prog-row { display: flex; align-items: flex-start; gap: 8px; font-size: 0.8rem; line-height: 1.45; }
+    .rt-prog-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+
+    /* ── 다이어트 탭 ── */
+    .diet-label { font-size: 0.68rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .food-preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .food-preset-btn { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 8px 4px; font-size: 0.72rem; cursor: pointer; text-align: center; transition: all .2s; line-height: 1.4; }
+    .food-preset-btn:hover { border-color: #C8A200; background: rgba(254,229,0,0.2); }
+    .food-preset-btn .fp-icon { font-size: 1.3rem; display: block; margin-bottom: 2px; }
+    .food-preset-btn .fp-kcal { color: var(--muted); font-size: 0.65rem; }
+    .food-manual-row { display: flex; gap: 6px; align-items: center; }
+    .food-manual-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; font-size: 0.85rem; color: var(--text); outline: none; }
+    .food-manual-input:focus { border-color: #C8A200; box-shadow: 0 0 0 3px rgba(254,229,0,0.2); }
+    .food-kcal-input { width: 80px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 9px 8px; font-size: 0.85rem; color: var(--text); outline: none; text-align: center; }
+    .food-kcal-input:focus { border-color: #C8A200; box-shadow: 0 0 0 3px rgba(254,229,0,0.2); }
+    .food-add-btn { background: #FEE500; border: none; border-radius: 8px; padding: 9px 14px; font-size: 0.85rem; font-weight: 700; color: #1A1200; cursor: pointer; white-space: nowrap; transition: all .2s; }
+    .food-add-btn:hover { background: #FFD600; box-shadow: 0 2px 8px rgba(254,229,0,0.5); }
+    .food-log-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
+    .food-log-item:last-child { border-bottom: none; }
+    .food-log-name { font-size: 0.85rem; font-weight: 600; }
+    .food-log-kcal { font-size: 0.82rem; color: #B07800; font-weight: 700; margin-left: 8px; }
+    .food-log-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: 2px 6px; border-radius: 6px; }
+    .food-log-del:hover { background: var(--bg); color: var(--danger); }
+    .food-total-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0 0; border-top: 2px solid var(--border); margin-top: 4px; font-weight: 700; font-size: 0.9rem; }
+    .food-total-val { font-size: 1.1rem; font-weight: 800; color: #B07800; }
+    .diet-hint { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 20px; }
+    .balance-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+    .balance-row:last-child { border-bottom: none; }
+    .balance-row-label { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+    .balance-row-val { font-weight: 700; font-size: 0.95rem; }
+    .balance-net-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 12px; margin: 14px 0; }
+    .balance-net-label { font-weight: 800; font-size: 0.95rem; }
+    .balance-net-val { font-size: 1.4rem; font-weight: 800; }
+    .diet-status-box { border-radius: 14px; padding: 16px; text-align: center; margin-top: 6px; }
+    .diet-status-emoji { font-size: 2.5rem; margin-bottom: 6px; }
+    .diet-status-label { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; }
+    .diet-status-desc { font-size: 0.8rem; opacity: 0.8; }
+    .diet-status-tip { font-size: 0.75rem; margin-top: 10px; padding: 8px 12px; background: rgba(0,0,0,0.06); border-radius: 8px; line-height: 1.5; }
+
+    @media (max-width: 400px) {
+      .form-row.three { grid-template-columns: 1fr 1fr; }
+      .activity-grid { grid-template-columns: repeat(2, 1fr); }
+      .ex-type-toggle { grid-template-columns: 1fr 1fr; }
+      .ex-type-toggle .type-btn:last-child { grid-column: span 2; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-top">
+      <div class="header-logo">
+        <h1>💪 FitTrack</h1>
+        <p>운동 기록 &amp; 분석</p>
+      </div>
+      <div class="header-stats">
+        <div class="today-cal" id="today-cal">0</div>
+        <div class="today-label">오늘 소모 kcal</div>
+      </div>
+    </div>
+    <div class="header-tagline">
+      <span class="pig-character">🐷</span>
+      <span class="tagline-text">우리 모두 건강한 돼지가 됩시다~ 💪</span>
+      <span class="pig-character" style="animation-delay:0.5s">🏋️</span>
+    </div>
+    <!-- PWA 설치 버튼 (설치 가능할 때만 표시) -->
+    <div id="pwa-install-banner" style="display:none;margin-top:8px;background:rgba(0,0,0,0.1);border-radius:24px;padding:6px 14px;display:none;align-items:center;justify-content:space-between;gap:8px">
+      <span style="font-size:0.76rem;font-weight:600;color:#1A1200">📱 홈 화면에 앱 추가</span>
+      <button id="pwa-install-btn" style="background:#1A1200;color:#FEE500;border:none;border-radius:16px;padding:5px 14px;font-size:0.76rem;font-weight:700;cursor:pointer">설치</button>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ── 성별 & 체중 프로필 배너 ── -->
+  <div class="profile-banner">
+    <div class="profile-row">
+      <div class="gender-group">
+        <label>성별</label>
+        <div class="gender-toggle">
+          <button class="gender-btn active" data-gender="male">♂ 남성</button>
+          <button class="gender-btn" data-gender="female">♀ 여성</button>
+        </div>
+      </div>
+      <div class="divider-v"></div>
+      <div class="bw-group">
+        <label>내 체중</label>
+        <div class="bw-input-row">
+          <input type="number" id="bw-input" value="70" step="0.5" min="30" max="300">
+          <span>kg</span>
+          <span class="bw-saved-badge" id="bw-badge">✓ 저장됨</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 탭 네비게이션 ── -->
+  <nav class="tab-nav">
+    <div class="tab-group">
+      <div class="tab-group-label">운동 입력</div>
+      <div class="tab-group-row">
+        <button class="tab-btn active" data-tab="cardio">
+          <span class="tab-icon">🏃</span>유산소
+        </button>
+        <button class="tab-btn" data-tab="weight">
+          <span class="tab-icon">💪</span>웨이트
+        </button>
+      </div>
+    </div>
+    <div class="tab-group">
+      <div class="tab-group-label">운동 가이드</div>
+      <div class="tab-group-row">
+        <button class="tab-btn" data-tab="guide">
+          <span class="tab-icon">📚</span>가이드
+        </button>
+        <button class="tab-btn" data-tab="routine">
+          <span class="tab-icon">📅</span>루틴
+        </button>
+      </div>
+    </div>
+    <div class="tab-group">
+      <div class="tab-group-label">기록 &amp; 분석</div>
+      <div class="tab-group-row">
+        <button class="tab-btn" data-tab="records">
+          <span class="tab-icon">📋</span>기록
+        </button>
+        <button class="tab-btn" data-tab="stats">
+          <span class="tab-icon">📊</span>통계
+        </button>
+      </div>
+    </div>
+    <div class="tab-group">
+      <div class="tab-group-label">다이어트 관리</div>
+      <div class="tab-group-row">
+        <button class="tab-btn" data-tab="diet" style="grid-column: span 2">
+          <span class="tab-icon">🍽️</span>오늘의 칼로리
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── 유산소 탭 ── -->
+  <section class="tab-content active" id="tab-cardio">
+    <div class="card">
+      <h2>유산소 운동 기록</h2>
+
+      <div class="activity-grid">
+        <button class="activity-btn active" data-activity="running">
+          <span class="icon">🏃</span>달리기
+        </button>
+        <button class="activity-btn" data-activity="walking">
+          <span class="icon">🚶</span>걷기
+        </button>
+        <button class="activity-btn" data-activity="cycling">
+          <span class="icon">🚴</span>자전거
+        </button>
+        <button class="activity-btn" data-activity="swimming">
+          <span class="icon">🏊</span>수영
+        </button>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0">
+          <label>거리 (km)</label>
+          <input type="number" id="c-dist" step="0.1" min="0" placeholder="0.0">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>시간 (분, 선택)</label>
+          <input type="number" id="c-dur" step="1" min="0" placeholder="입력 시 정확↑">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:12px">
+        <label>날짜</label>
+        <input type="date" id="c-date">
+      </div>
+
+      <div id="c-result" class="result-card" style="display:none">
+        <div class="result-label">예상 소모 칼로리</div>
+        <div class="result-main">
+          <span class="result-number" id="c-cal">0</span>
+          <span class="result-unit">kcal</span>
+        </div>
+        <div class="result-sub" id="c-sub"></div>
+      </div>
+
+      <button class="btn-save" id="btn-c-save" disabled>저장하기</button>
+    </div>
+  </section>
+
+  <!-- ── 웨이트 탭 ── -->
+  <section class="tab-content" id="tab-weight">
+    <div class="card">
+      <h2>웨이트 트레이닝 기록</h2>
+
+      <div class="ex-type-toggle">
+        <button class="type-btn active" data-type="compound">🔗 복합운동</button>
+        <button class="type-btn" data-type="isolation">💡 고립운동</button>
+        <button class="type-btn" data-type="bodyweight">🤸 맨몸운동</button>
+      </div>
+
+      <div class="form-group">
+        <label>운동 종목</label>
+        <select id="w-exercise"></select>
+      </div>
+
+      <!-- 맨몸운동 안내 -->
+      <div class="bw-note" id="bw-note">
+        🏋️ 맨몸운동은 <strong id="bw-note-val">내 체중</strong>을 기준으로 계산합니다.<br>
+        추가 무게(웨이트벨트 등)가 있다면 아래에 입력하세요.
+      </div>
+
+      <div class="form-row three">
+        <div class="form-group" style="margin-bottom:0">
+          <label id="w-kg-label">무게 (kg)</label>
+          <input type="number" id="w-kg" step="0.5" min="0" placeholder="0">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>세트 수</label>
+          <input type="number" id="w-sets" min="1" value="3">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label>반복 횟수</label>
+          <input type="number" id="w-reps" min="1" placeholder="0">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:12px">
+        <label>날짜</label>
+        <input type="date" id="w-date">
+      </div>
+
+      <div id="w-result" class="result-card" style="display:none">
+        <div class="result-grid" style="margin-bottom:12px">
+          <div class="result-item">
+            <div class="result-label">예상 소모 칼로리</div>
+            <div class="result-main" style="margin-bottom:0">
+              <span class="result-number" id="w-cal">0</span>
+              <span class="result-unit">kcal</span>
+            </div>
+          </div>
+          <div class="result-item">
+            <div class="result-label">예상 최대 1RM</div>
+            <div class="result-main" style="margin-bottom:0">
+              <span class="result-number" id="w-1rm">0</span>
+              <span class="result-unit">kg</span>
+            </div>
+          </div>
+        </div>
+        <div id="rm-table"></div>
+      </div>
+
+      <button class="btn-save" id="btn-w-save" disabled>저장하기</button>
+    </div>
+  </section>
+
+  <!-- ── 기록 탭 ── -->
+  <section class="tab-content" id="tab-records">
+    <div class="filter-section">
+      <div class="filter-row">
+        <button class="filter-btn active" data-type-filter="all">전체</button>
+        <button class="filter-btn" data-type-filter="cardio">🏃 유산소</button>
+        <button class="filter-btn" data-type-filter="weight">💪 웨이트</button>
+      </div>
+      <div class="filter-row">
+        <button class="filter-btn active" data-period-filter="today">오늘</button>
+        <button class="filter-btn" data-period-filter="week">이번 주</button>
+        <button class="filter-btn" data-period-filter="month">이번 달</button>
+        <button class="filter-btn" data-period-filter="all">전체</button>
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-item">
+        <div class="val" id="sum-cal">0</div>
+        <div class="lbl">총 kcal</div>
+      </div>
+      <div class="summary-item">
+        <div class="val" id="sum-count">0</div>
+        <div class="lbl">운동 횟수</div>
+      </div>
+      <div class="summary-item">
+        <div class="val" id="sum-dist">0</div>
+        <div class="lbl">총 km (유산소)</div>
+      </div>
+    </div>
+
+    <div id="records-list"></div>
+
+    <!-- 데이터 백업/복원 -->
+    <div style="margin-top:16px;padding:14px 16px;background:#fff;border:1px solid #EDE8DE;border-radius:14px;box-shadow:0 2px 8px rgba(176,120,0,.07)">
+      <div style="font-size:0.68rem;font-weight:800;color:#8B7F72;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">💾 데이터 백업</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="exportData()" style="flex:1;padding:10px;background:#FEE500;border:none;border-radius:9px;font-size:0.82rem;font-weight:700;color:#1A1200;cursor:pointer;min-width:120px">📤 내보내기</button>
+        <label style="flex:1;min-width:120px">
+          <input type="file" accept=".json" style="display:none" onchange="importData(this.files[0]);this.value=''">
+          <span style="display:block;padding:10px;background:#FAF7F0;border:1px solid #EDE8DE;border-radius:9px;font-size:0.82rem;font-weight:700;color:#8B7F72;cursor:pointer;text-align:center">📥 가져오기</span>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 통계 탭 ── -->
+  <section class="tab-content" id="tab-stats">
+    <div class="card">
+      <h3>📈 칼로리 소모 추이 (최근 30일)</h3>
+      <div class="chart-container">
+        <canvas id="chart-cal"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <h3>🏋️ 최대 1RM 성장 그래프</h3>
+      <div class="form-group">
+        <label>운동 종목 선택</label>
+        <select id="stats-ex-sel"></select>
+      </div>
+      <div class="chart-container">
+        <canvas id="chart-rm"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 운동 가이드 탭 ── -->
+  <section class="tab-content" id="tab-guide">
+    <!-- 목록 뷰 -->
+    <div id="guide-list-view">
+      <div class="card" style="padding:12px;margin-bottom:10px">
+        <div class="guide-search-row">
+          <span class="guide-search-icon">🔍</span>
+          <input type="text" id="guide-search" placeholder="운동 이름 또는 타겟 부위 검색…">
+        </div>
+        <div class="filter-row" style="margin-bottom:0">
+          <button class="filter-btn active" data-gcat="all">전체</button>
+          <button class="filter-btn" data-gcat="compound">🔗 복합운동</button>
+          <button class="filter-btn" data-gcat="isolation">💡 고립운동</button>
+          <button class="filter-btn" data-gcat="bodyweight">🤸 맨몸운동</button>
+        </div>
+      </div>
+      <div id="guide-ex-list"></div>
+    </div>
+    <!-- 상세 뷰 -->
+    <div id="guide-detail-view" style="display:none">
+      <button class="guide-back-btn" onclick="guideShowList()">← 목록으로</button>
+      <div class="card">
+        <div id="guide-detail-content"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 루틴 탭 ── -->
+  <section class="tab-content" id="tab-routine">
+    <div class="rt-selector">
+      <div class="rt-label">⏱ 기간 선택</div>
+      <div class="rt-row" id="rt-period-row">
+        <button class="filter-btn active" data-rp="day">일단위</button>
+        <button class="filter-btn" data-rp="week">주단위</button>
+        <button class="filter-btn" data-rp="month">월단위</button>
+      </div>
+      <div class="rt-label">🎯 운동 목표</div>
+      <div class="rt-row" id="rt-goal-row">
+        <button class="filter-btn active" data-rg="hypertrophy">💪 근비대</button>
+        <button class="filter-btn" data-rg="strength">⚡ 근력</button>
+        <button class="filter-btn" data-rg="endurance">🏃 근지구력</button>
+      </div>
+      <div class="rt-label">🏋️ 운동 부위</div>
+      <div class="rt-row" id="rt-focus-row">
+        <button class="filter-btn active" data-rf="upper">상체</button>
+        <button class="filter-btn" data-rf="lower">하체</button>
+        <button class="filter-btn" data-rf="full">전신</button>
+      </div>
+      <button class="rt-gen-btn" onclick="generateRoutine()">✨ 루틴 생성하기</button>
+    </div>
+    <div class="rt-result" id="rt-result"></div>
+  </section>
+
+  <!-- ── 다이어트/칼로리 탭 ── -->
+  <section class="tab-content" id="tab-diet">
+    <!-- 음식 입력 -->
+    <div class="card" style="margin-bottom:12px">
+      <h2 style="font-size:1rem;font-weight:800;margin-bottom:12px">🍽️ 오늘 먹은 음식</h2>
+      <!-- Quick presets -->
+      <div class="diet-label">빠른 추가</div>
+      <div class="food-preset-grid" id="food-preset-grid"></div>
+      <!-- Manual -->
+      <div class="diet-label" style="margin-top:12px">직접 입력</div>
+      <div class="food-manual-row">
+        <input type="text" id="food-name-input" class="food-manual-input" placeholder="음식 이름">
+        <input type="number" id="food-kcal-input" class="food-kcal-input" placeholder="kcal" min="1" max="9999">
+        <button class="food-add-btn" onclick="addFoodItem()">추가</button>
+      </div>
+      <!-- Log list -->
+      <div id="food-log-list" style="margin-top:12px"></div>
+      <div id="food-total-row" style="display:none" class="food-total-row">
+        <span>오늘 총 섭취</span>
+        <span id="food-total-kcal" class="food-total-val">0 kcal</span>
+      </div>
+    </div>
+    <!-- Balance -->
+    <div class="card" id="diet-balance-card">
+      <h2 style="font-size:1rem;font-weight:800;margin-bottom:14px">⚖️ 오늘의 칼로리 밸런스</h2>
+      <div id="diet-balance-content">
+        <div class="diet-hint">음식을 추가하면 밸런스가 계산됩니다</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ── 500kcal 달성 팝업 ── -->
+<div id="achievement-popup" class="popup-overlay">
+  <div class="popup-box">
+    <span class="popup-pig-big">🐷</span>
+    <span class="popup-confetti">🎉✨🎊</span>
+    <div class="popup-title">오늘 할당량 달성!</div>
+    <div class="popup-kcal-badge">500 kcal 🔥</div>
+    <p class="popup-msg">
+      대단해요! 오늘 목표 칼로리를 채웠어요.<br>
+      이렇게 꾸준히 운동하면<br>
+      건강한 돼지가 될 수 있어요! 오잉크~ 🐷💪
+    </p>
+    <button class="popup-close" onclick="closeAchievementPopup()">💪 최고야, 내일도 화이팅!</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+// ── 상수 ──────────────────────────────────────────────────
+const ACTIVITIES = {
+  running:  { name: '달리기', icon: '🏃', distFactor: 1.036, met: 9 },
+  walking:  { name: '걷기',   icon: '🚶', distFactor: 0.55,  met: 3.5 },
+  cycling:  { name: '자전거', icon: '🚴', distFactor: 0.45,  met: 8 },
+  swimming: { name: '수영',   icon: '🏊', distFactor: 8.5,   met: 8 },
+};
+
+const EXERCISES = {
+  compound: [
+    '스쿼트', '데드리프트', '벤치프레스', '오버헤드프레스', '바벨로우',
+    '레그프레스', '인클라인벤치프레스', '덤벨로우', '랫풀다운',
+    '케이블로우', '덤벨프레스',
+  ],
+  isolation: [
+    '바이셉컬', '해머컬', '트라이셉푸쉬다운', '스컬크러셔',
+    '레그익스텐션', '레그컬', '사이드레터럴레이즈', '프론트레이즈',
+    '케이블크로스오버', '힙쓰러스트', '시티드카프레이즈', '페이스풀',
+  ],
+  bodyweight: [
+    '풀업', '친업', '딥스', '푸쉬업', '파이크푸쉬업',
+    '링딥스', '머슬업', '레그레이즈', '행잉니레이즈',
+    '버피', '플랭크', '마운틴클라이머', '스쿼트(맨몸)', '런지', 'AB슬라이드',
+  ],
+};
+
+// 성별 칼로리 계수 (여성은 동일 체중 대비 약 10% 적게 소모)
+const GENDER_FACTOR = { male: 1.0, female: 0.9 };
+
+// Epley 1RM 퍼센트 테이블
+const RM_TABLE = [
+  [1,100],[2,97],[3,93],[4,90],[5,87],
+  [6,85],[7,82],[8,80],[10,75],[12,70],[15,65],
+];
+
+// ── 상태 ──────────────────────────────────────────────────
+let bodyWeight = parseFloat(localStorage.getItem('bw_kg')) || 70;
+let gender = localStorage.getItem('gender') || 'male';
+let currentActivity = 'running';
+let currentExType = 'compound';
+let records = { cardio: [], weight: [] };
+window._records = records;
+let recTypeFilter = 'all';
+let recPeriodFilter = 'today';
+let charts = {};
+
+// ── 계산 함수 ─────────────────────────────────────────────
+function gf() { return GENDER_FACTOR[gender]; }
+
+function calcCardio(activity, dist, dur) {
+  const a = ACTIVITIES[activity];
+  if (dur > 0) return Math.round(a.met * bodyWeight * (dur / 60) * gf());
+  if (dist > 0) return Math.round(a.distFactor * dist * bodyWeight * gf());
+  return 0;
+}
+
+function calcWeight(exType, wkg, sets, reps) {
+  if (exType === 'bodyweight') {
+    const total = bodyWeight + (wkg || 0);
+    return Math.round(total * sets * reps * 0.045 * gf());
+  }
+  const f = exType === 'compound' ? 0.05 : 0.03;
+  return Math.round(wkg * sets * reps * f * gf());
+}
+
+function calc1RM(wkg, reps, exType) {
+  const effectiveW = exType === 'bodyweight' ? bodyWeight + (wkg || 0) : (wkg || 0);
+  if (!effectiveW || !reps || reps < 1) return 0;
+  if (reps === 1) return effectiveW;
+  return Math.round(effectiveW * (1 + reps / 30) * 10) / 10;
+}
+
+// ── 500kcal 팝업 ──────────────────────────────────────────
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
+function checkCalorieAchievement(cal) {
+  if (cal < 500) return;
+  if (localStorage.getItem('popup_shown_date') === todayStr()) return;
+  localStorage.setItem('popup_shown_date', todayStr());
+  document.getElementById('achievement-popup').classList.add('show');
+}
+
+function closeAchievementPopup() {
+  document.getElementById('achievement-popup').classList.remove('show');
+}
+
+// ── IndexedDB ─────────────────────────────────────────────
+const DB_NAME = 'fittrack_db';
+const DB_VERSION = 1;
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const database = e.target.result;
+      if (!database.objectStoreNames.contains('cardio')) {
+        database.createObjectStore('cardio', { keyPath: 'id', autoIncrement: true });
+      }
+      if (!database.objectStoreNames.contains('weight')) {
+        database.createObjectStore('weight', { keyPath: 'id', autoIncrement: true });
+      }
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e.target.error);
+  });
+}
+
+function dbGetAll(storeName) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readonly');
+    const req = tx.objectStore(storeName).getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbAdd(storeName, data) {
+  return new Promise((resolve, reject) => {
+    const payload = { ...data, created_at: Date.now() };
+    const tx = db.transaction(storeName, 'readwrite');
+    const req = tx.objectStore(storeName).add(payload);
+    req.onsuccess = () => resolve({ ...payload, id: req.result });
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbDelete(storeName, id) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite');
+    const req = tx.objectStore(storeName).delete(Number(id));
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// ── 데이터 함수 ────────────────────────────────────────────
+async function loadRecords() {
+  try {
+    const [cardio, weight] = await Promise.all([dbGetAll('cardio'), dbGetAll('weight')]);
+    cardio.sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
+    weight.sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
+    records = { cardio, weight };
+    window._records = records;
+    refreshAll();
+  } catch(e) {
+    toast('데이터 로드 실패', true);
+  }
+}
+
+async function saveCardioRec(data) {
+  try {
+    const rec = await dbAdd('cardio', data);
+    records.cardio.unshift(rec);
+    window._records = records;
+    refreshAll();
+    toast('🏃 유산소 기록 저장 완료!');
+  } catch { toast('저장 실패', true); }
+}
+
+async function saveWeightRec(data) {
+  try {
+    const rec = await dbAdd('weight', data);
+    records.weight.unshift(rec);
+    window._records = records;
+    refreshAll();
+    toast('💪 웨이트 기록 저장 완료!');
+  } catch { toast('저장 실패', true); }
+}
+
+async function deleteRec(type, id) {
+  if (!confirm('이 기록을 삭제하시겠습니까?')) return;
+  try {
+    await dbDelete(type, id);
+    if (type === 'cardio') records.cardio = records.cardio.filter(r => r.id !== Number(id));
+    else records.weight = records.weight.filter(r => r.id !== Number(id));
+    refreshAll();
+    toast('삭제되었습니다');
+  } catch { toast('삭제 실패', true); }
+}
+
+// ── UI ────────────────────────────────────────────────────
+function refreshAll() {
+  updateHeaderStats();
+  renderRecords();
+  renderStats();
+}
+
+function updateHeaderStats() {
+  const today = todayStr();
+  const todayCal = [
+    ...records.cardio.filter(r => r.date === today),
+    ...records.weight.filter(r => r.date === today),
+  ].reduce((s, r) => s + Number(r.calories), 0);
+  document.getElementById('today-cal').textContent = Math.round(todayCal).toLocaleString();
+  checkCalorieAchievement(Math.round(todayCal));
+}
+
+function filterRecords() {
+  const now = new Date();
+  const todayS = todayStr();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  const mondayS = monday.getFullYear() + '-' + String(monday.getMonth()+1).padStart(2,'0') + '-' + String(monday.getDate()).padStart(2,'0');
+  const firstDay = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+
+  function inPeriod(d) {
+    if (recPeriodFilter === 'today') return d === todayS;
+    if (recPeriodFilter === 'week')  return d >= mondayS;
+    if (recPeriodFilter === 'month') return d >= firstDay;
+    return true;
+  }
+
+  const cardio = records.cardio.filter(r => inPeriod(r.date));
+  const weight = records.weight.filter(r => inPeriod(r.date));
+
+  if (recTypeFilter === 'cardio') return { cardio, weight: [] };
+  if (recTypeFilter === 'weight') return { cardio: [], weight };
+  return { cardio, weight };
+}
+
+function renderRecords() {
+  const { cardio, weight } = filterRecords();
+
+  const totalCal = [...cardio, ...weight].reduce((s, r) => s + Number(r.calories), 0);
+  const totalDist = cardio.reduce((s, r) => s + Number(r.distance_km), 0);
+  document.getElementById('sum-cal').textContent = Math.round(totalCal).toLocaleString();
+  document.getElementById('sum-count').textContent = cardio.length + weight.length;
+  document.getElementById('sum-dist').textContent = totalDist.toFixed(1);
+
+  const all = [
+    ...cardio.map(r => ({ ...r, _type: 'cardio' })),
+    ...weight.map(r => ({ ...r, _type: 'weight' })),
+  ].sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : Number(b.created_at) - Number(a.created_at)));
+
+  const container = document.getElementById('records-list');
+  if (!all.length) {
+    container.innerHTML = `<div class="empty-state"><div class="big">🐷</div><p>기록이 없습니다.<br>운동해서 건강한 돼지가 되어봐요!</p></div>`;
+    return;
+  }
+
+  container.innerHTML = all.map(r => {
+    if (r._type === 'cardio') {
+      const a = ACTIVITIES[r.activity] || { name: r.activity, icon: '🏃' };
+      const meta = `${Number(r.distance_km).toFixed(1)}km${Number(r.duration_min) > 0 ? ` · ${r.duration_min}분` : ''}`;
+      return `<div class="record-item">
+        <div class="record-icon">${a.icon}</div>
+        <div class="record-body">
+          <div class="record-title c-cardio">${a.name}</div>
+          <div class="record-meta">${meta} · 체중 ${r.body_weight_kg}kg</div>
+        </div>
+        <div class="record-right">
+          <div class="record-cal">${Math.round(r.calories)} kcal</div>
+          <div class="record-date">${r.date}</div>
+        </div>
+        <button class="record-delete" onclick="deleteRec('cardio','${r.id}')">🗑</button>
+      </div>`;
+    } else {
+      const isBW = r.exercise_type === 'bodyweight';
+      const icon = isBW ? '🤸' : '🏋️';
+      const colorClass = isBW ? 'c-bodyweight' : 'c-weight';
+      const weightInfo = isBW
+        ? `맨몸${Number(r.weight_kg) > 0 ? `+${r.weight_kg}kg` : ''}`
+        : `${r.weight_kg}kg`;
+      const oneRM = r.one_rm ? ` · 1RM ${Number(r.one_rm).toFixed(1)}kg` : '';
+      return `<div class="record-item">
+        <div class="record-icon">${icon}</div>
+        <div class="record-body">
+          <div class="record-title ${colorClass}">${r.exercise}</div>
+          <div class="record-meta">${weightInfo} × ${r.sets}세트 × ${r.reps}회${oneRM}</div>
+        </div>
+        <div class="record-right">
+          <div class="record-cal">${Math.round(r.calories)} kcal</div>
+          <div class="record-date">${r.date}</div>
+        </div>
+        <button class="record-delete" onclick="deleteRec('weight','${r.id}')">🗑</button>
+      </div>`;
+    }
+  }).join('');
+}
+
+function renderStats() {
+  renderCalChart();
+  populateStatsExSelect();
+  renderRMChart();
+}
+
+function renderCalChart() {
+  const last30 = [];
+  const today = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    last30.push(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'));
+  }
+
+  const calByDate = {};
+  last30.forEach(d => { calByDate[d] = 0; });
+  [...records.cardio, ...records.weight].forEach(r => {
+    if (calByDate[r.date] !== undefined) calByDate[r.date] += Number(r.calories);
+  });
+
+  if (charts.cal) charts.cal.destroy();
+  const ctx = document.getElementById('chart-cal').getContext('2d');
+  charts.cal = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: last30.map(d => d.slice(5)),
+      datasets: [{
+        label: 'kcal',
+        data: last30.map(d => Math.round(calByDate[d])),
+        backgroundColor: 'rgba(176,120,0,0.55)',
+        borderColor: '#B07800',
+        borderWidth: 1,
+        borderRadius: 4,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8B7F72', font: { size: 10 }, maxTicksLimit: 10 }, grid: { color: '#EDE8DE' } },
+        y: { ticks: { color: '#8B7F72', font: { size: 10 } }, grid: { color: '#EDE8DE' } },
+      },
+    },
+  });
+}
+
+function populateStatsExSelect() {
+  const sel = document.getElementById('stats-ex-sel');
+  const exList = [...new Set(records.weight.map(r => r.exercise))];
+  const prev = sel.value;
+  sel.innerHTML = exList.length
+    ? exList.map(e => `<option value="${e}">${e}</option>`).join('')
+    : '<option value="">기록 없음</option>';
+  if (prev && exList.includes(prev)) sel.value = prev;
+}
+
+function renderRMChart() {
+  const ex = document.getElementById('stats-ex-sel').value;
+  const filtered = records.weight
+    .filter(r => r.exercise === ex && r.one_rm)
+    .sort((a, b) => a.date > b.date ? 1 : -1);
+
+  if (charts.rm) charts.rm.destroy();
+  const ctx = document.getElementById('chart-rm').getContext('2d');
+  charts.rm = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: filtered.map(r => r.date.slice(5)),
+      datasets: [{
+        label: '1RM (kg)',
+        data: filtered.map(r => Number(r.one_rm)),
+        borderColor: '#B07800',
+        backgroundColor: 'rgba(176,120,0,0.12)',
+        borderWidth: 2,
+        pointBackgroundColor: '#B07800',
+        pointRadius: 4,
+        fill: true,
+        tension: 0.3,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8B7F72', font: { size: 10 } }, grid: { color: '#EDE8DE' } },
+        y: { ticks: { color: '#8B7F72', font: { size: 10 } }, grid: { color: '#EDE8DE' } },
+      },
+    },
+  });
+}
+
+// ── 유산소 라이브 계산 ────────────────────────────────────
+function liveCardio() {
+  const dist = parseFloat(document.getElementById('c-dist').value) || 0;
+  const dur  = parseFloat(document.getElementById('c-dur').value) || 0;
+  const resultEl = document.getElementById('c-result');
+  const saveBtn  = document.getElementById('btn-c-save');
+
+  if (!dist && !dur) { resultEl.style.display = 'none'; saveBtn.disabled = true; return; }
+
+  const cal = calcCardio(currentActivity, dist, dur);
+  document.getElementById('c-cal').textContent = cal.toLocaleString();
+  const a = ACTIVITIES[currentActivity];
+  const gLabel = gender === 'male' ? '남성' : '여성';
+  const basis = dur > 0
+    ? `MET ${a.met} × 체중 ${bodyWeight}kg × ${dur}분 (${gLabel} 기준)`
+    : `${a.distFactor} × ${dist}km × 체중 ${bodyWeight}kg (${gLabel} 기준)`;
+  document.getElementById('c-sub').textContent = basis;
+  resultEl.style.display = '';
+  saveBtn.disabled = !dist;
+}
+
+// ── 웨이트 라이브 계산 ────────────────────────────────────
+function liveWeight() {
+  const wkg  = parseFloat(document.getElementById('w-kg').value) || 0;
+  const sets = parseInt(document.getElementById('w-sets').value) || 1;
+  const reps = parseInt(document.getElementById('w-reps').value) || 0;
+  const resultEl = document.getElementById('w-result');
+  const saveBtn  = document.getElementById('btn-w-save');
+
+  // 맨몸운동은 reps만 있어도 계산 가능
+  const canCalc = currentExType === 'bodyweight' ? reps > 0 : (wkg > 0 && reps > 0);
+
+  if (!canCalc) { resultEl.style.display = 'none'; saveBtn.disabled = true; return; }
+
+  const cal  = calcWeight(currentExType, wkg, sets, reps);
+  const oneRM = calc1RM(wkg, reps, currentExType);
+
+  document.getElementById('w-cal').textContent = cal.toLocaleString();
+  document.getElementById('w-1rm').textContent = oneRM;
+  resultEl.style.display = '';
+  saveBtn.disabled = false;
+  render1RMTable(wkg, reps, oneRM);
+}
+
+function render1RMTable(wkg, reps, oneRM) {
+  document.getElementById('rm-table').innerHTML = `
+    <div class="rm-table">
+      <div class="rm-table-header">
+        <span>반복 수</span><span>1RM 비율</span><span>권장 무게</span>
+      </div>
+      ${RM_TABLE.map(([r, pct]) => `
+        <div class="rm-table-row${r === reps ? ' highlight' : ''}">
+          <span>${r}회</span>
+          <span>${pct}%</span>
+          <span>${(oneRM * pct / 100).toFixed(1)}kg</span>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ── 운동 종목 옵션 ────────────────────────────────────────
+function populateExercises() {
+  const sel = document.getElementById('w-exercise');
+  sel.innerHTML = EXERCISES[currentExType].map(e => `<option value="${e}">${e}</option>`).join('');
+}
+
+// 맨몸운동 선택 시 UI 변경
+function updateBodyweightUI() {
+  const isBW = currentExType === 'bodyweight';
+  const note = document.getElementById('bw-note');
+  const label = document.getElementById('w-kg-label');
+  const input = document.getElementById('w-kg');
+
+  note.classList.toggle('show', isBW);
+  if (isBW) {
+    label.textContent = '추가 무게 (선택, kg)';
+    input.placeholder = '0 = 맨몸만';
+    document.getElementById('bw-note-val').textContent = `${bodyWeight}kg`;
+  } else {
+    label.textContent = '무게 (kg)';
+    input.placeholder = '0';
+  }
+}
+
+// ── 토스트 ────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (isError ? ' error' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ''; }, 2500);
+}
+
+// ── 초기화 ───────────────────────────────────────────────
+async function init() {
+  try {
+    db = await openDB();
+  } catch(e) {
+    toast('데이터베이스 초기화 실패 — 브라우저가 IndexedDB를 지원하는지 확인하세요', true);
+  }
+  // 성별 복원 및 버튼 상태
+  document.querySelectorAll('.gender-btn').forEach(btn => {
+    if (btn.dataset.gender === gender) btn.classList.add('active');
+    else btn.classList.remove('active');
+  });
+
+  // 체중 복원
+  const bwInput = document.getElementById('bw-input');
+  bwInput.value = bodyWeight;
+
+  // 날짜 기본값
+  document.getElementById('c-date').value = todayStr();
+  document.getElementById('w-date').value = todayStr();
+
+  // ── 성별 버튼 ──
+  document.querySelectorAll('.gender-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      gender = btn.dataset.gender;
+      localStorage.setItem('gender', gender);
+      document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      liveCardio();
+      liveWeight();
+      toast(gender === 'male' ? '♂ 남성으로 설정되었습니다' : '♀ 여성으로 설정되었습니다');
+    });
+  });
+
+  // ── 체중 입력 ──
+  bwInput.addEventListener('change', () => {
+    bodyWeight = parseFloat(bwInput.value) || 70;
+    localStorage.setItem('bw_kg', bodyWeight);
+    const badge = document.getElementById('bw-badge');
+    badge.classList.add('show');
+    setTimeout(() => badge.classList.remove('show'), 1500);
+    if (currentExType === 'bodyweight') {
+      document.getElementById('bw-note-val').textContent = `${bodyWeight}kg`;
+    }
+    liveCardio();
+    liveWeight();
+  });
+
+  // ── 탭 전환 ──
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      if (btn.dataset.tab === 'stats') renderStats();
+      if (btn.dataset.tab === 'guide') renderGuideList();
+      if (btn.dataset.tab === 'routine') initRoutineSelectors();
+      if (btn.dataset.tab === 'diet') { initFoodPresets(); renderFoodTab(); }
+    });
+  });
+
+  // ── 활동 선택 (유산소) ──
+  document.querySelectorAll('.activity-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentActivity = btn.dataset.activity;
+      liveCardio();
+    });
+  });
+
+  document.getElementById('c-dist').addEventListener('input', liveCardio);
+  document.getElementById('c-dur').addEventListener('input', liveCardio);
+
+  // ── 유산소 저장 ──
+  document.getElementById('btn-c-save').addEventListener('click', () => {
+    const dist = parseFloat(document.getElementById('c-dist').value) || 0;
+    const dur  = parseFloat(document.getElementById('c-dur').value) || 0;
+    if (!dist) return;
+    saveCardioRec({
+      date: document.getElementById('c-date').value || todayStr(),
+      activity: currentActivity,
+      distance_km: dist,
+      duration_min: dur,
+      body_weight_kg: bodyWeight,
+      calories: calcCardio(currentActivity, dist, dur),
+    });
+    document.getElementById('c-dist').value = '';
+    document.getElementById('c-dur').value = '';
+    liveCardio();
+  });
+
+  // ── 운동 종류 토글 (웨이트) ──
+  document.querySelectorAll('.type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentExType = btn.dataset.type;
+      populateExercises();
+      updateBodyweightUI();
+      liveWeight();
+    });
+  });
+
+  // ── 웨이트 입력 ──
+  ['w-kg','w-sets','w-reps'].forEach(id => {
+    document.getElementById(id).addEventListener('input', liveWeight);
+  });
+
+  populateExercises();
+  updateBodyweightUI();
+
+  // ── 웨이트 저장 ──
+  document.getElementById('btn-w-save').addEventListener('click', () => {
+    const wkg  = parseFloat(document.getElementById('w-kg').value) || 0;
+    const sets = parseInt(document.getElementById('w-sets').value) || 1;
+    const reps = parseInt(document.getElementById('w-reps').value) || 0;
+    const ex   = document.getElementById('w-exercise').value;
+
+    if (!ex || !reps) return;
+    if (currentExType !== 'bodyweight' && !wkg) return;
+
+    const oneRM = calc1RM(wkg, reps, currentExType);
+    saveWeightRec({
+      date: document.getElementById('w-date').value || todayStr(),
+      exercise: ex,
+      exercise_type: currentExType,
+      weight_kg: wkg,
+      sets,
+      reps,
+      one_rm: oneRM || null,
+      calories: calcWeight(currentExType, wkg, sets, reps),
+    });
+    document.getElementById('w-kg').value = '';
+    document.getElementById('w-reps').value = '';
+    document.getElementById('w-sets').value = '3';
+    liveWeight();
+  });
+
+  // ── 기록 필터 ──
+  document.querySelectorAll('[data-type-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-type-filter]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      recTypeFilter = btn.dataset.typeFilter;
+      renderRecords();
+    });
+  });
+
+  document.querySelectorAll('[data-period-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-period-filter]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      recPeriodFilter = btn.dataset.periodFilter;
+      renderRecords();
+    });
+  });
+
+  // ── 통계 운동 선택 ──
+  document.getElementById('stats-ex-sel').addEventListener('change', renderRMChart);
+
+  // ── 팝업 바깥 클릭으로 닫기 ──
+  document.getElementById('achievement-popup').addEventListener('click', function(e) {
+    if (e.target === this) closeAchievementPopup();
+  });
+
+  loadRecords();
+}
+
+// ── 운동 가이드 ───────────────────────────────────────────
+const GUIDE_DATA = [
+  /* 복합운동 */
+  { name:'스쿼트',cat:'compound',icon:'🏋️',diff:3,primary:['대퇴사두근','둔근'],secondary:['햄스트링','척추기립근','코어'],
+    effects:[['🦵','하체 전체 근력 강화'],['🔥','기초 대사량 증가'],['⚖️','좌우 균형 발달'],['🏆','전신 호르몬 반응 극대화']],
+    steps:['발을 어깨너비로 벌리고 발끝을 15~30도 바깥으로 향하게 선다.','가슴을 펴고 시선을 정면 또는 약간 위로 유지한다.','무릎이 발끝 방향을 따르도록 엉덩이를 뒤로 빼며 천천히 앉는다.','허벅지가 바닥과 평행(또는 그 이하)이 될 때까지 내려간다.','발뒤꿈치로 바닥을 밀며 일어서고, 정점에서 둔근을 조인다.'],
+    sets:[['근력 강화','s','5세트','3~5회','3~5분','고중량 저반복'],['근비대','h','4세트','8~12회','90초','이심성 집중'],['근지구력','e','3세트','15~20회','45초','저중량 고반복']],
+    tip:'무릎이 발끝 안쪽으로 모이지 않도록 주의. 발뒤꿈치가 들리면 발목 유연성을 먼저 개선하세요.'},
+  { name:'데드리프트',cat:'compound',icon:'🏋️',diff:4,primary:['척추기립근','햄스트링','둔근'],secondary:['광배근','승모근','전완근'],
+    effects:[['💪','전신 후면 사슬 강화'],['📐','자세 교정 효과'],['✊','악력·코어 동시 강화'],['⚡','폭발적 근력 향상']],
+    steps:['바벨을 발등 위(정강이 가까이)에 두고 발을 엉덩이 너비로 선다.','힙 힌지 동작으로 허리를 곧게 펴고 바를 잡는다(오버 또는 믹스 그립).','복압을 높이고 바닥을 밀듯 다리를 펴며 일어선다.','바가 정강이를 스치듯 가까이 유지하며 엉덩이를 앞으로 밀어 일어선다.','완전히 선 뒤 반대 순서로 천천히 내린다.'],
+    sets:[['근력 강화','s','5세트','1~5회','3~5분','최대 근력 향상'],['근비대','h','4세트','6~10회','2분','주 1~2회 권장'],['근지구력','e','3세트','12~15회','60초','루마니안 DL 변형 추천']],
+    tip:'허리 라운딩은 부상의 주원인입니다. 중량보다 자세를 먼저 완성하세요.'},
+  { name:'벤치프레스',cat:'compound',icon:'🏋️',diff:3,primary:['대흉근'],secondary:['삼두근','전면 삼각근'],
+    effects:[['💪','상체 밀기 근력 향상'],['🫁','흉근 볼륨 발달'],['🔗','삼두·어깨 협응 강화']],
+    steps:['벤치에 누워 등 상부·둔근을 밀착, 발은 바닥에 평평하게 놓는다.','바를 어깨너비 1.5배로 잡고 랙에서 빼내어 젖꼭지 위로 든다.','천천히 가슴 하부에 바가 닿을 때까지 내린다(팔꿈치 약 75도).','흉근을 수축하며 폭발적으로 밀어올린다.','반복 시 살짝 긴장을 유지하며 내린다.'],
+    sets:[['근력 강화','s','5세트','3~5회','3~5분','스팟터 필수'],['근비대','h','4세트','8~12회','90초','이심성 3초'],['근지구력','e','3세트','15~20회','45초','덤벨 변형 병행']],
+    tip:'바를 너무 넓게 잡거나 팔꿈치를 90도 이상 벌리면 어깨에 부담이 됩니다.'},
+  { name:'오버헤드프레스',cat:'compound',icon:'🏋️',diff:4,primary:['삼각근 전면·측면'],secondary:['삼두근','승모근','코어'],
+    effects:[['🎯','어깨 전체 근력 강화'],['🏗️','상체 안정성 향상'],['⚖️','코어 연계 근력 발달']],
+    steps:['바를 쇄골 바로 위에 올리고 어깨너비로 잡는다.','발은 어깨너비, 코어와 둔근을 강하게 수축한다.','머리를 약간 뒤로 빼며 바를 수직으로 밀어올린다.','팔꿈치가 완전히 펴질 때 머리는 바 앞으로 나온다.','천천히 쇄골 위치로 내리며 반복한다.'],
+    sets:[['근력 강화','s','5세트','3~5회','3분','코어 긴장 필수'],['근비대','h','4세트','8~12회','90초','시티드 변형 가능'],['근지구력','e','3세트','15회','60초','덤벨로 가동범위 확대']],
+    tip:'허리가 과도하게 꺾이면 코어 강화가 먼저입니다. 무게를 줄이고 자세를 잡으세요.'},
+  { name:'바벨로우',cat:'compound',icon:'🏋️',diff:4,primary:['광배근','승모근 중부'],secondary:['후면 삼각근','이두근'],
+    effects:[['📐','등 두께 발달'],['🦴','자세 교정'],['💪','당기기 근력 강화']],
+    steps:['발을 엉덩이 너비로 서고 힙 힌지로 상체를 45~70도 숙인다.','바를 어깨너비(오버 그립)로 잡고 등을 평평하게 유지한다.','팔꿈치를 뒤쪽으로 당기며 바를 아랫배 방향으로 끌어당긴다.','광배근이 완전히 수축되면 잠시 정지한다.','천천히 내리며 어깨가 완전히 이완되도록 팔을 뻗는다.'],
+    sets:[['근력 강화','s','5세트','4~6회','3분','펜들레이로우 변형 추천'],['근비대','h','4세트','8~12회','90초','이심성 3초'],['근지구력','e','3세트','15회','60초','덤벨로우 대체 가능']],
+    tip:'반동을 이용하면 허리 부상 위험이 높습니다. 느린 속도로 근육을 자극하세요.'},
+  { name:'레그프레스',cat:'compound',icon:'🏋️',diff:2,primary:['대퇴사두근'],secondary:['햄스트링','둔근'],
+    effects:[['🦵','하체 근량 증가'],['🛡️','관절 부담 최소화'],['🔧','스쿼트 보조 운동']],
+    steps:['시트에 등을 밀착하고 발판에 어깨너비로 발을 올린다.','안전 잠금장치를 해제하고 발판을 천천히 가슴 쪽으로 내린다.','무릎이 90도 이상 구부러지면 멈춘다.','발뒤꿈치로 발판을 밀어 시작 자세로 돌아온다.','무릎을 완전히 잠그지 않고 약간 남겨두며 반복한다.'],
+    sets:[['근력 강화','s','4세트','6~8회','2분','고중량 적용 용이'],['근비대','h','4세트','10~15회','90초','발 위치로 자극 조절'],['근지구력','e','3세트','20~25회','60초','드롭셋 효과적']],
+    tip:'발판 위치가 낮을수록 대퇴사두, 높을수록 둔근·햄스트링에 자극됩니다.'},
+  { name:'인클라인벤치프레스',cat:'compound',icon:'🏋️',diff:3,primary:['상부 대흉근'],secondary:['전면 삼각근','삼두근'],
+    effects:[['🎯','상부 흉근 집중 발달'],['💎','쇄골 라인 선명화'],['📈','벤치프레스 보완']],
+    steps:['벤치를 30~45도 경사로 조절하고 등을 밀착시킨다.','바를 어깨너비보다 약간 넓게 잡고 랙에서 뺀다.','쇄골~상부 가슴 사이로 바를 내린다.','상부 흉근을 수축하며 밀어올린다.','천천히 제어하며 내리고 반복한다.'],
+    sets:[['근력 강화','s','4세트','5~7회','3분',''],['근비대','h','4세트','8~12회','90초','덤벨 변형으로 가동범위 확대'],['근지구력','e','3세트','15회','60초','']],
+    tip:'경사가 너무 가파르면 삼각근 운동이 됩니다. 30~45도가 적정 각도입니다.'},
+  { name:'덤벨로우',cat:'compound',icon:'🏋️',diff:2,primary:['광배근'],secondary:['승모근','후면 삼각근','이두근'],
+    effects:[['⚖️','좌우 대칭 등 발달'],['📏','가동범위 극대화'],['🔧','바벨로우 보완']],
+    steps:['한쪽 무릎과 손을 벤치에 올려 지지한다.','반대 손으로 덤벨을 잡고 팔을 아래로 뻗는다.','등을 평평하게 유지한 채 팔꿈치를 뒤로 당긴다.','덤벨을 옆구리까지 올리며 광배근을 수축한다.','천천히 내리며 반대쪽도 실시한다.'],
+    sets:[['근력 강화','s','4세트','6~8회','90초',''],['근비대','h','4세트','10~12회','75초','최대 수축 1초 정지 추천'],['근지구력','e','3세트','15~20회','45초','']],
+    tip:'팔의 힘이 아닌 등(광배근)으로 당기는 느낌에 집중하세요.'},
+  { name:'랫풀다운',cat:'compound',icon:'🏋️',diff:2,primary:['광배근'],secondary:['이두근','후면 삼각근'],
+    effects:[['📐','등 넓이 발달'],['🏋️','풀업 전 단계 훈련'],['💎','V자 체형 만들기']],
+    steps:['머신에 앉아 무릎 패드로 허벅지를 고정하고 넓은 오버그립으로 바를 잡는다.','상체를 약간 뒤로 기울이고 가슴을 편다.','팔꿈치를 아래·뒤로 당기며 쇄골 위로 바를 내린다.','광배근이 완전히 수축될 때 1초 정지한다.','천천히 팔을 펴며 시작 자세로 돌아간다.'],
+    sets:[['근력 강화','s','4세트','6~8회','2분',''],['근비대','h','4세트','10~12회','90초',''],['근지구력','e','3세트','15~20회','60초','언더그립 변형 병행']],
+    tip:'바를 목 뒤로 당기면 경추에 부담이 됩니다. 반드시 가슴 앞으로 당기세요.'},
+  { name:'케이블로우',cat:'compound',icon:'🏋️',diff:2,primary:['광배근','승모근 중부'],secondary:['후면 삼각근','이두근'],
+    effects:[['🎯','등 두께·중부 등 강화'],['📐','자세 교정'],['⚡','지속적 긴장감 제공']],
+    steps:['케이블 머신 발판에 발을 대고 무릎을 약간 구부려 앉는다.','상체를 곧게 세우고 핸들을 양손으로 잡는다.','팔꿈치를 뒤로 당기며 핸들을 배꼽 방향으로 끌어당긴다.','견갑골을 조이며 최대 수축 지점에서 1초 정지한다.','천천히 팔을 펴며 견갑골이 완전히 이완되도록 내린다.'],
+    sets:[['근력 강화','s','4세트','6~8회','90초',''],['근비대','h','4세트','10~12회','75초',''],['근지구력','e','3세트','15~20회','45초','']],
+    tip:'상체를 앞뒤로 흔들지 말고 등 근육의 수축·이완에만 집중하세요.'},
+  { name:'덤벨프레스',cat:'compound',icon:'🏋️',diff:2,primary:['대흉근'],secondary:['삼두근','전면 삼각근'],
+    effects:[['⚖️','좌우 균형 흉근 발달'],['📏','가동범위 극대화'],['🦴','관절 안정화 근육 강화']],
+    steps:['덤벨을 양손에 들고 벤치에 누운다.','덤벨을 가슴 옆 어깨 높이에 위치, 팔꿈치 약 90도.','흉근을 수축하며 덤벨을 위로 밀어올린다.','양 덤벨이 위쪽에서 서로 가까워지도록 움직인다.','천천히 내리며 가슴 근육의 스트레칭을 느낀다.'],
+    sets:[['근력 강화','s','4세트','6~8회','2분',''],['근비대','h','4세트','10~12회','90초',''],['근지구력','e','3세트','15~20회','60초','']],
+    tip:'바벨보다 안정성이 낮으므로 처음엔 가벼운 중량부터 시작하세요.'},
+  /* 고립운동 */
+  { name:'바이셉컬',cat:'isolation',icon:'💪',diff:1,primary:['이두근 장두·단두'],secondary:['전완근'],
+    effects:[['💪','팔뚝 앞쪽 볼륨 증가'],['🎯','이두근 피크 강화'],['🔗','당기기 운동 보완']],
+    steps:['바벨 또는 덤벨을 언더그립으로 잡고 팔을 몸통 옆에 늘어뜨린다.','팔꿈치를 고정하고 무게를 어깨 방향으로 들어올린다.','이두근이 완전히 수축되면 정점에서 1초 정지한다.','천천히(3~4초) 내리며 이두근 이완을 느낀다.','팔꿈치가 완전히 펴질 때까지 내린 후 반복한다.'],
+    sets:[['근력 강화','s','4세트','5~7회','2분','EZ바 추천'],['근비대','h','3세트','10~12회','60초','피크 수축 집중'],['근지구력','e','3세트','15~20회','30초','드롭셋 효과적']],
+    tip:'팔꿈치가 앞뒤로 움직이면 이두 자극이 줄어듭니다. 팔꿈치를 몸통 옆에 고정하세요.'},
+  { name:'해머컬',cat:'isolation',icon:'💪',diff:1,primary:['상완근','이두근'],secondary:['전완근'],
+    effects:[['💪','팔뚝 두께 증가'],['✊','전완근 강화'],['🛡️','손목 부담 경감']],
+    steps:['덤벨을 세로로(중립 그립) 잡고 양 옆에 늘어뜨린다.','엄지손가락이 위를 향하도록 유지하며 팔꿈치를 구부린다.','덤벨이 어깨 높이에 올 때까지 들어올린다.','1초 수축 후 천천히 내린다.','번갈아 또는 동시에 실시할 수 있다.'],
+    sets:[['근력 강화','s','4세트','6~8회','90초',''],['근비대','h','3세트','10~12회','60초','교대 수행 시 집중도 향상'],['근지구력','e','3세트','15~20회','30초','']],
+    tip:'바이셉컬보다 상완근·전완근 자극이 강해 팔뚝 두께를 채우는 데 효과적입니다.'},
+  { name:'트라이셉푸쉬다운',cat:'isolation',icon:'💪',diff:1,primary:['삼두근 외측두·내측두'],secondary:[],
+    effects:[['💪','팔뚝 뒤쪽 발달'],['💎','삼두 근육 선명도 향상'],['🔧','벤치프레스 보완']],
+    steps:['케이블 머신 높은 위치에 바 또는 로프 핸들을 연결한다.','양손으로 핸들을 잡고 팔꿈치를 몸통에 고정한다.','팔꿈치를 기준으로 팔뚝을 아래로 밀어 완전히 편다.','삼두근 최대 수축 시 1초 정지한다.','천천히 시작 자세로 돌아와 반복한다.'],
+    sets:[['근력 강화','s','4세트','6~8회','90초',''],['근비대','h','3세트','10~15회','60초','로프 변형으로 외측두 강조'],['근지구력','e','3세트','20회','30초','드롭셋 추천']],
+    tip:'팔꿈치가 앞으로 나오면 삼두 자극이 떨어집니다. 팔꿈치를 옆구리에 고정하세요.'},
+  { name:'스컬크러셔',cat:'isolation',icon:'💪',diff:3,primary:['삼두근 장두'],secondary:['삼두근 내측두'],
+    effects:[['🎯','삼두 장두 집중 발달'],['💪','팔 전체 볼륨 증가'],['⬆️','오버헤드 근력 강화']],
+    steps:['바벨 또는 EZ바를 들고 벤치에 누운다.','팔을 머리 위로 수직으로 들어올린다.','팔꿈치를 고정하고 바를 이마 방향으로 천천히 내린다.','삼두근 스트레칭을 느끼며 완전히 내린다.','삼두근을 수축하며 팔꿈치를 다시 펴 시작 자세로 돌아온다.'],
+    sets:[['근력 강화','s','4세트','6~8회','2분',''],['근비대','h','3세트','10~12회','90초','EZ바 사용 시 손목 부담 경감'],['근지구력','e','3세트','15회','60초','']],
+    tip:'팔꿈치가 바깥으로 벌어지면 자극이 분산됩니다. 팔꿈치를 모은 채 수행하세요.'},
+  { name:'레그익스텐션',cat:'isolation',icon:'💪',diff:1,primary:['대퇴사두근'],secondary:[],
+    effects:[['🎯','대퇴부 전면 집중 발달'],['🦴','무릎 안정화'],['🔧','스쿼트 보조']],
+    steps:['머신 시트에 앉아 발목 패드를 발목 앞쪽에 위치시킨다.','등받이에 등을 밀착하고 손잡이를 잡는다.','대퇴사두근을 수축하며 다리를 완전히 편다.','최대 수축 지점에서 1~2초 정지한다.','천천히 내리며 시작 자세로 돌아간다.'],
+    sets:[['근력 강화','s','4세트','8~10회','90초',''],['근비대','h','4세트','12~15회','60초','이심성 집중 추천'],['근지구력','e','3세트','20~25회','30초','드롭셋 효과적']],
+    tip:'무릎 통증이 있다면 완전한 가동범위 대신 부분 범위(60~90도)로 수행하세요.'},
+  { name:'레그컬',cat:'isolation',icon:'💪',diff:1,primary:['햄스트링'],secondary:['비복근'],
+    effects:[['🎯','대퇴부 후면 집중 발달'],['🦴','무릎 굴곡 근력 강화'],['🛡️','햄스트링 부상 예방']],
+    steps:['머신에 엎드려 발목 패드를 발뒤꿈치 위에 위치시킨다.','복부를 머신에 밀착하고 손잡이를 잡는다.','햄스트링을 수축하며 발뒤꿈치를 엉덩이 방향으로 당긴다.','최대 수축 지점에서 1초 정지한다.','천천히 다리를 펴며 시작 자세로 돌아간다.'],
+    sets:[['근력 강화','s','4세트','8~10회','90초',''],['근비대','h','4세트','12~15회','60초',''],['근지구력','e','3세트','20회','30초','']],
+    tip:'엉덩이가 들리면 햄스트링보다 둔근이 주도합니다. 복부를 머신에 밀착하세요.'},
+  { name:'사이드레터럴레이즈',cat:'isolation',icon:'💪',diff:2,primary:['삼각근 측면'],secondary:['승모근 상부'],
+    effects:[['📐','어깨 넓이 발달'],['💎','V라인 체형 형성'],['🎯','어깨 볼륨 향상']],
+    steps:['덤벨을 양손에 들고 몸통 옆에 위치시킨다.','팔꿈치를 약 15~20도 구부린 채 유지한다.','소지손가락 쪽이 위를 향하도록 약간 기울이며 팔을 옆으로 들어올린다.','어깨 높이(수평)까지 올리고 1초 정지한다.','천천히 내리며 반복한다.'],
+    sets:[['근력 강화','s','4세트','8~10회','90초','케이블 변형 추천'],['근비대','h','4세트','12~15회','60초','이심성 3초 집중'],['근지구력','e','3세트','20회','30초','드롭셋 효과적']],
+    tip:'너무 높이 들면 승모근이 개입됩니다. 어깨 높이에서 멈추는 것이 포인트입니다.'},
+  { name:'프론트레이즈',cat:'isolation',icon:'💪',diff:2,primary:['삼각근 전면'],secondary:['상부 대흉근'],
+    effects:[['🎯','어깨 앞쪽 발달'],['🔧','벤치프레스·OHP 보완']],
+    steps:['덤벨 또는 바를 양손에 들고 허벅지 앞에 위치시킨다.','팔꿈치를 살짝 구부린 채 팔을 앞으로 들어올린다.','어깨 높이까지 올리고 1초 정지한다.','천천히 내리며 반복한다.','번갈아 또는 동시에 수행할 수 있다.'],
+    sets:[['근력 강화','s','3세트','8~10회','90초',''],['근비대','h','3세트','12~15회','60초',''],['근지구력','e','3세트','15~20회','30초','']],
+    tip:'전면 삼각근은 벤치프레스 등에서 이미 많이 자극받으므로 과도한 볼륨은 피하세요.'},
+  { name:'케이블크로스오버',cat:'isolation',icon:'💪',diff:2,primary:['대흉근 내측'],secondary:['대흉근 전체'],
+    effects:[['💎','흉근 선명도·분리도 향상'],['🎯','흉근 내측 선 강화'],['⚡','지속적 긴장감']],
+    steps:['케이블 머신 양쪽 높은 위치에 핸들을 연결하고 사이에 선다.','양손으로 핸들을 잡고 한 발 내딛어 상체를 약간 기울인다.','팔꿈치를 약간 구부린 채 가슴 앞으로 호를 그리며 당긴다.','양손이 몸 중앙에서 교차할 때 흉근을 최대 수축한다.','천천히 원위치로 돌아가며 가슴이 스트레칭되는 것을 느낀다.'],
+    sets:[['근력 강화','s','4세트','8~10회','90초',''],['근비대','h','4세트','12~15회','60초','핸들 높이로 자극 조절'],['근지구력','e','3세트','20회','30초','드롭셋 효과적']],
+    tip:'핸들 높이를 조절하면 상·중·하부 흉근 자극을 달리할 수 있습니다.'},
+  { name:'힙쓰러스트',cat:'isolation',icon:'💪',diff:2,primary:['대둔근'],secondary:['중둔근','햄스트링'],
+    effects:[['🎯','둔근 집중 발달'],['✨','힙업 효과'],['💪','고관절 신전 근력 강화']],
+    steps:['벤치 가장자리에 등 상부를 기대고 바벨을 골반 위에 올린다.','발을 어깨너비로 벌리고 무릎을 약 90도로 구부린다.','둔근을 강하게 수축하며 골반을 위로 밀어올린다.','몸통이 바닥과 평행이 될 때 1~2초 정지한다.','천천히 골반을 내리며 반복한다.'],
+    sets:[['근력 강화','s','4세트','6~8회','2분',''],['근비대','h','4세트','10~15회','90초','정점 수축 2초 필수'],['근지구력','e','3세트','20회','60초','밴드 힙쓰러스트 변형 가능']],
+    tip:'발뒤꿈치로 바닥을 밀고 발끝을 약간 바깥으로 향하면 둔근 자극이 극대화됩니다.'},
+  { name:'시티드카프레이즈',cat:'isolation',icon:'💪',diff:1,primary:['가자미근'],secondary:['비복근'],
+    effects:[['💪','종아리 하부 발달'],['🦶','발목 안정성 향상']],
+    steps:['머신 또는 의자에 앉아 무릎 위에 중량을 올린다.','발 앞쪽을 발판 끝에 올리고 발뒤꿈치를 바닥 쪽으로 내린다.','발뒤꿈치를 최대한 높이 들어올리며 수축한다.','정점에서 1~2초 유지한다.','발뒤꿈치를 천천히 완전히 내리며 스트레칭한다.'],
+    sets:[['근력 강화','s','4세트','8~10회','90초',''],['근비대','h','4세트','15~20회','60초','이심성 3초 집중'],['근지구력','e','3세트','25~30회','30초','']],
+    tip:'서서 하는 카프레이즈(비복근 중심)와 병행하면 종아리 전체를 균형 있게 발달시킵니다.'},
+  { name:'페이스풀',cat:'isolation',icon:'💪',diff:2,primary:['후면 삼각근','회전근개'],secondary:['승모근 중·하부'],
+    effects:[['🛡️','어깨 건강 유지'],['📐','라운드숄더 교정'],['✅','자세 개선']],
+    steps:['케이블 머신을 얼굴 높이로 설정하고 로프 핸들을 연결한다.','양손으로 로프를 잡고 한 발 앞에 서거나 바닥에 앉는다.','팔꿈치를 어깨 높이로 높게 들며 로프를 얼굴 방향으로 당긴다.','후면 삼각근이 완전히 수축될 때 1초 정지한다.','천천히 시작 자세로 돌아가며 반복한다.'],
+    sets:[['근력 강화','s','4세트','10~12회','60초',''],['근비대','h','4세트','15회','45초',''],['근지구력','e','3세트','20회','30초','매 운동 세션 포함 권장']],
+    tip:'어깨 건강을 위해 매 운동 세션에 포함하길 권장합니다. 가벼운 중량으로 고반복이 효과적입니다.'},
+  /* 맨몸운동 */
+  { name:'풀업',cat:'bodyweight',icon:'🤸',diff:4,primary:['광배근'],secondary:['이두근','후면 삼각근'],
+    effects:[['📐','등 넓이·두께 발달'],['✊','매달리기 근력 향상'],['💎','V자 체형 완성']],
+    steps:['철봉을 어깨너비보다 약간 넓게 오버그립(손등이 앞)으로 잡는다.','팔을 완전히 펴고 매달린 채 코어를 수축한다.','팔꿈치를 아래·뒤로 당기며 턱이 철봉 위로 올라올 때까지 당긴다.','정점에서 1초 정지 후 천천히 팔을 펴며 내려간다.','완전히 팔이 펴지면 다시 반복한다.'],
+    sets:[['근력 강화','s','5세트','최대 반복','3분','가중 풀업으로 발전'],['근비대','h','4세트','8~12회','90초','밴드 보조로 반복 수 조절'],['근지구력','e','3세트','최대 반복','60초','고반복 도전']],
+    tip:'처음에는 네거티브(천천히 내리기)나 밴드 보조로 시작하세요.'},
+  { name:'친업',cat:'bodyweight',icon:'🤸',diff:3,primary:['이두근','광배근'],secondary:['전완근'],
+    effects:[['💪','이두근 강화'],['📐','등 발달'],['📈','풀업 입문 단계']],
+    steps:['철봉을 어깨너비로 언더그립(손바닥이 앞)으로 잡는다.','팔을 완전히 펴고 매달린다.','이두근을 수축하며 턱이 철봉 위로 올라올 때까지 당긴다.','정점에서 잠시 정지 후 천천히 내려간다.','완전히 팔이 펴지면 반복한다.'],
+    sets:[['근력 강화','s','5세트','최대 반복','2분',''],['근비대','h','4세트','8~12회','90초',''],['근지구력','e','3세트','최대 반복','60초','']],
+    tip:'풀업보다 이두근 자극이 강하고 난이도가 낮아 초보자에게 먼저 추천됩니다.'},
+  { name:'딥스',cat:'bodyweight',icon:'🤸',diff:3,primary:['삼두근','대흉근'],secondary:['전면 삼각근'],
+    effects:[['💪','상체 밀기 근력 강화'],['🎯','삼두·흉근 발달'],['⬆️','고강도 맨몸 운동']],
+    steps:['평행봉을 양손으로 잡고 팔을 펴 몸을 지지한다.','다리를 교차하거나 앞으로 내밀어 안정된 자세를 잡는다.','천천히 팔꿈치를 구부리며 몸을 내린다(90도 이상 구부리지 않는다).','삼두근을 수축하며 폭발적으로 밀어올린다.','팔꿈치를 완전히 펴며 시작 자세로 돌아간다.'],
+    sets:[['근력 강화','s','5세트','최대 반복','3분','가중 딥스 벨트 활용'],['근비대','h','4세트','10~15회','90초','밴드 보조로 반복 조절'],['근지구력','e','3세트','최대 반복','60초','']],
+    tip:'상체를 앞으로 기울이면 흉근, 수직으로 유지하면 삼두근에 더 자극됩니다.'},
+  { name:'푸쉬업',cat:'bodyweight',icon:'🤸',diff:2,primary:['대흉근'],secondary:['삼두근','코어'],
+    effects:[['✅','기초 상체 근력 향상'],['📍','장소 무관 수행 가능'],['🔗','코어 연계 강화']],
+    steps:['손을 어깨너비보다 약간 넓게 짚고 발끝을 세워 플랭크 자세를 취한다.','머리부터 발까지 일직선이 되도록 유지한다.','팔꿈치를 구부리며 가슴이 바닥에 거의 닿을 때까지 내린다.','흉근을 수축하며 폭발적으로 밀어올린다.','팔꿈치를 완전히 펴며 반복한다.'],
+    sets:[['근력 강화','s','5세트','최대 반복','2분','발 높이 올리면 상부 흉근 강조'],['근비대','h','4세트','15~20회','60초','체중 조끼 활용 가능'],['근지구력','e','3세트','최대 반복','30초','타이머 푸쉬업 도전']],
+    tip:'무릎을 바닥에 대고 수행하면 부하가 줄어 초보자에게 적합합니다.'},
+  { name:'파이크푸쉬업',cat:'bodyweight',icon:'🤸',diff:3,primary:['삼각근 전면·측면'],secondary:['삼두근'],
+    effects:[['🎯','어깨 근력 강화'],['🏆','핸드스탠드 준비 단계'],['🔧','오버헤드프레스 대체']],
+    steps:['손을 어깨너비로 짚고 엉덩이를 위로 높이 들어 역V자 자세를 만든다.','발을 손과 가까이 위치시킬수록 난이도가 높아진다.','팔꿈치를 구부리며 머리를 바닥 방향으로 내린다.','머리가 손 사이 바닥에 거의 닿으면 멈춘다.','삼각근을 수축하며 밀어올려 시작 자세로 돌아간다.'],
+    sets:[['근력 강화','s','4세트','6~10회','2분',''],['근비대','h','4세트','10~15회','90초','발을 박스 위에 올리면 난이도 증가'],['근지구력','e','3세트','최대 반복','60초','']],
+    tip:'발을 박스 위에 올리면 핸드스탠드 푸쉬업에 가까운 자극을 줄 수 있습니다.'},
+  { name:'링딥스',cat:'bodyweight',icon:'🤸',diff:5,primary:['삼두근','대흉근'],secondary:['코어 안정화 근육'],
+    effects:[['⚡','안정화 근육 강화'],['🎯','딥스보다 높은 자극'],['🏆','체조 기초 근력']],
+    steps:['체조링을 잡고 팔을 펴 몸을 지지한다.','링이 흔들리지 않도록 코어·둔근을 단단히 조인다.','팔꿈치를 구부리며 천천히 몸을 내린다.','링이 겨드랑이 옆에 올 때까지 내린 후 멈춘다.','삼두근을 수축하며 밀어올리고, 정점에서 링을 내측으로 잠근다.'],
+    sets:[['근력 강화','s','5세트','최대 반복','3분',''],['근비대','h','4세트','8~12회','2분',''],['근지구력','e','3세트','최대 반복','90초','']],
+    tip:'일반 딥스 15회 이상 가능할 때 도전하세요. 초보자는 발을 바닥에 댄 채 시작하세요.'},
+  { name:'머슬업',cat:'bodyweight',icon:'🤸',diff:5,primary:['광배근','이두근','삼두근'],secondary:['전면 삼각근'],
+    effects:[['🏆','풀업+딥스 복합 운동'],['⚡','폭발적 당기기 근력'],['💪','상체 종합 발달']],
+    steps:['철봉을 오버그립으로 잡고 매달린다.','몸을 약간 흔들어 반동을 만들고 폭발적으로 철봉 위로 당겨 올라간다.','팔꿈치가 철봉 위로 올라오면 상체를 앞으로 기울여 딥스 자세를 만든다.','삼두근을 수축하며 팔꿈치를 펴 몸을 위로 밀어올린다.','천천히 내려와 시작 자세로 돌아간다.'],
+    sets:[['근력 강화','s','5세트','최대 반복','5분',''],['근비대','h','4세트','5~8회','3분',''],['근지구력','e','3세트','최대 반복','2분','']],
+    tip:'풀업 10회 이상, 딥스 15회 이상 가능할 때 도전하세요.'},
+  { name:'레그레이즈',cat:'bodyweight',icon:'🤸',diff:3,primary:['하복부','장요근'],secondary:['복직근'],
+    effects:[['🎯','하복부 집중 강화'],['🏗️','코어 안정성'],['🛡️','척추 보호']],
+    steps:['철봉에 오버그립으로 매달린다.','코어를 수축하고 반동 없이 다리를 앞으로 들어올린다.','다리를 수평(또는 수직)이 될 때까지 올린다.','하복부를 수축한 채 1초 정지한다.','천천히 내리며 반복한다.'],
+    sets:[['근력 강화','s','4세트','10~12회','90초',''],['근비대','h','4세트','15회','60초',''],['근지구력','e','3세트','최대 반복','45초','']],
+    tip:'무릎을 구부리고 올리는 행잉니레이즈로 먼저 연습한 후 도전하세요.'},
+  { name:'행잉니레이즈',cat:'bodyweight',icon:'🤸',diff:2,primary:['복근 하부','장요근'],secondary:['전완근'],
+    effects:[['💪','복근 발달'],['📈','레그레이즈 진입 단계'],['🏗️','코어 강화']],
+    steps:['철봉에 어깨너비로 매달린다.','코어를 수축하고 무릎을 구부려 가슴 쪽으로 끌어올린다.','복근이 수축되는 것을 느끼며 올라온다.','정점에서 1초 정지한다.','천천히 내리며 발이 흔들리지 않도록 제어한다.'],
+    sets:[['근력 강화','s','4세트','10~15회','60초',''],['근비대','h','4세트','15~20회','45초',''],['근지구력','e','3세트','최대 반복','30초','']],
+    tip:'몸이 흔들리면 코어 힘이 아닌 반동을 사용하는 것입니다. 천천히 제어하세요.'},
+  { name:'버피',cat:'bodyweight',icon:'🤸',diff:3,primary:['전신','심폐계'],secondary:['코어','하체'],
+    effects:[['🔥','심폐 지구력 향상'],['⚡','전신 유산소 운동'],['💸','칼로리 소모 극대화']],
+    steps:['서 있는 자세에서 시작한다.','양손을 바닥에 짚으며 쪼그려 앉는다.','양발을 뒤로 점프해 플랭크 자세를 만든다.','푸쉬업 1회를 수행한다(선택).','다시 양발을 앞으로 당기고 점프하며 손을 머리 위로 올린다.'],
+    sets:[['근력 강화','s','5세트','10회','2분','속도보다 자세 중심'],['근비대','h','4세트','15회','90초',''],['근지구력','e','3세트','60초 최대','30초','HIIT 회로 훈련 추천']],
+    tip:'점프 없이 천천히 서는 no-jump 버피로 강도를 낮출 수 있습니다.'},
+  { name:'플랭크',cat:'bodyweight',icon:'🤸',diff:2,primary:['코어(복횡근·복직근)'],secondary:['척추기립근','어깨'],
+    effects:[['🏗️','코어 안정성 강화'],['🛡️','허리 통증 예방'],['📐','자세 개선']],
+    steps:['팔꿈치를 어깨 아래 바닥에 짚고 발끝을 세운다.','머리부터 발까지 완전한 일직선을 만든다.','복부·둔근을 단단히 수축하고 호흡을 유지한다.','엉덩이가 처지거나 하늘로 솟지 않도록 일직선을 유지한다.','목표 시간(30초~2분) 동안 자세를 유지한다.'],
+    sets:[['근력 강화','s','4세트','60~90초','60초',''],['근비대','h','4세트','45~60초','45초','사이드 플랭크 병행'],['근지구력','e','3세트','최대 시간','30초','']],
+    tip:'자세가 흐트러지기 시작하면 시간을 늘리는 것보다 자세 유지가 우선입니다.'},
+  { name:'마운틴클라이머',cat:'bodyweight',icon:'🤸',diff:2,primary:['코어','대퇴굴근'],secondary:['어깨 안정화 근육'],
+    effects:[['🔥','유산소 + 코어 동시 자극'],['💓','심박수 향상'],['⚡','민첩성 향상']],
+    steps:['양손을 어깨 아래 바닥에 짚고 플랭크 자세를 취한다.','코어를 수축하고 오른쪽 무릎을 가슴 쪽으로 빠르게 당긴다.','오른발을 원위치로 보내는 동시에 왼쪽 무릎을 당긴다.','달리는 것처럼 좌우 무릎을 번갈아 빠르게 수행한다.','허리가 꺾이지 않도록 코어를 계속 수축 유지한다.'],
+    sets:[['근력 강화','s','4세트','30초','60초',''],['근비대','h','4세트','45초','45초',''],['근지구력','e','3세트','60초','30초','HIIT 회로 훈련 추천']],
+    tip:'속도보다 자세가 우선입니다. 엉덩이가 들리면 속도를 줄이세요.'},
+  { name:'스쿼트(맨몸)',cat:'bodyweight',icon:'🤸',diff:1,primary:['대퇴사두근','둔근'],secondary:['햄스트링'],
+    effects:[['🦵','하체 근력 입문'],['📍','도구 없이 가능'],['🔧','중량 스쿼트 준비']],
+    steps:['발을 어깨너비로 벌리고 발끝을 바깥으로 살짝 향하게 선다.','양팔을 앞으로 뻗어 균형을 잡는다.','가슴을 펴고 무릎이 발끝 방향을 따르도록 천천히 앉는다.','허벅지가 바닥과 평행이 될 때까지 내려간다.','발뒤꿈치로 바닥을 밀며 일어선다.'],
+    sets:[['근력 강화','s','4세트','15~20회','60초','점프스쿼트로 강도 증가'],['근비대','h','4세트','20~30회','60초',''],['근지구력','e','3세트','50회 이상','30초','타바타 스쿼트 도전']],
+    tip:'중량 스쿼트 전 반드시 올바른 맨몸 스쿼트 자세를 먼저 완성하세요.'},
+  { name:'런지',cat:'bodyweight',icon:'🤸',diff:2,primary:['대퇴사두근','둔근'],secondary:['햄스트링','코어'],
+    effects:[['⚖️','좌우 균형 하체 발달'],['🎯','기능적 근력 향상'],['🦵','하체 협응력 강화']],
+    steps:['발을 모은 채 곧게 선다.','한 발을 앞으로 크게 내딛는다.','뒷무릎이 거의 바닥에 닿을 때까지 천천히 내린다.','앞발의 발뒤꿈치로 바닥을 밀며 원래 자리로 돌아온다.','반대쪽 발로 반복한다.'],
+    sets:[['근력 강화','s','4세트','10회(각)','90초','덤벨 런지로 부하 증가'],['근비대','h','4세트','12~15회(각)','60초','워킹런지 변형 효과적'],['근지구력','e','3세트','20회(각)','30초','']],
+    tip:'앞 무릎이 발끝보다 앞으로 나오지 않도록 보폭을 적절히 유지하세요.'},
+  { name:'AB슬라이드',cat:'bodyweight',icon:'🎯',diff:4,primary:['복직근','복횡근'],secondary:['광배근','어깨','장요근'],
+    effects:[['🔥','전복부 심층 자극'],['🏗️','코어 안정성 극대화'],['💪','광배근 연계 강화'],['🛡️','허리 안정화 근육 발달']],
+    steps:['무릎을 바닥에 대고 AB슬라이드 롤러를 어깨 아래 바닥에 놓는다.','코어와 둔근을 단단히 수축하고 허리를 중립(자연 곡선)으로 유지한다.','천천히 롤러를 앞으로 밀며 상체를 바닥과 평행에 가깝게 뻗는다.','복부에 강한 자극을 느끼며 한계점에서 1~2초 정지한다.','복근과 광배근을 수축하며 롤러를 무릎 방향으로 당겨 돌아온다.'],
+    sets:[['근력 강화','s','5세트','6~10회','3분','올바른 자세 우선, 허리 과신전 금지'],['근비대','h','4세트','10~15회','90초','가동 범위를 점진적으로 늘려가세요'],['근지구력','e','3세트','20~25회','60초','느린 속도로 복근 연소 극대화']],
+    tip:'허리가 과신전(꺾임)되면 즉시 중단하세요. 처음에는 무릎 대고 짧은 범위로 시작하고, 익숙해지면 팔을 완전히 뻗는 롤아웃으로 발전시키세요. 복압을 반드시 유지하세요.'},
+];
+
+const CAT_LABEL = { compound:'복합운동', isolation:'고립운동', bodyweight:'맨몸운동' };
+let guideCat = 'all';
+let guideSearch = '';
+
+function renderGuideList() {
+  const items = GUIDE_DATA.filter(ex => {
+    const catOk = guideCat === 'all' || ex.cat === guideCat;
+    if (!catOk) return false;
+    if (!guideSearch) return true;
+    const q = guideSearch.toLowerCase();
+    return ex.name.toLowerCase().includes(q)
+      || ex.primary.some(t => t.toLowerCase().includes(q))
+      || ex.secondary.some(t => t.toLowerCase().includes(q));
+  });
+
+  const listEl = document.getElementById('guide-ex-list');
+  if (!listEl) return;
+  listEl.innerHTML = items.length ? items.map(ex => {
+    const idx = GUIDE_DATA.indexOf(ex);
+    const diffStars = '★'.repeat(ex.diff) + '☆'.repeat(5 - ex.diff);
+    return `<div class="guide-ex-item" onclick="guideSelectEx(${idx})">
+      <div class="guide-ex-icon">${ex.icon}</div>
+      <div class="guide-ex-info">
+        <div class="guide-ex-name">${ex.name}</div>
+        <div class="guide-ex-sub"><span class="guide-badge g-badge-${ex.cat}">${CAT_LABEL[ex.cat]}</span> &nbsp; ${ex.primary.join(' · ')}</div>
+      </div>
+      <div class="guide-ex-arrow">›</div>
+    </div>`;
+  }).join('') : `<div class="empty-state"><div class="big">🔍</div><p>검색 결과가 없습니다.</p></div>`;
+
+  // 카테고리 필터 버튼 이벤트 (가이드 탭 활성화될 때마다 재등록)
+  document.querySelectorAll('[data-gcat]').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('[data-gcat]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      guideCat = btn.dataset.gcat;
+      renderGuideList();
+    };
+  });
+  const srch = document.getElementById('guide-search');
+  if (srch) srch.oninput = e => { guideSearch = e.target.value.trim(); renderGuideList(); };
+}
+
+function guideSelectEx(idx) {
+  const ex = GUIDE_DATA[idx];
+  document.getElementById('guide-list-view').style.display = 'none';
+  document.getElementById('guide-detail-view').style.display = 'block';
+
+  const diffStarsFilled = '<span class="g-star-on">' + '★'.repeat(ex.diff) + '</span>';
+  const diffStarsEmpty  = '<span class="g-star-off">' + '☆'.repeat(5 - ex.diff) + '</span>';
+  const diffLabel = ['','입문','초급','중급','고급','전문가'][ex.diff];
+
+  const savedRm = parseFloat(localStorage.getItem('1rm_' + ex.name) || '') || '';
+  document.getElementById('guide-detail-content').innerHTML = `
+    <div class="guide-detail-header">
+      <div class="guide-detail-icon ${ex.cat}">${ex.icon}</div>
+      <div>
+        <div class="guide-detail-title">${ex.name}</div>
+        <div class="guide-detail-meta">
+          <span class="guide-badge g-badge-${ex.cat}">${CAT_LABEL[ex.cat]}</span>
+          <span class="guide-diff">${diffStarsFilled}${diffStarsEmpty} ${diffLabel}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="rm-calc-box">
+      <div class="rm-calc-title">🏋️ 1RM 기반 적정 중량 계산기</div>
+      ${ex.cat === 'bodyweight' ? '<div class="rm-bw-note">💡 맨몸운동은 추가 중량(kg) 또는 참고용으로 활용하세요</div>' : ''}
+      <div class="rm-input-row">
+        <input type="number" id="guide-rm-input" class="rm-input"
+               placeholder="내 최대 1회 중량 입력 (kg)"
+               min="1" max="999" step="2.5" value="${savedRm}">
+        <button class="rm-calc-btn" onclick="guideCalcRm('${ex.name.replace(/'/g,"\\'")}')">계산하기</button>
+      </div>
+      <div id="guide-rm-results"></div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-sec-title">🎯 타겟 부위</div>
+      <div class="g-chips">
+        ${ex.primary.map(t => `<span class="g-chip primary">⭐ ${t}</span>`).join('')}
+        ${ex.secondary.map(t => `<span class="g-chip secondary">${t}</span>`).join('')}
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-sec-title">✨ 주요 효과</div>
+      <div class="g-effects">
+        ${ex.effects.map(([icon, text]) => `<div class="g-effect"><span class="g-effect-icon">${icon}</span><span>${text}</span></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-sec-title">📋 운동 방법</div>
+      <div class="g-steps">
+        ${ex.steps.map((s, i) => `<div class="g-step">
+          <div class="g-step-num ${ex.cat}">${i+1}</div>
+          <div class="g-step-text">${s}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-sec-title">📊 추천 세트 & 반복 수</div>
+      <table class="g-sets-table">
+        <thead><tr><th>목표</th><th>세트</th><th>반복 수</th><th>휴식</th><th>포인트</th></tr></thead>
+        <tbody>
+          ${ex.sets.map(([goal, gc, sets, reps, rest, note]) => `<tr>
+            <td><span class="g-goal g-goal-${gc}">${goal}</span></td>
+            <td><strong>${sets}</strong></td>
+            <td>${reps}</td>
+            <td>${rest}</td>
+            <td style="color:var(--muted);font-size:.76rem">${note}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    ${ex.tip ? `<div class="guide-section">
+      <div class="guide-sec-title">💡 팁 & 주의사항</div>
+      <div class="g-tip">💡 <span>${ex.tip}</span></div>
+    </div>` : ''}
+  `;
+
+  // 저장된 1RM 있으면 자동 계산
+  if (savedRm) _drawRmResults(savedRm);
+
+  // 실시간 계산 이벤트
+  const rmInp = document.getElementById('guide-rm-input');
+  if (rmInp) {
+    rmInp.addEventListener('input', () => {
+      const v = parseFloat(rmInp.value);
+      const resEl = document.getElementById('guide-rm-results');
+      if (v > 0) { localStorage.setItem('1rm_' + ex.name, v); _drawRmResults(v); }
+      else if (resEl) resEl.innerHTML = '';
+    });
+    rmInp.addEventListener('keydown', e => { if (e.key === 'Enter') guideCalcRm(ex.name); });
+  }
+}
+
+function guideShowList() {
+  document.getElementById('guide-list-view').style.display = 'block';
+  document.getElementById('guide-detail-view').style.display = 'none';
+}
+
+// ── 가이드 1RM 계산기 ────────────────────────────────────────
+const RM_GOALS = [
+  { label:'근력강화', icon:'⚡', pct:90, reps:'3~5회', sets:'5세트', color:'#DC2626', bg:'rgba(220,38,38,0.08)' },
+  { label:'근비대',   icon:'💪', pct:70, reps:'8~12회', sets:'4세트', color:'#B07800', bg:'rgba(254,229,0,0.2)' },
+  { label:'근지구력', icon:'🏃', pct:60, reps:'15~20회',sets:'3세트', color:'#16A34A', bg:'rgba(22,163,74,0.08)' },
+];
+
+function guideCalcRm(exName) {
+  const inp = document.getElementById('guide-rm-input');
+  if (!inp) return;
+  const rm = parseFloat(inp.value);
+  if (!rm || rm <= 0) { showToast('1RM을 입력해주세요'); return; }
+  localStorage.setItem('1rm_' + exName, rm);
+  _drawRmResults(rm);
+}
+
+function _drawRmResults(rm) {
+  const el = document.getElementById('guide-rm-results');
+  if (!el) return;
+  el.className = 'rm-results';
+  el.innerHTML = RM_GOALS.map(g => {
+    const raw = rm * g.pct / 100;
+    const w   = Math.round(raw / 2.5) * 2.5;
+    const wStr = w % 1 === 0 ? w : w.toFixed(1);
+    return `<div class="rm-row" style="background:${g.bg};border-left:3px solid ${g.color}">
+      <div class="rm-row-left">
+        <span class="rm-row-goal" style="color:${g.color}">${g.icon} ${g.label}</span>
+        <span class="rm-row-reps">${g.reps} × ${g.sets}</span>
+      </div>
+      <div class="rm-row-right">
+        <span class="rm-pct">${g.pct}%</span>
+        <span class="rm-kg" style="color:${g.color}">${wStr}<span class="rm-kg-unit"> kg</span></span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 루틴 생성기 ──────────────────────────────────────────────
+let rtPeriod = 'day';
+let rtGoal   = 'hypertrophy';
+let rtFocus  = 'upper';
+
+function E(name, sets, reps, rest, note) {
+  return { name, sets, reps, rest, note: note || '' };
+}
+function D(day, label, exs) {
+  return { day, label, rest: false, exercises: exs };
+}
+function R(day) {
+  return { day, label: '휴식', rest: true, exercises: [] };
+}
+
+const ROUTINE_PLANS = {
+  hypertrophy: {
+    upper: {
+      meta: { goal:'근비대', focus:'상체', tip:'세트 사이 90~120초 휴식. 마지막 세트는 실패 직전까지 수행하여 근육 성장 자극을 극대화하세요.' },
+      stats: { days:4, sets:26, totalReps:'8~12회', rest:'90~120초' },
+      day: [D('오늘의 운동','Push + Pull 상체', [
+        E('벤치프레스',4,'8~12회','90초','가슴 수평 주동'),
+        E('인클라인벤치프레스',4,'10~12회','90초','상부 가슴 집중'),
+        E('바벨로우',4,'8~12회','90초','등 두께 핵심'),
+        E('오버헤드프레스',3,'10~12회','90초','어깨 삼각근'),
+        E('랫풀다운',3,'10~12회','75초','광배근 너비'),
+        E('바이셉컬',3,'10~12회','60초','이두 고립'),
+        E('트라이셉푸쉬다운',3,'12~15회','60초','삼두 마무리'),
+      ])],
+      week: [
+        D('월','Push Day — 가슴·어깨·삼두',[
+          E('벤치프레스',4,'8~12회','90초','메인 리프트'),
+          E('인클라인벤치프레스',4,'10~12회','90초'),
+          E('오버헤드프레스',3,'10~12회','90초'),
+          E('딥스',3,'최대(8~12)','75초'),
+          E('사이드레터럴레이즈',4,'12~15회','45초'),
+          E('트라이셉푸쉬다운',3,'12~15회','60초'),
+        ]),
+        R('화'),
+        D('수','Pull Day — 등·이두',[
+          E('바벨로우',4,'8~12회','90초','등 두께'),
+          E('랫풀다운',4,'10~12회','90초','등 너비'),
+          E('케이블로우',3,'10~12회','75초'),
+          E('덤벨로우',3,'10~12회','75초'),
+          E('바이셉컬',3,'10~12회','60초'),
+          E('페이스풀',3,'15회','45초','후면 삼각·회전근개'),
+        ]),
+        R('목'),
+        D('금','Push Day 2 — 가슴·어깨',[
+          E('덤벨프레스',4,'10~12회','90초'),
+          E('케이블크로스오버',4,'12~15회','75초'),
+          E('오버헤드프레스',4,'10~12회','90초'),
+          E('프론트레이즈',3,'12~15회','45초'),
+          E('스컬크러셔',3,'10~12회','60초'),
+        ]),
+        D('토','Pull Day 2 — 등·이두',[
+          E('친업',4,'최대(6~10)','90초','풀업 대체 가능'),
+          E('랫풀다운',3,'12회','75초'),
+          E('케이블로우',3,'12회','75초'),
+          E('해머컬',3,'12~15회','60초'),
+          E('페이스풀',3,'15회','45초'),
+        ]),
+        R('일'),
+      ],
+    },
+    lower: {
+      meta: { goal:'근비대', focus:'하체', tip:'스쿼트·레그프레스는 깊이를 충분히 내려 대퇴사두와 둔근을 최대 스트레치하세요. 데드리프트는 허리를 펴고 복압을 유지하세요.' },
+      stats: { days:3, sets:23, totalReps:'8~15회', rest:'75~90초' },
+      day: [D('오늘의 운동','전면·후면 하체 통합',[
+        E('스쿼트',4,'8~12회','90초','하체 핵심 리프트'),
+        E('레그프레스',4,'10~15회','90초','대퇴사두 볼륨'),
+        E('레그익스텐션',3,'12~15회','60초','사두 고립'),
+        E('레그컬',3,'12~15회','60초','햄스트링 고립'),
+        E('힙쓰러스트',3,'10~15회','75초','둔근 집중'),
+        E('런지',3,'12회(각다리)','60초'),
+        E('시티드카프레이즈',4,'15~20회','45초','종아리'),
+      ])],
+      week: [
+        D('월','Quad Focus — 대퇴사두·전면',[
+          E('스쿼트',4,'8~12회','90초','주동 리프트'),
+          E('레그프레스',4,'10~15회','90초'),
+          E('레그익스텐션',3,'12~15회','60초'),
+          E('런지',3,'12회(각)','60초'),
+          E('시티드카프레이즈',3,'15~20회','45초'),
+        ]),
+        R('화'),
+        D('수','Hip & Ham Focus — 둔근·햄스트링',[
+          E('데드리프트',4,'8~10회','90초','후면 체인'),
+          E('힙쓰러스트',4,'10~15회','75초','둔근 메인'),
+          E('레그컬',3,'12~15회','60초'),
+          E('스쿼트(맨몸)',3,'20회','45초','마무리 펌핑'),
+          E('시티드카프레이즈',3,'15~20회','45초'),
+        ]),
+        R('목'),
+        D('금','Volume Day — 전체 하체',[
+          E('레그프레스',4,'12~15회','90초'),
+          E('레그익스텐션',3,'15회','60초'),
+          E('레그컬',3,'15회','60초'),
+          E('힙쓰러스트',3,'12~15회','75초'),
+          E('런지',3,'12회(각)','60초'),
+          E('시티드카프레이즈',4,'20회','45초'),
+        ]),
+        R('토'),
+        R('일'),
+      ],
+    },
+    full: {
+      meta: { goal:'근비대', focus:'전신', tip:'A/B/C 3분할 전신 루틴. 매 운동마다 복합운동 → 고립운동 순서로 진행하여 에너지 효율을 높이세요.' },
+      stats: { days:3, sets:21, totalReps:'8~12회', rest:'75~90초' },
+      day: [D('오늘의 운동','전신 균형 루틴',[
+        E('스쿼트',4,'8~12회','90초','하체 복합'),
+        E('벤치프레스',4,'8~12회','90초','상체 복합 A'),
+        E('바벨로우',4,'8~12회','90초','등 복합'),
+        E('오버헤드프레스',3,'10~12회','75초','어깨'),
+        E('레그컬',3,'12~15회','60초','햄스트링'),
+        E('바이셉컬',3,'10~12회','60초'),
+        E('트라이셉푸쉬다운',3,'12~15회','60초'),
+      ])],
+      week: [
+        D('월','Day A — 스쿼트 패턴',[
+          E('스쿼트',4,'8~12회','90초'),
+          E('벤치프레스',4,'8~12회','90초'),
+          E('바벨로우',3,'8~12회','90초'),
+          E('바이셉컬',3,'10~12회','60초'),
+          E('레그컬',3,'12~15회','60초'),
+        ]),
+        R('화'),
+        D('수','Day B — 힙 힌지 패턴',[
+          E('데드리프트',4,'6~10회','120초','핵심 리프트'),
+          E('인클라인벤치프레스',4,'10~12회','90초'),
+          E('랫풀다운',3,'10~12회','90초'),
+          E('오버헤드프레스',3,'10~12회','75초'),
+          E('힙쓰러스트',3,'10~15회','75초'),
+        ]),
+        R('목'),
+        D('금','Day C — 볼륨 데이',[
+          E('레그프레스',4,'12~15회','90초'),
+          E('덤벨프레스',4,'10~12회','90초'),
+          E('케이블로우',3,'10~12회','75초'),
+          E('런지',3,'12회(각)','60초'),
+          E('트라이셉푸쉬다운',3,'12~15회','60초'),
+          E('해머컬',3,'12회','60초'),
+        ]),
+        R('토'),
+        R('일'),
+      ],
+    },
+  },
+
+  strength: {
+    upper: {
+      meta: { goal:'근력', focus:'상체', tip:'고중량 저반복. 세트 사이 3~5분 충분히 휴식하여 신경계를 회복시키세요. 마지막 반복은 기술이 무너지기 직전까지만 수행하세요.' },
+      stats: { days:3, sets:17, totalReps:'3~5회', rest:'3~5분' },
+      day: [D('오늘의 운동','상체 강도 훈련',[
+        E('벤치프레스',5,'3~5회','3~5분','1RM 80~90%'),
+        E('오버헤드프레스',5,'3~5회','3~5분'),
+        E('바벨로우',5,'4~6회','3분','등 지지력'),
+        E('딥스',4,'최대(5~8)','2분','삼두·하부 가슴'),
+        E('풀업',4,'최대(5~8)','2분'),
+      ])],
+      week: [
+        D('월','Bench Focus',[
+          E('벤치프레스',5,'3~5회','4분','메인 리프트'),
+          E('오버헤드프레스',3,'5회','3분','보조 리프트'),
+          E('바벨로우',4,'5회','3분'),
+          E('딥스',3,'최대','2분'),
+        ]),
+        R('화'),
+        D('수','OHP Focus',[
+          E('오버헤드프레스',5,'3~5회','4분','메인'),
+          E('벤치프레스',3,'5회','3분','보조'),
+          E('랫풀다운',4,'6~8회','2분'),
+          E('바이셉컬',3,'6~8회','90초'),
+        ]),
+        R('목'),
+        D('금','Row Focus',[
+          E('바벨로우',5,'3~5회','4분','등 강도'),
+          E('인클라인벤치프레스',4,'5회','3분'),
+          E('풀업',4,'최대','2분'),
+          E('트라이셉푸쉬다운',3,'8회','90초'),
+        ]),
+        R('토'),
+        R('일'),
+      ],
+    },
+    lower: {
+      meta: { goal:'근력', focus:'하체', tip:'스쿼트와 데드리프트는 충분한 워밍업 세트(50%→70%→80%→작업중량)를 거친 후 작업 세트에 임하세요.' },
+      stats: { days:3, sets:16, totalReps:'3~5회', rest:'3~5분' },
+      day: [D('오늘의 운동','하체 최대 근력',[
+        E('스쿼트',5,'3~5회','4~5분','1RM 85~90%'),
+        E('데드리프트',4,'3~5회','4~5분'),
+        E('레그프레스',3,'6~8회','2분','보조 볼륨'),
+        E('런지',3,'8회(각)','90초'),
+      ])],
+      week: [
+        D('월','Squat Day',[
+          E('스쿼트',5,'3~5회','4~5분','메인'),
+          E('레그프레스',3,'6~8회','2분','보조'),
+          E('레그컬',3,'8회','90초'),
+          E('런지',3,'8회(각)','90초'),
+        ]),
+        R('화'),
+        D('목','Deadlift Day',[
+          E('데드리프트',5,'3~5회','4~5분','메인'),
+          E('스쿼트',3,'5회','3분','보조'),
+          E('힙쓰러스트',3,'8회','2분'),
+        ]),
+        R('수'),
+        D('금','Volume Lower',[
+          E('레그프레스',4,'6~8회','2분'),
+          E('레그익스텐션',3,'8~10회','90초'),
+          E('레그컬',3,'8~10회','90초'),
+          E('시티드카프레이즈',3,'10~12회','60초'),
+        ]),
+        R('토'),
+        R('일'),
+      ],
+    },
+    full: {
+      meta: { goal:'근력', focus:'전신', tip:'StrongLifts 5×5 스타일. 스쿼트는 매 운동마다 수행. 세 가지 대근육군 복합 리프트에 집중하여 신경계 효율을 극대화하세요.' },
+      stats: { days:3, sets:15, totalReps:'5회', rest:'3~5분' },
+      day: [D('오늘의 운동','Big 3 전신 강도',[
+        E('스쿼트',5,'5회','3~5분','필수 기반'),
+        E('벤치프레스',5,'5회','3~5분'),
+        E('바벨로우',5,'5회','3~5분'),
+      ])],
+      week: [
+        D('월','Day A',[
+          E('스쿼트',5,'5회','3~5분'),
+          E('벤치프레스',5,'5회','3~5분'),
+          E('바벨로우',5,'5회','3~5분'),
+        ]),
+        R('화'),
+        D('수','Day B',[
+          E('스쿼트',5,'5회','3~5분'),
+          E('오버헤드프레스',5,'5회','3~5분'),
+          E('데드리프트',1,'5회','5분','1세트 최대 강도'),
+        ]),
+        R('목'),
+        D('금','Day A 반복',[
+          E('스쿼트',5,'5회','3~5분'),
+          E('벤치프레스',5,'5회','3~5분'),
+          E('바벨로우',5,'5회','3~5분'),
+        ]),
+        R('토'),
+        R('일'),
+      ],
+    },
+  },
+
+  endurance: {
+    upper: {
+      meta: { goal:'근지구력', focus:'상체', tip:'세트 사이 30~45초 짧은 휴식. 가벼운 중량으로 천천히 제어하며 근육을 지속적으로 수축하세요. 호흡을 절대 멈추지 마세요.' },
+      stats: { days:3, sets:21, totalReps:'15~20회', rest:'30~45초' },
+      day: [D('오늘의 운동','상체 지구력 서킷',[
+        E('푸쉬업',3,'최대','30초','흉근·삼두'),
+        E('풀업/친업',3,'최대','30초','광배근·이두'),
+        E('케이블로우',3,'15~20회','30초'),
+        E('바이셉컬',3,'15~20회','30초','가벼운 중량'),
+        E('트라이셉푸쉬다운',3,'15~20회','30초'),
+        E('사이드레터럴레이즈',3,'20회','30초'),
+        E('페이스풀',3,'20회','30초','후면 삼각'),
+      ])],
+      week: [
+        D('월','Upper Circuit A',[
+          E('푸쉬업',3,'최대','30초'),
+          E('딥스',3,'최대','30초'),
+          E('랫풀다운',3,'15~20회','30초'),
+          E('사이드레터럴레이즈',3,'20회','30초'),
+          E('바이셉컬',3,'15~20회','30초'),
+          E('트라이셉푸쉬다운',3,'15~20회','30초'),
+        ]),
+        R('화'),
+        D('수','Upper Circuit B',[
+          E('친업',3,'최대','30초'),
+          E('케이블로우',3,'15~20회','30초'),
+          E('프론트레이즈',3,'15~20회','30초'),
+          E('해머컬',3,'15~20회','30초'),
+          E('페이스풀',3,'20회','30초'),
+          E('딥스',2,'최대','30초'),
+        ]),
+        R('목'),
+        D('금','Full Upper 서킷',[
+          E('푸쉬업',2,'최대','30초'),
+          E('친업',2,'최대','30초'),
+          E('오버헤드프레스',3,'15회','30초','경중량'),
+          E('바이셉컬',3,'15~20회','30초'),
+          E('사이드레터럴레이즈',3,'20회','30초'),
+          E('트라이셉푸쉬다운',3,'20회','30초'),
+          E('페이스풀',3,'20회','30초'),
+        ]),
+        R('토'),
+        R('일'),
+      ],
+    },
+    lower: {
+      meta: { goal:'근지구력', focus:'하체', tip:'맨몸 또는 가벼운 중량으로 고반복 수행. 둔근과 대퇴사두가 타오르는 느낌을 유지하며 세트를 이어가세요.' },
+      stats: { days:3, sets:21, totalReps:'15~30회', rest:'30~45초' },
+      day: [D('오늘의 운동','하체 지구력 서킷',[
+        E('스쿼트(맨몸)',3,'20~30회','30초'),
+        E('런지',3,'20회(각다리)','30초'),
+        E('레그익스텐션',3,'20~25회','30초','경중량'),
+        E('레그컬',3,'20회','30초'),
+        E('힙쓰러스트',3,'20회','30초','자체중량'),
+        E('버피',3,'10회','45초','전신 지구력'),
+        E('마운틴클라이머',3,'30초','30초'),
+      ])],
+      week: [
+        D('월','Quad 지구력',[
+          E('스쿼트(맨몸)',3,'25~30회','30초'),
+          E('런지',3,'20회(각)','30초'),
+          E('레그익스텐션',3,'20~25회','30초'),
+          E('버피',3,'10회','45초'),
+          E('마운틴클라이머',3,'30초','30초'),
+        ]),
+        R('화'),
+        D('수','Hip & Ham 지구력',[
+          E('힙쓰러스트',3,'20회','30초'),
+          E('레그프레스',3,'20회','30초','경중량'),
+          E('레그컬',3,'20회','30초'),
+          E('런지',3,'15회(각)','30초'),
+          E('시티드카프레이즈',3,'25회','30초'),
+        ]),
+        R('목'),
+        D('금','Full Lower 서킷',[
+          E('스쿼트(맨몸)',3,'25회','30초'),
+          E('레그익스텐션',3,'20회','30초'),
+          E('레그컬',3,'20회','30초'),
+          E('힙쓰러스트',3,'20회','30초'),
+          E('버피',3,'10회','45초'),
+          E('마운틴클라이머',3,'30초','30초'),
+          E('런지',3,'15회(각)','30초'),
+        ]),
+        R('토'),
+        R('일'),
+      ],
+    },
+    full: {
+      meta: { goal:'근지구력', focus:'전신', tip:'전신 서킷 방식으로 상체→하체 교대. 심박수를 높게 유지하면서 호흡을 안정적으로 유지하세요. 유산소 효과도 함께 얻을 수 있어요.' },
+      stats: { days:4, sets:21, totalReps:'15~20회', rest:'30~45초' },
+      day: [D('오늘의 운동','전신 지구력 서킷',[
+        E('버피',3,'15회','30초','전신 워밍업'),
+        E('푸쉬업',3,'최대','30초'),
+        E('스쿼트(맨몸)',3,'20회','30초'),
+        E('풀업/친업',3,'최대','30초'),
+        E('플랭크',3,'60초','30초'),
+        E('AB슬라이드',3,'15~20회','45초','코어 핵심'),
+        E('런지',3,'15회(각)','30초'),
+        E('마운틴클라이머',3,'30초','30초'),
+      ])],
+      week: [
+        D('월','Upper 지구력',[
+          E('푸쉬업',3,'최대','30초'),
+          E('친업',3,'최대','30초'),
+          E('사이드레터럴레이즈',3,'20회','30초'),
+          E('바이셉컬',3,'20회','30초','경중량'),
+          E('트라이셉푸쉬다운',3,'20회','30초'),
+        ]),
+        D('화','Lower 지구력',[
+          E('스쿼트(맨몸)',3,'25회','30초'),
+          E('런지',3,'20회(각)','30초'),
+          E('레그컬',3,'20회','30초'),
+          E('힙쓰러스트',3,'20회','30초'),
+          E('버피',3,'10회','45초'),
+        ]),
+        D('수','Active Recovery',[
+          E('플랭크',3,'60초','30초'),
+          E('AB슬라이드',3,'12~15회','45초','코어 강화'),
+          E('마운틴클라이머',3,'30초','30초'),
+          E('행잉니레이즈',3,'15회','30초'),
+        ]),
+        D('목','Full Body 서킷',[
+          E('버피',3,'15회','30초'),
+          E('푸쉬업',3,'최대','30초'),
+          E('풀업',3,'최대','30초'),
+          E('스쿼트(맨몸)',3,'25회','30초'),
+          E('런지',3,'15회(각)','30초'),
+          E('플랭크',3,'45초','30초'),
+        ]),
+        D('금','Cardio + Core',[
+          E('마운틴클라이머',3,'30초','30초'),
+          E('버피',3,'15회','30초'),
+          E('플랭크',3,'60초','30초'),
+          E('행잉니레이즈',3,'15회','30초'),
+        ]),
+        R('토'),
+        R('일'),
+      ],
+    },
+  },
+};
+
+const MONTH_WEEKS = [
+  { week:1, label:'1주차 — 기초 (Base)',      tag:'base',   cls:'wk-base',
+    intensity:'70~75% 1RM', volume:'기본 세트 수',
+    focus:'자세와 가동범위 완성. 가벼운 중량으로 근육을 깨우는 단계.' },
+  { week:2, label:'2주차 — 점진적 과부하',    tag:'over',   cls:'wk-over',
+    intensity:'75~80% 1RM', volume:'세트 수 +1 또는 중량 5% 증가',
+    focus:'작업 중량을 높이거나 세트를 추가해 훈련 볼륨을 점진적으로 높이세요.' },
+  { week:3, label:'3주차 — 피크 (Peak)',       tag:'peak',   cls:'wk-peak',
+    intensity:'80~87.5% 1RM', volume:'최대 볼륨',
+    focus:'최고 강도로 훈련. 마지막 세트는 1~2회 여유만 남기고 실패 직전까지 수행하세요.' },
+  { week:4, label:'4주차 — 디로드 (Deload)',  tag:'deload', cls:'wk-deload',
+    intensity:'60~65% 1RM', volume:'볼륨 30~40% 감소',
+    focus:'회복과 부상 예방. 가벼운 중량으로 자세를 다시 점검하고 다음 사이클을 준비하세요.' },
+];
+
+const GOAL_LABEL  = { hypertrophy:'근비대 💪', strength:'근력 ⚡', endurance:'근지구력 🏃' };
+const FOCUS_LABEL = { upper:'상체', lower:'하체', full:'전신' };
+const PERIOD_LABEL = { day:'일단위', week:'주단위', month:'월단위' };
+
+function initRoutineSelectors() {
+  ['[data-rp]','[data-rg]','[data-rf]'].forEach(sel => {
+    document.querySelectorAll(sel).forEach(btn => {
+      btn.onclick = () => {
+        const row = btn.parentElement;
+        row.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (btn.dataset.rp) rtPeriod = btn.dataset.rp;
+        if (btn.dataset.rg) rtGoal   = btn.dataset.rg;
+        if (btn.dataset.rf) rtFocus  = btn.dataset.rf;
+      };
+    });
+  });
+}
+
+function generateRoutine() {
+  const plan = ROUTINE_PLANS[rtGoal][rtFocus];
+  const result = document.getElementById('rt-result');
+  result.classList.add('show');
+  const meta = plan.meta;
+  const stats = plan.stats;
+  let html = `
+    <div class="rt-summary">
+      <div class="rt-summary-title">📋 ${GOAL_LABEL[rtGoal]} · ${FOCUS_LABEL[rtFocus]} · ${PERIOD_LABEL[rtPeriod]} 루틴</div>
+      <div class="rt-stats">
+        <div class="rt-stat"><div class="rt-stat-val">${stats.days}</div><div class="rt-stat-lbl">훈련일/주</div></div>
+        <div class="rt-stat"><div class="rt-stat-val">${stats.sets}</div><div class="rt-stat-lbl">총 세트</div></div>
+        <div class="rt-stat"><div class="rt-stat-val">${stats.totalReps}</div><div class="rt-stat-lbl">목표 반복수</div></div>
+        <div class="rt-stat"><div class="rt-stat-val">${stats.rest}</div><div class="rt-stat-lbl">세트 휴식</div></div>
+      </div>
+    </div>
+    <div class="rt-tip">💡 <span>${meta.tip}</span></div>
+  `;
+  if (rtPeriod === 'day') {
+    html += renderDayRoutine(plan.day);
+  } else if (rtPeriod === 'week') {
+    html += renderWeekRoutine(plan.week);
+  } else {
+    html += renderMonthRoutine(plan.week);
+  }
+  result.innerHTML = html;
+  result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function exTableHTML(exercises) {
+  if (!exercises.length) return '';
+  return `<div style="padding:10px 14px 14px">
+    <table class="rt-ex-table">
+      <thead><tr>
+        <th>#</th><th>운동</th><th>세트</th><th>반복</th><th>휴식</th>
+      </tr></thead>
+      <tbody>
+        ${exercises.map((e, i) => `<tr>
+          <td><span class="rt-ex-num">${i+1}</span></td>
+          <td><span class="rt-ex-name">${e.name}</span>${e.note ? `<span class="rt-ex-note">${e.note}</span>` : ''}</td>
+          <td>${e.sets}</td>
+          <td>${e.reps}</td>
+          <td>${e.rest}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function renderDayRoutine(sessions) {
+  return sessions.map((s, i) => `
+    <div class="rt-day-card">
+      <div class="rt-day-header">
+        <div class="rt-day-badge">${['A','B','C'][i] || (i+1)}</div>
+        <div>
+          <div class="rt-day-title">${s.label}</div>
+          <div class="rt-day-sub">${s.exercises.length}가지 운동 · ${s.exercises.reduce((sum, e) => sum + e.sets, 0)}세트</div>
+        </div>
+      </div>
+      ${exTableHTML(s.exercises)}
+    </div>`).join('');
+}
+
+function renderWeekRoutine(days) {
+  const WEEKDAYS = ['월','화','수','목','금','토','일'];
+  return days.map((d, i) => {
+    if (d.rest) return `
+      <div class="rt-day-card">
+        <div class="rt-rest-row">
+          <div class="rt-day-badge rest" style="width:38px;height:38px">😴</div>
+          <div><strong>${d.day}요일</strong> — 휴식일 · 충분한 수면과 단백질 보충을 권장해요</div>
+        </div>
+      </div>`;
+    const setCount = d.exercises.reduce((s, e) => s + e.sets, 0);
+    return `
+      <div class="rt-day-card">
+        <div class="rt-day-header">
+          <div class="rt-day-badge">${d.day}</div>
+          <div>
+            <div class="rt-day-title">${d.label}</div>
+            <div class="rt-day-sub">${d.exercises.length}가지 운동 · ${setCount}세트</div>
+          </div>
+        </div>
+        ${exTableHTML(d.exercises)}
+      </div>`;
+  }).join('');
+}
+
+function renderMonthRoutine(weekDays) {
+  const trainingDays = weekDays.filter(d => !d.rest);
+  const weekPreview = trainingDays.map(d => `${d.day}요일: ${d.label.split('—')[0].trim()}`).join(' · ');
+  let html = `
+    <div class="rt-day-card" style="margin-bottom:14px">
+      <div class="rt-day-header">
+        <div class="rt-day-badge" style="font-size:1.1rem;width:38px;height:38px">📆</div>
+        <div>
+          <div class="rt-day-title">주간 스케줄 기준</div>
+          <div class="rt-day-sub">${weekPreview}</div>
+        </div>
+      </div>
+      <div style="padding:0 14px 14px">
+        ${exTableHTML(trainingDays.length ? trainingDays[0].exercises : [])}
+      </div>
+    </div>`;
+  html += MONTH_WEEKS.map(w => `
+    <div class="rt-month-card">
+      <div class="rt-month-header">
+        <div class="rt-month-week-title">${w.label}</div>
+        <div class="rt-week-tag ${w.cls}">${w.intensity}</div>
+      </div>
+      <div class="rt-prog-list">
+        <div class="rt-prog-row">
+          <div class="rt-prog-dot" style="background:var(--primary)"></div>
+          <div><strong>강도:</strong> ${w.intensity}</div>
+        </div>
+        <div class="rt-prog-row">
+          <div class="rt-prog-dot" style="background:#C08A00"></div>
+          <div><strong>볼륨:</strong> ${w.volume}</div>
+        </div>
+        <div class="rt-prog-row">
+          <div class="rt-prog-dot" style="background:#64748b"></div>
+          <div>${w.focus}</div>
+        </div>
+      </div>
+    </div>`).join('');
+  return html;
+}
+
+// ── 음식/칼로리 밸런스 ─────────────────────────────────────────
+const FOOD_PRESETS = [
+  { name:'공기밥', kcal:300, icon:'🍚' },
+  { name:'라면', kcal:500, icon:'🍜' },
+  { name:'치킨 반마리', kcal:700, icon:'🍗' },
+  { name:'삼겹살 1인분', kcal:600, icon:'🥩' },
+  { name:'피자 1조각', kcal:280, icon:'🍕' },
+  { name:'김치찌개', kcal:300, icon:'🍲' },
+  { name:'제육볶음', kcal:500, icon:'🥘' },
+  { name:'떡볶이', kcal:400, icon:'🌶️' },
+  { name:'햄버거', kcal:550, icon:'🍔' },
+  { name:'삼각김밥', kcal:200, icon:'🍙' },
+  { name:'컵라면', kcal:350, icon:'🍜' },
+  { name:'닭가슴살', kcal:100, icon:'🐔' },
+  { name:'고구마', kcal:130, icon:'🍠' },
+  { name:'바나나', kcal:100, icon:'🍌' },
+  { name:'콜라 500ml', kcal:210, icon:'🥤' },
+  { name:'아이스크림', kcal:250, icon:'🍦' },
+  { name:'빵/케이크', kcal:350, icon:'🍞' },
+  { name:'커피(라떼)', kcal:150, icon:'☕' },
+  { name:'프로틴 쉐이크', kcal:150, icon:'💪' },
+  { name:'단백질바', kcal:200, icon:'🍫' },
+  { name:'계란 2개', kcal:140, icon:'🥚' },
+  { name:'우유 200ml', kcal:120, icon:'🥛' },
+  { name:'샐러드', kcal:150, icon:'🥗' },
+  { name:'과자 1봉지', kcal:300, icon:'🍿' },
+];
+
+function todayFoodKey() { return 'food_log_' + todayStr(); }
+
+function loadFoodLog() {
+  try { return JSON.parse(localStorage.getItem(todayFoodKey()) || '[]'); }
+  catch { return []; }
+}
+
+function saveFoodLog(log) {
+  localStorage.setItem(todayFoodKey(), JSON.stringify(log));
+}
+
+function addFoodPreset(name, kcal) {
+  const log = loadFoodLog();
+  log.push({ id: Date.now().toString(), name, kcal });
+  saveFoodLog(log);
+  renderFoodTab();
+}
+
+function addFoodItem() {
+  const name = document.getElementById('food-name-input').value.trim();
+  const kcal = parseInt(document.getElementById('food-kcal-input').value, 10);
+  if (!name || !kcal || kcal <= 0) { toast('음식 이름과 칼로리를 입력하세요'); return; }
+  const log = loadFoodLog();
+  log.push({ id: Date.now().toString(), name, kcal });
+  saveFoodLog(log);
+  document.getElementById('food-name-input').value = '';
+  document.getElementById('food-kcal-input').value = '';
+  renderFoodTab();
+}
+
+function removeFoodItem(id) {
+  const log = loadFoodLog().filter(f => f.id !== id);
+  saveFoodLog(log);
+  renderFoodTab();
+}
+
+function getTodayExerciseKcal() {
+  const today = todayStr();
+  const cRecs = (window._records && window._records.cardio || []).filter(r => r.date === today);
+  const wRecs = (window._records && window._records.weight || []).filter(r => r.date === today);
+  const cKcal = cRecs.reduce((s, r) => s + (r.calories || 0), 0);
+  const wKcal = wRecs.reduce((s, r) => s + (r.calories || 0), 0);
+  return Math.round(cKcal + wKcal);
+}
+
+function estimateBMR() {
+  const factor = gender === 'female' ? 22 : 24;
+  return Math.round(bodyWeight * factor);
+}
+
+function getDietStatus(net) {
+  if (net <= -600) return { emoji:'🔥', label:'적극 다이어트 중!', color:'#1D4ED8', bg:'#EFF6FF', desc:'빠른 체중 감량 구간', tip:'너무 빠른 감량은 근손실 위험이 있어요. 단백질을 충분히 섭취하세요.' };
+  if (net <= -100) return { emoji:'✅', label:'다이어트 중', color:'#15803D', bg:'#F0FDF4', desc:'건강한 체중 감량 구간', tip:'이 속도를 유지하면 한 달에 약 1~2kg 감량 가능해요.' };
+  if (net <= +200) return { emoji:'⚖️', label:'칼로리 유지', color:'#B07800', bg:'#FFFBEB', desc:'현재 체중 유지 구간', tip:'체중 유지에 이상적인 칼로리 범위예요.' };
+  if (net <= +600) return { emoji:'💪', label:'린 벌크업', color:'#7E22CE', bg:'#F5F3FF', desc:'근육 성장을 위한 잉여 칼로리', tip:'적당한 잉여 칼로리로 근육 성장을 도울 수 있어요. 웨이트 훈련 병행 필수!' };
+  return { emoji:'⚠️', label:'살크업 주의', color:'#DC2626', bg:'#FEF2F2', desc:'과도한 칼로리 잉여 — 지방 축적 위험', tip:'칼로리 잉여가 너무 크면 지방이 쌓여요. 운동량을 늘리거나 식사량을 조절하세요.' };
+}
+
+function renderFoodTab() {
+  const log = loadFoodLog();
+  const totalFood = log.reduce((s, f) => s + f.kcal, 0);
+  const listEl = document.getElementById('food-log-list');
+  const totalRow = document.getElementById('food-total-row');
+  const totalVal = document.getElementById('food-total-kcal');
+
+  if (listEl) {
+    listEl.innerHTML = log.length ? log.map(f => `
+      <div class="food-log-item">
+        <div><span class="food-log-name">${f.name}</span><span class="food-log-kcal">${f.kcal} kcal</span></div>
+        <button class="food-log-del" onclick="removeFoodItem('${f.id}')">✕</button>
+      </div>`).join('') : '<div style="color:var(--muted);font-size:0.82rem;padding:8px 0">아직 추가된 음식이 없어요</div>';
+  }
+  if (totalRow) { totalRow.style.display = log.length ? 'flex' : 'none'; }
+  if (totalVal) totalVal.textContent = totalFood.toLocaleString() + ' kcal';
+
+  renderDietBalance(totalFood);
+}
+
+function renderDietBalance(totalFood) {
+  const bmr = estimateBMR();
+  const exKcal = getTodayExerciseKcal();
+  const totalBurn = bmr + exKcal;
+  const net = totalFood - totalBurn;
+  const st = getDietStatus(net);
+  const balEl = document.getElementById('diet-balance-content');
+  if (!balEl) return;
+
+  if (totalFood === 0) {
+    balEl.innerHTML = '<div class="diet-hint">음식을 추가하면 밸런스가 계산됩니다</div>';
+    return;
+  }
+
+  balEl.innerHTML = `
+    <div class="balance-row">
+      <div class="balance-row-label">🍽️ 오늘 섭취</div>
+      <div class="balance-row-val" style="color:#B07800">+${totalFood.toLocaleString()} kcal</div>
+    </div>
+    <div class="balance-row">
+      <div class="balance-row-label">🏃 운동 소모</div>
+      <div class="balance-row-val" style="color:#16a34a">-${exKcal.toLocaleString()} kcal</div>
+    </div>
+    <div class="balance-row">
+      <div class="balance-row-label">💤 기초대사량 (BMR 추정)</div>
+      <div class="balance-row-val" style="color:#64748b">-${bmr.toLocaleString()} kcal</div>
+    </div>
+    <div class="balance-net-row" style="background:${st.bg}">
+      <div class="balance-net-label" style="color:${st.color}">순 칼로리 밸런스</div>
+      <div class="balance-net-val" style="color:${st.color}">${net >= 0 ? '+' : ''}${net.toLocaleString()} kcal</div>
+    </div>
+    <div class="diet-status-box" style="background:${st.bg}; border: 2px solid ${st.color}20;">
+      <div class="diet-status-emoji">${st.emoji}</div>
+      <div class="diet-status-label" style="color:${st.color}">${st.label}</div>
+      <div class="diet-status-desc" style="color:${st.color}">${st.desc}</div>
+      <div class="diet-status-tip" style="color:${st.color}">${st.tip}</div>
+    </div>`;
+}
+
+function initFoodPresets() {
+  const grid = document.getElementById('food-preset-grid');
+  if (!grid || grid.dataset.init) return;
+  grid.dataset.init = '1';
+  grid.innerHTML = FOOD_PRESETS.map(f => `
+    <button class="food-preset-btn" onclick="addFoodPreset('${f.name}', ${f.kcal})">
+      <span class="fp-icon">${f.icon}</span>
+      <span>${f.name}</span>
+      <span class="fp-kcal">${f.kcal} kcal</span>
+    </button>`).join('');
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+// ── PWA 설치 프롬프트 ─────────────────────────────────────
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const banner = document.getElementById('pwa-install-banner');
+  if (banner) banner.style.display = 'flex';
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  const banner = document.getElementById('pwa-install-banner');
+  if (banner) banner.style.display = 'none';
+  toast('✅ FitTrack 앱이 설치되었습니다!');
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.addEventListener('click', async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+    if (outcome === 'accepted') deferredInstallPrompt = null;
+  });
+});
+
+// ── PWA 서비스워커 등록 ───────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./fitness_pwa_sw.js')
+      .then(() => console.log('FitTrack SW 등록 완료'))
+      .catch(e => console.warn('SW 등록 실패:', e));
+  });
+}
+
+// ── 데이터 내보내기 / 가져오기 ────────────────────────────
+async function exportData() {
+  const [cardio, weight] = await Promise.all([dbGetAll('cardio'), dbGetAll('weight')]);
+  const food = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k.startsWith('food_log_')) food[k] = localStorage.getItem(k);
+  }
+  const blob = new Blob([JSON.stringify({ cardio, weight, food, bw_kg: localStorage.getItem('bw_kg'), gender: localStorage.getItem('gender') }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `fittrack_backup_${todayStr()}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('📦 데이터 내보내기 완료!');
+}
+
+async function importData(file) {
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    const tx1 = db.transaction('cardio', 'readwrite');
+    tx1.objectStore('cardio').clear();
+    await new Promise(r => { tx1.oncomplete = r; });
+    const tx2 = db.transaction('weight', 'readwrite');
+    tx2.objectStore('weight').clear();
+    await new Promise(r => { tx2.oncomplete = r; });
+    if (data.cardio?.length) {
+      const tx3 = db.transaction('cardio', 'readwrite');
+      data.cardio.forEach(r => { const { id, ...rest } = r; tx3.objectStore('cardio').add(rest); });
+      await new Promise(r => { tx3.oncomplete = r; });
+    }
+    if (data.weight?.length) {
+      const tx4 = db.transaction('weight', 'readwrite');
+      data.weight.forEach(r => { const { id, ...rest } = r; tx4.objectStore('weight').add(rest); });
+      await new Promise(r => { tx4.oncomplete = r; });
+    }
+    if (data.food) Object.entries(data.food).forEach(([k, v]) => localStorage.setItem(k, v));
+    if (data.bw_kg) { localStorage.setItem('bw_kg', data.bw_kg); bodyWeight = parseFloat(data.bw_kg); document.getElementById('bw-input').value = bodyWeight; }
+    if (data.gender) { localStorage.setItem('gender', data.gender); gender = data.gender; document.querySelectorAll('.gender-btn').forEach(b => b.classList.toggle('active', b.dataset.gender === gender)); }
+    await loadRecords();
+    toast('✅ 데이터 가져오기 완료!');
+  } catch(e) {
+    toast('가져오기 실패 — 올바른 백업 파일인지 확인하세요', true);
+  }
+}
+</script>
+</body>
+</html>
