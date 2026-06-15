@@ -20,6 +20,12 @@
       --cardio-bg: rgba(239,68,68,0.12);
       --weight: #8b5cf6;
       --weight-bg: rgba(139,92,246,0.12);
+      --bodyweight: #f59e0b;
+      --bodyweight-bg: rgba(245,158,11,0.12);
+      --male: #60a5fa;
+      --male-bg: rgba(96,165,250,0.15);
+      --female: #f472b6;
+      --female-bg: rgba(244,114,182,0.15);
       --success: #22c55e;
       --danger: #f43f5e;
       --radius: 12px;
@@ -59,50 +65,56 @@
 
     .header-logo p { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
 
-    .header-stats {
-      text-align: right;
-    }
+    .header-stats { text-align: right; }
+    .header-stats .today-cal { font-size: 1.4rem; font-weight: 700; color: var(--primary-light); }
+    .header-stats .today-label { font-size: 0.7rem; color: var(--muted); }
 
-    .header-stats .today-cal {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--primary-light);
-    }
+    .container { max-width: 640px; margin: 0 auto; padding: 16px; }
 
-    .header-stats .today-label {
-      font-size: 0.7rem;
-      color: var(--muted);
-    }
-
-    .container {
-      max-width: 640px;
-      margin: 0 auto;
-      padding: 16px;
-    }
-
-    .bw-banner {
+    /* ── 프로필 배너 ── */
+    .profile-banner {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 12px 16px;
+      padding: 14px 16px;
       margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
     }
 
-    .bw-banner label {
-      font-size: 0.8rem;
+    .profile-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .gender-group { display: flex; flex-direction: column; gap: 4px; }
+    .gender-group label { font-size: 0.7rem; color: var(--muted); }
+
+    .gender-toggle { display: flex; gap: 6px; }
+
+    .gender-btn {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
       color: var(--muted);
-      white-space: nowrap;
+      cursor: pointer;
+      padding: 6px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: all 0.2s;
     }
 
-    .bw-input-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex: 1;
-    }
+    .gender-btn[data-gender="male"]:hover  { border-color: var(--male); color: var(--male); }
+    .gender-btn[data-gender="female"]:hover { border-color: var(--female); color: var(--female); }
+    .gender-btn[data-gender="male"].active  { background: var(--male-bg); border-color: var(--male); color: var(--male); }
+    .gender-btn[data-gender="female"].active { background: var(--female-bg); border-color: var(--female); color: var(--female); }
+
+    .divider-v { width: 1px; height: 36px; background: var(--border); }
+
+    .bw-group { display: flex; flex-direction: column; gap: 4px; }
+    .bw-group label { font-size: 0.7rem; color: var(--muted); }
+
+    .bw-input-row { display: flex; align-items: center; gap: 6px; }
 
     .bw-input-row input {
       width: 80px;
@@ -112,21 +124,17 @@
       color: var(--text);
       font-size: 1rem;
       font-weight: 700;
-      padding: 4px 8px;
+      padding: 5px 8px;
       text-align: center;
+      outline: none;
     }
 
     .bw-input-row span { font-size: 0.85rem; color: var(--muted); }
 
-    .bw-saved-badge {
-      font-size: 0.7rem;
-      color: var(--success);
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
+    .bw-saved-badge { font-size: 0.7rem; color: var(--success); opacity: 0; transition: opacity 0.3s; }
     .bw-saved-badge.show { opacity: 1; }
 
+    /* ── 탭 ── */
     .tab-nav {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -155,17 +163,13 @@
     }
 
     .tab-btn .tab-icon { font-size: 1.1rem; }
-
     .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-
-    .tab-btn.active {
-      color: var(--text);
-      background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(96,165,250,0.2));
-    }
+    .tab-btn.active { color: var(--text); background: linear-gradient(135deg, rgba(124,58,237,0.3), rgba(96,165,250,0.2)); }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
+    /* ── 카드 ── */
     .card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -174,21 +178,10 @@
       margin-bottom: 12px;
     }
 
-    .card h2 {
-      font-size: 1rem;
-      font-weight: 700;
-      margin-bottom: 16px;
-      color: var(--text);
-    }
+    .card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; }
+    .card h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; }
 
-    .card h3 {
-      font-size: 0.9rem;
-      font-weight: 600;
-      margin-bottom: 12px;
-      color: var(--text);
-    }
-
-    /* Activity buttons */
+    /* ── 유산소 활동 버튼 ── */
     .activity-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -212,19 +205,13 @@
     }
 
     .activity-btn .icon { font-size: 1.4rem; }
-
     .activity-btn:hover { border-color: var(--cardio); color: var(--text); }
+    .activity-btn.active { background: var(--cardio-bg); border-color: var(--cardio); color: var(--cardio); }
 
-    .activity-btn.active {
-      background: var(--cardio-bg);
-      border-color: var(--cardio);
-      color: var(--cardio);
-    }
-
-    /* Exercise type toggle */
+    /* ── 운동 종류 토글 (3개) ── */
     .ex-type-toggle {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 6px;
       margin-bottom: 14px;
     }
@@ -235,21 +222,19 @@
       border-radius: 8px;
       color: var(--muted);
       cursor: pointer;
-      padding: 8px;
-      font-size: 0.82rem;
+      padding: 8px 4px;
+      font-size: 0.78rem;
       font-weight: 500;
       transition: all 0.2s;
+      white-space: nowrap;
     }
 
     .type-btn:hover { border-color: var(--weight); color: var(--text); }
+    .type-btn[data-type="compound"].active  { background: var(--weight-bg); border-color: var(--weight); color: var(--weight); }
+    .type-btn[data-type="isolation"].active { background: rgba(59,130,246,0.12); border-color: #3b82f6; color: #3b82f6; }
+    .type-btn[data-type="bodyweight"].active { background: var(--bodyweight-bg); border-color: var(--bodyweight); color: var(--bodyweight); }
 
-    .type-btn.active {
-      background: var(--weight-bg);
-      border-color: var(--weight);
-      color: var(--weight);
-    }
-
-    /* Form */
+    /* ── 폼 ── */
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -266,11 +251,7 @@
       margin-bottom: 12px;
     }
 
-    .form-group label {
-      font-size: 0.75rem;
-      color: var(--muted);
-      font-weight: 500;
-    }
+    .form-group label { font-size: 0.75rem; color: var(--muted); font-weight: 500; }
 
     .form-group input,
     .form-group select {
@@ -286,13 +267,24 @@
     }
 
     .form-group input:focus,
-    .form-group select:focus {
-      border-color: var(--primary-light);
-    }
-
+    .form-group select:focus { border-color: var(--primary-light); }
     .form-group select option { background: #1e1e2e; }
 
-    /* Result card */
+    /* 맨몸운동 안내 */
+    .bw-note {
+      background: var(--bodyweight-bg);
+      border: 1px solid rgba(245,158,11,0.4);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.78rem;
+      color: var(--bodyweight);
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    .bw-note.show { display: block; }
+
+    /* ── 결과 카드 ── */
     .result-card {
       background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(96,165,250,0.1));
       border: 1px solid rgba(124,58,237,0.4);
@@ -301,18 +293,9 @@
       margin-bottom: 14px;
     }
 
-    .result-main {
-      display: flex;
-      align-items: baseline;
-      gap: 6px;
-      margin-bottom: 6px;
-    }
+    .result-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 4px; }
 
-    .result-label {
-      font-size: 0.72rem;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
+    .result-main { display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; }
 
     .result-number {
       font-size: 2.2rem;
@@ -323,31 +306,14 @@
       background-clip: text;
     }
 
-    .result-unit {
-      font-size: 1rem;
-      color: var(--muted);
-    }
+    .result-unit { font-size: 1rem; color: var(--muted); }
+    .result-sub { font-size: 0.75rem; color: var(--muted); }
 
-    .result-sub {
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
-
-    .result-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
+    .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .result-item { display: flex; flex-direction: column; }
 
-    /* 1RM table */
-    .rm-table {
-      margin-top: 12px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-    }
+    /* 1RM 테이블 */
+    .rm-table { margin-top: 12px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
 
     .rm-table-header,
     .rm-table-row {
@@ -357,17 +323,12 @@
       font-size: 0.76rem;
     }
 
-    .rm-table-header {
-      background: rgba(255,255,255,0.05);
-      color: var(--muted);
-      font-weight: 600;
-    }
-
+    .rm-table-header { background: rgba(255,255,255,0.05); color: var(--muted); font-weight: 600; }
     .rm-table-row { border-top: 1px solid var(--border); }
     .rm-table-row.highlight { background: rgba(124,58,237,0.15); color: var(--primary-light); font-weight: 700; }
     .rm-table-row span:last-child { color: var(--primary-light); font-weight: 600; }
 
-    /* Buttons */
+    /* ── 버튼 ── */
     .btn-save {
       width: 100%;
       padding: 12px;
@@ -385,17 +346,9 @@
     .btn-save:active { transform: scale(0.98); }
     .btn-save:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-    /* Filter row */
-    .filter-section {
-      margin-bottom: 12px;
-    }
-
-    .filter-row {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-bottom: 8px;
-    }
+    /* ── 필터 ── */
+    .filter-section { margin-bottom: 12px; }
+    .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
 
     .filter-btn {
       background: var(--card);
@@ -414,7 +367,7 @@
       color: var(--primary-light);
     }
 
-    /* Summary card */
+    /* ── 요약 카드 ── */
     .summary-card {
       background: linear-gradient(135deg, #1e1a2e, #1a1e30);
       border: 1px solid var(--border);
@@ -427,19 +380,10 @@
       text-align: center;
     }
 
-    .summary-item .val {
-      font-size: 1.3rem;
-      font-weight: 800;
-      color: var(--primary-light);
-    }
+    .summary-item .val { font-size: 1.3rem; font-weight: 800; color: var(--primary-light); }
+    .summary-item .lbl { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
 
-    .summary-item .lbl {
-      font-size: 0.68rem;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    /* Records list */
+    /* ── 기록 목록 ── */
     .records-list { display: flex; flex-direction: column; gap: 8px; }
 
     .record-item {
@@ -452,11 +396,7 @@
       gap: 12px;
     }
 
-    .record-icon {
-      font-size: 1.6rem;
-      flex-shrink: 0;
-    }
-
+    .record-icon { font-size: 1.6rem; flex-shrink: 0; }
     .record-body { flex: 1; min-width: 0; }
 
     .record-title {
@@ -467,25 +407,10 @@
       text-overflow: ellipsis;
     }
 
-    .record-meta {
-      font-size: 0.73rem;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
+    .record-meta { font-size: 0.73rem; color: var(--muted); margin-top: 2px; }
     .record-right { text-align: right; flex-shrink: 0; }
-
-    .record-cal {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--primary-light);
-    }
-
-    .record-date {
-      font-size: 0.7rem;
-      color: var(--muted);
-      margin-top: 2px;
-    }
+    .record-cal { font-size: 1rem; font-weight: 700; color: var(--primary-light); }
+    .record-date { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
 
     .record-delete {
       background: none;
@@ -501,22 +426,14 @@
 
     .record-delete:hover { opacity: 1; color: var(--danger); }
 
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--muted);
-    }
-
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
     .empty-state .big { font-size: 2.5rem; margin-bottom: 8px; }
     .empty-state p { font-size: 0.85rem; }
 
-    /* Chart */
-    .chart-container {
-      position: relative;
-      height: 200px;
-    }
+    /* ── 차트 ── */
+    .chart-container { position: relative; height: 200px; }
 
-    /* Toast */
+    /* ── 토스트 ── */
     #toast {
       position: fixed;
       bottom: 24px;
@@ -537,12 +454,15 @@
     #toast.show { transform: translateX(-50%) translateY(0); }
     #toast.error { border-color: var(--danger); color: var(--danger); }
 
-    .badge-cardio { color: var(--cardio); }
-    .badge-weight { color: var(--weight); }
+    .c-cardio { color: var(--cardio); }
+    .c-weight { color: var(--weight); }
+    .c-bodyweight { color: var(--bodyweight); }
 
     @media (max-width: 400px) {
       .form-row.three { grid-template-columns: 1fr 1fr; }
       .activity-grid { grid-template-columns: repeat(2, 1fr); }
+      .ex-type-toggle { grid-template-columns: 1fr 1fr; }
+      .ex-type-toggle .type-btn:last-child { grid-column: span 2; }
     }
   </style>
 </head>
@@ -552,7 +472,7 @@
   <div class="header-inner">
     <div class="header-logo">
       <h1>💪 FitTrack</h1>
-      <p>운동 기록 & 분석</p>
+      <p>운동 기록 &amp; 분석</p>
     </div>
     <div class="header-stats">
       <div class="today-cal" id="today-cal">0</div>
@@ -563,17 +483,29 @@
 
 <div class="container">
 
-  <!-- 체중 입력 -->
-  <div class="bw-banner">
-    <label>내 체중</label>
-    <div class="bw-input-row">
-      <input type="number" id="bw-input" value="70" step="0.5" min="30" max="300">
-      <span>kg</span>
+  <!-- ── 성별 & 체중 프로필 배너 ── -->
+  <div class="profile-banner">
+    <div class="profile-row">
+      <div class="gender-group">
+        <label>성별</label>
+        <div class="gender-toggle">
+          <button class="gender-btn active" data-gender="male">♂ 남성</button>
+          <button class="gender-btn" data-gender="female">♀ 여성</button>
+        </div>
+      </div>
+      <div class="divider-v"></div>
+      <div class="bw-group">
+        <label>내 체중</label>
+        <div class="bw-input-row">
+          <input type="number" id="bw-input" value="70" step="0.5" min="30" max="300">
+          <span>kg</span>
+          <span class="bw-saved-badge" id="bw-badge">✓ 저장됨</span>
+        </div>
+      </div>
     </div>
-    <span class="bw-saved-badge" id="bw-badge">✓ 저장됨</span>
   </div>
 
-  <!-- 탭 네비게이션 -->
+  <!-- ── 탭 네비게이션 ── -->
   <nav class="tab-nav">
     <button class="tab-btn active" data-tab="cardio">
       <span class="tab-icon">🏃</span>유산소
@@ -589,7 +521,7 @@
     </button>
   </nav>
 
-  <!-- ── 유산소 탭 ─────────────────────────────── -->
+  <!-- ── 유산소 탭 ── -->
   <section class="tab-content active" id="tab-cardio">
     <div class="card">
       <h2>유산소 운동 기록</h2>
@@ -638,14 +570,15 @@
     </div>
   </section>
 
-  <!-- ── 웨이트 탭 ─────────────────────────────── -->
+  <!-- ── 웨이트 탭 ── -->
   <section class="tab-content" id="tab-weight">
     <div class="card">
       <h2>웨이트 트레이닝 기록</h2>
 
       <div class="ex-type-toggle">
-        <button class="type-btn active" data-type="compound">🔗 복합 운동</button>
-        <button class="type-btn" data-type="isolation">💡 고립 운동</button>
+        <button class="type-btn active" data-type="compound">🔗 복합운동</button>
+        <button class="type-btn" data-type="isolation">💡 고립운동</button>
+        <button class="type-btn" data-type="bodyweight">🤸 맨몸운동</button>
       </div>
 
       <div class="form-group">
@@ -653,9 +586,15 @@
         <select id="w-exercise"></select>
       </div>
 
+      <!-- 맨몸운동 안내 -->
+      <div class="bw-note" id="bw-note">
+        🏋️ 맨몸운동은 <strong id="bw-note-val">내 체중</strong>을 기준으로 계산합니다.<br>
+        추가 무게(웨이트벨트 등)가 있다면 아래에 입력하세요.
+      </div>
+
       <div class="form-row three">
         <div class="form-group" style="margin-bottom:0">
-          <label>무게 (kg)</label>
+          <label id="w-kg-label">무게 (kg)</label>
           <input type="number" id="w-kg" step="0.5" min="0" placeholder="0">
         </div>
         <div class="form-group" style="margin-bottom:0">
@@ -697,7 +636,7 @@
     </div>
   </section>
 
-  <!-- ── 기록 탭 ───────────────────────────────── -->
+  <!-- ── 기록 탭 ── -->
   <section class="tab-content" id="tab-records">
     <div class="filter-section">
       <div class="filter-row">
@@ -713,7 +652,7 @@
       </div>
     </div>
 
-    <div class="summary-card" id="rec-summary">
+    <div class="summary-card">
       <div class="summary-item">
         <div class="val" id="sum-cal">0</div>
         <div class="lbl">총 kcal</div>
@@ -731,7 +670,7 @@
     <div id="records-list"></div>
   </section>
 
-  <!-- ── 통계 탭 ───────────────────────────────── -->
+  <!-- ── 통계 탭 ── -->
   <section class="tab-content" id="tab-stats">
     <div class="card">
       <h3>📈 칼로리 소모 추이 (최근 30일)</h3>
@@ -758,7 +697,7 @@
 <script>
 'use strict';
 
-// ── 상수 ─────────────────────────────────────────────────
+// ── 상수 ──────────────────────────────────────────────────
 const ACTIVITIES = {
   running:  { name: '달리기', icon: '🏃', distFactor: 1.036, met: 9 },
   walking:  { name: '걷기',   icon: '🚶', distFactor: 0.55,  met: 3.5 },
@@ -769,14 +708,23 @@ const ACTIVITIES = {
 const EXERCISES = {
   compound: [
     '스쿼트', '데드리프트', '벤치프레스', '오버헤드프레스', '바벨로우',
-    '풀업', '딥스', '레그프레스', '인클라인벤치프레스', '덤벨로우', '랫풀다운',
+    '레그프레스', '인클라인벤치프레스', '덤벨로우', '랫풀다운',
+    '케이블로우', '덤벨프레스',
   ],
   isolation: [
     '바이셉컬', '해머컬', '트라이셉푸쉬다운', '스컬크러셔',
     '레그익스텐션', '레그컬', '사이드레터럴레이즈', '프론트레이즈',
-    '케이블크로스오버', '케이블로우', '힙쓰러스트', '레그레이즈', '시티드카프레이즈',
+    '케이블크로스오버', '힙쓰러스트', '시티드카프레이즈', '페이스풀',
+  ],
+  bodyweight: [
+    '풀업', '친업', '딥스', '푸쉬업', '파이크푸쉬업',
+    '링딥스', '머슬업', '레그레이즈', '행잉니레이즈',
+    '버피', '플랭크', '마운틴클라이머', '스쿼트(맨몸)', '런지',
   ],
 };
+
+// 성별 칼로리 계수 (여성은 동일 체중 대비 약 10% 적게 소모)
+const GENDER_FACTOR = { male: 1.0, female: 0.9 };
 
 // Epley 1RM 퍼센트 테이블
 const RM_TABLE = [
@@ -784,8 +732,9 @@ const RM_TABLE = [
   [6,85],[7,82],[8,80],[10,75],[12,70],[15,65],
 ];
 
-// ── 상태 ─────────────────────────────────────────────────
+// ── 상태 ──────────────────────────────────────────────────
 let bodyWeight = parseFloat(localStorage.getItem('bw_kg')) || 70;
+let gender = localStorage.getItem('gender') || 'male';
 let currentActivity = 'running';
 let currentExType = 'compound';
 let records = { cardio: [], weight: [] };
@@ -794,22 +743,29 @@ let recPeriodFilter = 'today';
 let charts = {};
 
 // ── 계산 함수 ─────────────────────────────────────────────
+function gf() { return GENDER_FACTOR[gender]; }
+
 function calcCardio(activity, dist, dur) {
   const a = ACTIVITIES[activity];
-  if (dur > 0) return Math.round(a.met * bodyWeight * (dur / 60));
-  if (dist > 0) return Math.round(a.distFactor * dist * bodyWeight);
+  if (dur > 0) return Math.round(a.met * bodyWeight * (dur / 60) * gf());
+  if (dist > 0) return Math.round(a.distFactor * dist * bodyWeight * gf());
   return 0;
 }
 
 function calcWeight(exType, wkg, sets, reps) {
+  if (exType === 'bodyweight') {
+    const total = bodyWeight + (wkg || 0);
+    return Math.round(total * sets * reps * 0.045 * gf());
+  }
   const f = exType === 'compound' ? 0.05 : 0.03;
-  return Math.round(wkg * sets * reps * f);
+  return Math.round(wkg * sets * reps * f * gf());
 }
 
-function calc1RM(wkg, reps) {
-  if (!wkg || !reps || reps < 1) return 0;
-  if (reps === 1) return wkg;
-  return Math.round(wkg * (1 + reps / 30) * 10) / 10;
+function calc1RM(wkg, reps, exType) {
+  const effectiveW = exType === 'bodyweight' ? bodyWeight + (wkg || 0) : (wkg || 0);
+  if (!effectiveW || !reps || reps < 1) return 0;
+  if (reps === 1) return effectiveW;
+  return Math.round(effectiveW * (1 + reps / 30) * 10) / 10;
 }
 
 // ── API ───────────────────────────────────────────────────
@@ -855,7 +811,7 @@ async function deleteRec(type, id) {
   } catch { toast('삭제 실패', true); }
 }
 
-// ── UI 렌더링 ─────────────────────────────────────────────
+// ── UI ────────────────────────────────────────────────────
 function refreshAll() {
   updateHeaderStats();
   renderRecords();
@@ -874,13 +830,15 @@ function updateHeaderStats() {
 function filterRecords() {
   const now = new Date();
   const todayS = todayStr();
-  const monday = new Date(now); monday.setDate(now.getDate() - now.getDay() + 1); const mondayS = monday.toISOString().slice(0,10);
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  const mondayS = monday.toISOString().slice(0,10);
   const firstDay = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
 
-  function inPeriod(dateStr) {
-    if (recPeriodFilter === 'today') return dateStr === todayS;
-    if (recPeriodFilter === 'week') return dateStr >= mondayS;
-    if (recPeriodFilter === 'month') return dateStr >= firstDay;
+  function inPeriod(d) {
+    if (recPeriodFilter === 'today') return d === todayS;
+    if (recPeriodFilter === 'week')  return d >= mondayS;
+    if (recPeriodFilter === 'month') return d >= firstDay;
     return true;
   }
 
@@ -901,11 +859,10 @@ function renderRecords() {
   document.getElementById('sum-count').textContent = cardio.length + weight.length;
   document.getElementById('sum-dist').textContent = totalDist.toFixed(1);
 
-  // 날짜순 정렬 (두 배열 합쳐서)
   const all = [
     ...cardio.map(r => ({ ...r, _type: 'cardio' })),
     ...weight.map(r => ({ ...r, _type: 'weight' })),
-  ].sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : 0));
+  ].sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : Number(b.created_at) - Number(a.created_at)));
 
   const container = document.getElementById('records-list');
   if (!all.length) {
@@ -920,7 +877,7 @@ function renderRecords() {
       return `<div class="record-item">
         <div class="record-icon">${a.icon}</div>
         <div class="record-body">
-          <div class="record-title badge-cardio">${a.name}</div>
+          <div class="record-title c-cardio">${a.name}</div>
           <div class="record-meta">${meta} · 체중 ${r.body_weight_kg}kg</div>
         </div>
         <div class="record-right">
@@ -930,12 +887,18 @@ function renderRecords() {
         <button class="record-delete" onclick="deleteRec('cardio','${r.id}')">🗑</button>
       </div>`;
     } else {
+      const isBW = r.exercise_type === 'bodyweight';
+      const icon = isBW ? '🤸' : '🏋️';
+      const colorClass = isBW ? 'c-bodyweight' : 'c-weight';
+      const weightInfo = isBW
+        ? `맨몸${Number(r.weight_kg) > 0 ? `+${r.weight_kg}kg` : ''}`
+        : `${r.weight_kg}kg`;
       const oneRM = r.one_rm ? ` · 1RM ${Number(r.one_rm).toFixed(1)}kg` : '';
       return `<div class="record-item">
-        <div class="record-icon">🏋️</div>
+        <div class="record-icon">${icon}</div>
         <div class="record-body">
-          <div class="record-title badge-weight">${r.exercise}</div>
-          <div class="record-meta">${r.weight_kg}kg × ${r.sets}세트 × ${r.reps}회${oneRM}</div>
+          <div class="record-title ${colorClass}">${r.exercise}</div>
+          <div class="record-meta">${weightInfo} × ${r.sets}세트 × ${r.reps}회${oneRM}</div>
         </div>
         <div class="record-right">
           <div class="record-cal">${Math.round(r.calories)} kcal</div>
@@ -967,18 +930,15 @@ function renderCalChart() {
     if (calByDate[r.date] !== undefined) calByDate[r.date] += Number(r.calories);
   });
 
-  const labels = last30.map(d => d.slice(5));
-  const data = last30.map(d => Math.round(calByDate[d]));
-
   if (charts.cal) charts.cal.destroy();
   const ctx = document.getElementById('chart-cal').getContext('2d');
   charts.cal = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels,
+      labels: last30.map(d => d.slice(5)),
       datasets: [{
         label: 'kcal',
-        data,
+        data: last30.map(d => Math.round(calByDate[d])),
         backgroundColor: 'rgba(124,58,237,0.5)',
         borderColor: '#7c3aed',
         borderWidth: 1,
@@ -998,12 +958,12 @@ function renderCalChart() {
 
 function populateStatsExSelect() {
   const sel = document.getElementById('stats-ex-sel');
-  const allExercises = [...new Set(records.weight.map(r => r.exercise))];
+  const exList = [...new Set(records.weight.map(r => r.exercise))];
   const prev = sel.value;
-  sel.innerHTML = allExercises.length
-    ? allExercises.map(e => `<option value="${e}">${e}</option>`).join('')
+  sel.innerHTML = exList.length
+    ? exList.map(e => `<option value="${e}">${e}</option>`).join('')
     : '<option value="">기록 없음</option>';
-  if (prev && allExercises.includes(prev)) sel.value = prev;
+  if (prev && exList.includes(prev)) sel.value = prev;
 }
 
 function renderRMChart() {
@@ -1044,18 +1004,19 @@ function renderRMChart() {
 // ── 유산소 라이브 계산 ────────────────────────────────────
 function liveCardio() {
   const dist = parseFloat(document.getElementById('c-dist').value) || 0;
-  const dur = parseFloat(document.getElementById('c-dur').value) || 0;
+  const dur  = parseFloat(document.getElementById('c-dur').value) || 0;
   const resultEl = document.getElementById('c-result');
-  const saveBtn = document.getElementById('btn-c-save');
+  const saveBtn  = document.getElementById('btn-c-save');
 
   if (!dist && !dur) { resultEl.style.display = 'none'; saveBtn.disabled = true; return; }
 
   const cal = calcCardio(currentActivity, dist, dur);
   document.getElementById('c-cal').textContent = cal.toLocaleString();
   const a = ACTIVITIES[currentActivity];
+  const gLabel = gender === 'male' ? '남성' : '여성';
   const basis = dur > 0
-    ? `MET ${a.met} × 체중 ${bodyWeight}kg × ${dur}분 기준`
-    : `${a.distFactor} × ${dist}km × 체중 ${bodyWeight}kg 기준`;
+    ? `MET ${a.met} × 체중 ${bodyWeight}kg × ${dur}분 (${gLabel} 기준)`
+    : `${a.distFactor} × ${dist}km × 체중 ${bodyWeight}kg (${gLabel} 기준)`;
   document.getElementById('c-sub').textContent = basis;
   resultEl.style.display = '';
   saveBtn.disabled = !dist;
@@ -1063,16 +1024,19 @@ function liveCardio() {
 
 // ── 웨이트 라이브 계산 ────────────────────────────────────
 function liveWeight() {
-  const wkg = parseFloat(document.getElementById('w-kg').value) || 0;
-  const sets = parseInt(document.getElementById('w-sets').value) || 0;
+  const wkg  = parseFloat(document.getElementById('w-kg').value) || 0;
+  const sets = parseInt(document.getElementById('w-sets').value) || 1;
   const reps = parseInt(document.getElementById('w-reps').value) || 0;
   const resultEl = document.getElementById('w-result');
-  const saveBtn = document.getElementById('btn-w-save');
+  const saveBtn  = document.getElementById('btn-w-save');
 
-  if (!wkg || !reps) { resultEl.style.display = 'none'; saveBtn.disabled = true; return; }
+  // 맨몸운동은 reps만 있어도 계산 가능
+  const canCalc = currentExType === 'bodyweight' ? reps > 0 : (wkg > 0 && reps > 0);
 
-  const cal = calcWeight(currentExType, wkg, sets || 1, reps);
-  const oneRM = calc1RM(wkg, reps);
+  if (!canCalc) { resultEl.style.display = 'none'; saveBtn.disabled = true; return; }
+
+  const cal  = calcWeight(currentExType, wkg, sets, reps);
+  const oneRM = calc1RM(wkg, reps, currentExType);
 
   document.getElementById('w-cal').textContent = cal.toLocaleString();
   document.getElementById('w-1rm').textContent = oneRM;
@@ -1085,7 +1049,7 @@ function render1RMTable(wkg, reps, oneRM) {
   document.getElementById('rm-table').innerHTML = `
     <div class="rm-table">
       <div class="rm-table-header">
-        <span>반복 수</span><span>1RM의 %</span><span>권장 무게</span>
+        <span>반복 수</span><span>1RM 비율</span><span>권장 무게</span>
       </div>
       ${RM_TABLE.map(([r, pct]) => `
         <div class="rm-table-row${r === reps ? ' highlight' : ''}">
@@ -1096,13 +1060,31 @@ function render1RMTable(wkg, reps, oneRM) {
     </div>`;
 }
 
-// ── 운동 종목 옵션 생성 ───────────────────────────────────
+// ── 운동 종목 옵션 ────────────────────────────────────────
 function populateExercises() {
   const sel = document.getElementById('w-exercise');
   sel.innerHTML = EXERCISES[currentExType].map(e => `<option value="${e}">${e}</option>`).join('');
 }
 
-// ── 날짜 헬퍼 ────────────────────────────────────────────
+// 맨몸운동 선택 시 UI 변경
+function updateBodyweightUI() {
+  const isBW = currentExType === 'bodyweight';
+  const note = document.getElementById('bw-note');
+  const label = document.getElementById('w-kg-label');
+  const input = document.getElementById('w-kg');
+
+  note.classList.toggle('show', isBW);
+  if (isBW) {
+    label.textContent = '추가 무게 (선택, kg)';
+    input.placeholder = '0 = 맨몸만';
+    document.getElementById('bw-note-val').textContent = `${bodyWeight}kg`;
+  } else {
+    label.textContent = '무게 (kg)';
+    input.placeholder = '0';
+  }
+}
+
+// ── 날짜 헬퍼 ─────────────────────────────────────────────
 function todayStr() { return new Date().toISOString().slice(0,10); }
 
 // ── 토스트 ────────────────────────────────────────────────
@@ -1115,34 +1097,61 @@ function toast(msg, isError = false) {
   toastTimer = setTimeout(() => { el.className = ''; }, 2500);
 }
 
-// ── 이벤트 바인딩 ─────────────────────────────────────────
+// ── 초기화 ───────────────────────────────────────────────
 function init() {
-  // 체중 입력
+  // 성별 복원 및 버튼 상태
+  document.querySelectorAll('.gender-btn').forEach(btn => {
+    if (btn.dataset.gender === gender) btn.classList.add('active');
+    else btn.classList.remove('active');
+  });
+
+  // 체중 복원
   const bwInput = document.getElementById('bw-input');
   bwInput.value = bodyWeight;
+
+  // 날짜 기본값
+  document.getElementById('c-date').value = todayStr();
+  document.getElementById('w-date').value = todayStr();
+
+  // ── 성별 버튼 ──
+  document.querySelectorAll('.gender-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      gender = btn.dataset.gender;
+      localStorage.setItem('gender', gender);
+      document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      liveCardio();
+      liveWeight();
+      toast(gender === 'male' ? '♂ 남성으로 설정되었습니다' : '♀ 여성으로 설정되었습니다');
+    });
+  });
+
+  // ── 체중 입력 ──
   bwInput.addEventListener('change', () => {
     bodyWeight = parseFloat(bwInput.value) || 70;
     localStorage.setItem('bw_kg', bodyWeight);
     const badge = document.getElementById('bw-badge');
     badge.classList.add('show');
     setTimeout(() => badge.classList.remove('show'), 1500);
+    if (currentExType === 'bodyweight') {
+      document.getElementById('bw-note-val').textContent = `${bodyWeight}kg`;
+    }
     liveCardio();
     liveWeight();
   });
 
-  // 탭 전환
+  // ── 탭 전환 ──
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const tab = btn.dataset.tab;
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
       btn.classList.add('active');
-      document.getElementById('tab-' + tab).classList.add('active');
-      if (tab === 'stats') renderStats();
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      if (btn.dataset.tab === 'stats') renderStats();
     });
   });
 
-  // 활동 선택 (유산소)
+  // ── 활동 선택 (유산소) ──
   document.querySelectorAll('.activity-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('active'));
@@ -1152,15 +1161,13 @@ function init() {
     });
   });
 
-  // 유산소 입력
   document.getElementById('c-dist').addEventListener('input', liveCardio);
   document.getElementById('c-dur').addEventListener('input', liveCardio);
-  document.getElementById('c-date').value = todayStr();
 
-  // 유산소 저장
+  // ── 유산소 저장 ──
   document.getElementById('btn-c-save').addEventListener('click', () => {
     const dist = parseFloat(document.getElementById('c-dist').value) || 0;
-    const dur = parseFloat(document.getElementById('c-dur').value) || 0;
+    const dur  = parseFloat(document.getElementById('c-dur').value) || 0;
     if (!dist) return;
     saveCardioRec({
       date: document.getElementById('c-date').value || todayStr(),
@@ -1175,32 +1182,37 @@ function init() {
     liveCardio();
   });
 
-  // 운동 종류 토글 (웨이트)
+  // ── 운동 종류 토글 (웨이트) ──
   document.querySelectorAll('.type-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentExType = btn.dataset.type;
       populateExercises();
+      updateBodyweightUI();
       liveWeight();
     });
   });
 
-  // 웨이트 입력
+  // ── 웨이트 입력 ──
   ['w-kg','w-sets','w-reps'].forEach(id => {
     document.getElementById(id).addEventListener('input', liveWeight);
   });
-  document.getElementById('w-date').value = todayStr();
-  populateExercises();
 
-  // 웨이트 저장
+  populateExercises();
+  updateBodyweightUI();
+
+  // ── 웨이트 저장 ──
   document.getElementById('btn-w-save').addEventListener('click', () => {
-    const wkg = parseFloat(document.getElementById('w-kg').value) || 0;
+    const wkg  = parseFloat(document.getElementById('w-kg').value) || 0;
     const sets = parseInt(document.getElementById('w-sets').value) || 1;
     const reps = parseInt(document.getElementById('w-reps').value) || 0;
-    const ex = document.getElementById('w-exercise').value;
-    if (!wkg || !reps || !ex) return;
-    const oneRM = calc1RM(wkg, reps);
+    const ex   = document.getElementById('w-exercise').value;
+
+    if (!ex || !reps) return;
+    if (currentExType !== 'bodyweight' && !wkg) return;
+
+    const oneRM = calc1RM(wkg, reps, currentExType);
     saveWeightRec({
       date: document.getElementById('w-date').value || todayStr(),
       exercise: ex,
@@ -1217,7 +1229,7 @@ function init() {
     liveWeight();
   });
 
-  // 기록 필터
+  // ── 기록 필터 ──
   document.querySelectorAll('[data-type-filter]').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('[data-type-filter]').forEach(b => b.classList.remove('active'));
@@ -1236,7 +1248,7 @@ function init() {
     });
   });
 
-  // 통계 운동 선택
+  // ── 통계 운동 선택 ──
   document.getElementById('stats-ex-sel').addEventListener('change', renderRMChart);
 
   loadRecords();
