@@ -664,6 +664,27 @@
     .g-goal-e { background: rgba(22,163,74,.1); color: #16a34a; }
     .g-tip { background: linear-gradient(135deg,#fffbeb,#fef3c7); border: 1px solid #fcd34d; border-radius: 10px; padding: 12px 14px; font-size: 0.82rem; color: #78350f; display: flex; gap: 8px; line-height: 1.55; }
 
+    /* ── 가이드 1RM 계산기 ── */
+    .rm-calc-box { background: linear-gradient(135deg,rgba(254,229,0,0.14),rgba(254,229,0,0.04)); border: 1.5px solid rgba(200,162,0,0.35); border-radius: 13px; padding: 14px 16px; margin-bottom: 18px; }
+    .rm-calc-title { font-size: 0.8rem; font-weight: 800; color: #8B6000; margin-bottom: 10px; letter-spacing: .01em; display: flex; align-items: center; gap: 6px; }
+    .rm-bw-note { font-size: 0.7rem; color: #8B6000; background: rgba(0,0,0,0.05); border-radius: 7px; padding: 5px 9px; margin-bottom: 9px; line-height: 1.5; }
+    .rm-input-row { display: flex; gap: 8px; align-items: stretch; }
+    .rm-input { flex: 1; background: #fff; border: 1.5px solid #C8A200; border-radius: 9px; padding: 11px 12px; font-size: 1.05rem; font-weight: 700; color: var(--text); outline: none; text-align: center; min-width: 0; }
+    .rm-input:focus { border-color: #B07800; box-shadow: 0 0 0 3px rgba(254,229,0,0.35); }
+    .rm-input::placeholder { font-size: 0.78rem; font-weight: 400; color: #bbb; }
+    .rm-calc-btn { background: #FEE500; border: none; border-radius: 9px; padding: 11px 18px; font-size: 0.88rem; font-weight: 800; color: #1A1200; cursor: pointer; white-space: nowrap; transition: all .18s; flex-shrink: 0; }
+    .rm-calc-btn:hover { background: #FFD600; box-shadow: 0 3px 10px rgba(254,229,0,0.6); }
+    .rm-calc-btn:active { transform: scale(.97); }
+    .rm-results { margin-top: 12px; display: flex; flex-direction: column; gap: 7px; }
+    .rm-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 13px; border-radius: 11px; }
+    .rm-row-left { display: flex; flex-direction: column; gap: 2px; }
+    .rm-row-goal { font-size: 0.88rem; font-weight: 800; }
+    .rm-row-reps { font-size: 0.69rem; color: var(--muted); }
+    .rm-row-right { display: flex; align-items: baseline; gap: 7px; }
+    .rm-pct { font-size: 0.68rem; font-weight: 700; padding: 2px 7px; background: rgba(0,0,0,0.07); border-radius: 6px; color: #555; }
+    .rm-kg { font-size: 1.5rem; font-weight: 900; line-height: 1; }
+    .rm-kg-unit { font-size: 0.72rem; font-weight: 700; opacity: .8; }
+
     /* ── 루틴 탭 ── */
     .rt-selector { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(176,120,0,.07); }
     .rt-label { font-size: 0.68rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
@@ -1940,6 +1961,7 @@ function guideSelectEx(idx) {
   const diffStarsEmpty  = '<span class="g-star-off">' + '☆'.repeat(5 - ex.diff) + '</span>';
   const diffLabel = ['','입문','초급','중급','고급','전문가'][ex.diff];
 
+  const savedRm = parseFloat(localStorage.getItem('1rm_' + ex.name) || '') || '';
   document.getElementById('guide-detail-content').innerHTML = `
     <div class="guide-detail-header">
       <div class="guide-detail-icon ${ex.cat}">${ex.icon}</div>
@@ -1950,6 +1972,18 @@ function guideSelectEx(idx) {
           <span class="guide-diff">${diffStarsFilled}${diffStarsEmpty} ${diffLabel}</span>
         </div>
       </div>
+    </div>
+
+    <div class="rm-calc-box">
+      <div class="rm-calc-title">🏋️ 1RM 기반 적정 중량 계산기</div>
+      ${ex.cat === 'bodyweight' ? '<div class="rm-bw-note">💡 맨몸운동은 추가 중량(kg) 또는 참고용으로 활용하세요</div>' : ''}
+      <div class="rm-input-row">
+        <input type="number" id="guide-rm-input" class="rm-input"
+               placeholder="내 최대 1회 중량 입력 (kg)"
+               min="1" max="999" step="2.5" value="${savedRm}">
+        <button class="rm-calc-btn" onclick="guideCalcRm('${ex.name.replace(/'/g,"\\'")}')">계산하기</button>
+      </div>
+      <div id="guide-rm-results"></div>
     </div>
 
     <div class="guide-section">
@@ -1998,11 +2032,63 @@ function guideSelectEx(idx) {
       <div class="g-tip">💡 <span>${ex.tip}</span></div>
     </div>` : ''}
   `;
+
+  // 저장된 1RM 있으면 자동 계산
+  if (savedRm) _drawRmResults(savedRm);
+
+  // 실시간 계산 이벤트
+  const rmInp = document.getElementById('guide-rm-input');
+  if (rmInp) {
+    rmInp.addEventListener('input', () => {
+      const v = parseFloat(rmInp.value);
+      const resEl = document.getElementById('guide-rm-results');
+      if (v > 0) { localStorage.setItem('1rm_' + ex.name, v); _drawRmResults(v); }
+      else if (resEl) resEl.innerHTML = '';
+    });
+    rmInp.addEventListener('keydown', e => { if (e.key === 'Enter') guideCalcRm(ex.name); });
+  }
 }
 
 function guideShowList() {
   document.getElementById('guide-list-view').style.display = 'block';
   document.getElementById('guide-detail-view').style.display = 'none';
+}
+
+// ── 가이드 1RM 계산기 ────────────────────────────────────────
+const RM_GOALS = [
+  { label:'근력강화', icon:'⚡', pct:90, reps:'3~5회', sets:'5세트', color:'#DC2626', bg:'rgba(220,38,38,0.08)' },
+  { label:'근비대',   icon:'💪', pct:70, reps:'8~12회', sets:'4세트', color:'#B07800', bg:'rgba(254,229,0,0.2)' },
+  { label:'근지구력', icon:'🏃', pct:60, reps:'15~20회',sets:'3세트', color:'#16A34A', bg:'rgba(22,163,74,0.08)' },
+];
+
+function guideCalcRm(exName) {
+  const inp = document.getElementById('guide-rm-input');
+  if (!inp) return;
+  const rm = parseFloat(inp.value);
+  if (!rm || rm <= 0) { showToast('1RM을 입력해주세요'); return; }
+  localStorage.setItem('1rm_' + exName, rm);
+  _drawRmResults(rm);
+}
+
+function _drawRmResults(rm) {
+  const el = document.getElementById('guide-rm-results');
+  if (!el) return;
+  el.className = 'rm-results';
+  el.innerHTML = RM_GOALS.map(g => {
+    const raw = rm * g.pct / 100;
+    const w   = Math.round(raw / 2.5) * 2.5;
+    const wStr = w % 1 === 0 ? w : w.toFixed(1);
+    return `<div class="rm-row" style="background:${g.bg};border-left:3px solid ${g.color}">
+      <div class="rm-row-left">
+        <span class="rm-row-goal" style="color:${g.color}">${g.icon} ${g.label}</span>
+        <span class="rm-row-reps">${g.reps} × ${g.sets}</span>
+      </div>
+      <div class="rm-row-right">
+        <span class="rm-pct">${g.pct}%</span>
+        <span class="rm-kg" style="color:${g.color}">${wStr}<span class="rm-kg-unit"> kg</span></span>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ── 루틴 생성기 ──────────────────────────────────────────────
