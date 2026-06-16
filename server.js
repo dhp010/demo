@@ -48,9 +48,9 @@ function buildMemoryStorage() {
     },
 
     // ── 피트니스 ──
-    getFitnessRecords: async () => ({
-      cardio: [...mem.cardio].sort((a, b) => b.created_at - a.created_at),
-      weight: [...mem.weight].sort((a, b) => b.created_at - a.created_at),
+    getFitnessRecords: async (userId) => ({
+      cardio: [...mem.cardio].filter(r => (r.user_id || 'default') === userId).sort((a, b) => b.created_at - a.created_at),
+      weight: [...mem.weight].filter(r => (r.user_id || 'default') === userId).sort((a, b) => b.created_at - a.created_at),
     }),
     addCardio: async (rec) => { mem.cardio.unshift(rec); },
     addWeight: async (rec) => { mem.weight.unshift(rec); },
@@ -137,6 +137,7 @@ function buildTursoStorage(client) {
       await client.execute(`
         CREATE TABLE IF NOT EXISTS fitness_cardio (
           id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL DEFAULT 'default',
           date TEXT NOT NULL,
           activity TEXT NOT NULL,
           distance_km REAL NOT NULL DEFAULT 0,
@@ -148,6 +149,7 @@ function buildTursoStorage(client) {
       await client.execute(`
         CREATE TABLE IF NOT EXISTS fitness_weight (
           id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL DEFAULT 'default',
           date TEXT NOT NULL,
           exercise TEXT NOT NULL,
           exercise_type TEXT NOT NULL DEFAULT 'compound',
@@ -158,6 +160,10 @@ function buildTursoStorage(client) {
           calories REAL NOT NULL DEFAULT 0,
           created_at INTEGER NOT NULL
         )`);
+      // 기존 테이블에 user_id 컬럼 추가 (마이그레이션)
+      for (const tbl of ['fitness_cardio', 'fitness_weight']) {
+        try { await client.execute(`ALTER TABLE ${tbl} ADD COLUMN user_id TEXT NOT NULL DEFAULT 'default'`); } catch {}
+      }
     },
 
     // ── 노트 (기존 — 변경 없음) ──
@@ -206,10 +212,10 @@ function buildTursoStorage(client) {
     },
 
     // ── 피트니스 ──
-    getFitnessRecords: async () => {
+    getFitnessRecords: async (userId) => {
       const [cardio, weight] = await Promise.all([
-        client.execute('SELECT * FROM fitness_cardio ORDER BY date DESC, created_at DESC'),
-        client.execute('SELECT * FROM fitness_weight ORDER BY date DESC, created_at DESC'),
+        client.execute({ sql: 'SELECT * FROM fitness_cardio WHERE user_id=? ORDER BY date DESC, created_at DESC', args: [userId] }),
+        client.execute({ sql: 'SELECT * FROM fitness_weight WHERE user_id=? ORDER BY date DESC, created_at DESC', args: [userId] }),
       ]);
       return { cardio: cardio.rows.map(toCardio), weight: weight.rows.map(toWeight) };
     },
@@ -217,9 +223,9 @@ function buildTursoStorage(client) {
     addCardio: async (rec) => {
       await client.execute({
         sql: `INSERT INTO fitness_cardio
-              (id, date, activity, distance_km, duration_min, body_weight_kg, calories, created_at)
-              VALUES (?,?,?,?,?,?,?,?)`,
-        args: [rec.id, rec.date, rec.activity, rec.distance_km, rec.duration_min || 0,
+              (id, user_id, date, activity, distance_km, duration_min, body_weight_kg, calories, created_at)
+              VALUES (?,?,?,?,?,?,?,?,?)`,
+        args: [rec.id, rec.user_id || 'default', rec.date, rec.activity, rec.distance_km, rec.duration_min || 0,
                rec.body_weight_kg, rec.calories, rec.created_at],
       });
     },
@@ -227,9 +233,9 @@ function buildTursoStorage(client) {
     addWeight: async (rec) => {
       await client.execute({
         sql: `INSERT INTO fitness_weight
-              (id, date, exercise, exercise_type, weight_kg, sets, reps, one_rm, calories, created_at)
-              VALUES (?,?,?,?,?,?,?,?,?,?)`,
-        args: [rec.id, rec.date, rec.exercise, rec.exercise_type || 'compound',
+              (id, user_id, date, exercise, exercise_type, weight_kg, sets, reps, one_rm, calories, created_at)
+              VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+        args: [rec.id, rec.user_id || 'default', rec.date, rec.exercise, rec.exercise_type || 'compound',
                rec.weight_kg, rec.sets, rec.reps, rec.one_rm ?? null,
                rec.calories, rec.created_at],
       });
@@ -296,7 +302,8 @@ const server = http.createServer(async (req, res) => {
     try {
       // ── 피트니스 API ──────────────────────────────────
       if (req.method === 'GET' && urlPath === '/api/fitness/records') {
-        return json(res, await storage.getFitnessRecords());
+        const userId = new URL(req.url, 'http://localhost').searchParams.get('user') || 'default';
+        return json(res, await storage.getFitnessRecords(userId));
       }
       if (req.method === 'POST' && urlPath === '/api/fitness/cardio') {
         const body = await parseBody(req);

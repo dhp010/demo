@@ -798,6 +798,31 @@
     .diet-status-desc { font-size: 0.8rem; opacity: 0.8; }
     .diet-status-tip { font-size: 0.75rem; margin-top: 10px; padding: 8px 12px; background: rgba(0,0,0,0.06); border-radius: 8px; line-height: 1.5; }
 
+    /* ── 프로필 바 ── */
+    .profile-bar { display:flex; align-items:center; justify-content:space-between; background:var(--card); border-bottom:1px solid var(--border); padding:8px 16px; position:sticky; top:0; z-index:100; }
+    .profile-current { display:flex; align-items:center; gap:9px; }
+    .profile-avatar { width:34px; height:34px; border-radius:50%; background:#FEE500; color:#1A1200; display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:900; flex-shrink:0; }
+    .profile-name-text { font-size:0.92rem; font-weight:800; }
+    .profile-switch-btn { background:var(--bg); border:1.5px solid var(--border); border-radius:20px; padding:5px 13px; font-size:0.76rem; font-weight:700; cursor:pointer; color:var(--muted); transition:all .15s; white-space:nowrap; }
+    .profile-switch-btn:hover { border-color:#C8A200; color:var(--text); }
+    /* 프로필 모달 */
+    .profile-overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:2000; display:flex; align-items:flex-start; justify-content:center; padding-top:56px; }
+    .profile-overlay.hidden { display:none; }
+    .profile-modal { background:var(--card); border-radius:18px; width:min(340px,92vw); max-height:72vh; overflow-y:auto; padding:20px 18px; box-shadow:0 12px 40px rgba(0,0,0,.35); }
+    .profile-modal-title { font-size:1rem; font-weight:900; margin-bottom:14px; }
+    .profile-item { display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:10px; margin-bottom:5px; cursor:pointer; transition:background .15s; border:1.5px solid transparent; }
+    .profile-item:hover { background:var(--bg); }
+    .profile-item.active { background:rgba(254,229,0,.18); border-color:#C8A200; }
+    .profile-item-avatar { width:36px; height:36px; border-radius:50%; background:#FEE500; color:#1A1200; display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:900; flex-shrink:0; }
+    .profile-item-name { flex:1; font-size:0.88rem; font-weight:700; }
+    .profile-item-del { background:none; border:none; color:var(--muted); cursor:pointer; font-size:0.9rem; padding:4px 8px; border-radius:6px; transition:all .15s; }
+    .profile-item-del:hover { color:#dc2626; background:var(--bg); }
+    .profile-add-row { display:flex; gap:7px; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
+    .profile-add-input { flex:1; background:var(--bg); border:1.5px solid var(--border); border-radius:8px; padding:9px 11px; font-size:0.85rem; color:var(--text); outline:none; }
+    .profile-add-input:focus { border-color:#C8A200; }
+    .profile-add-btn { background:#FEE500; border:none; border-radius:8px; padding:9px 14px; font-size:0.85rem; font-weight:800; color:#1A1200; cursor:pointer; white-space:nowrap; }
+    .profile-add-btn:hover { background:#FFD600; }
+
     @media (max-width: 400px) {
       .form-row.three { grid-template-columns: 1fr 1fr; }
       .activity-grid { grid-template-columns: repeat(2, 1fr); }
@@ -873,6 +898,28 @@
   </style>
 </head>
 <body>
+
+<!-- ── 프로필 바 ── -->
+<div class="profile-bar" id="profile-bar">
+  <div class="profile-current">
+    <div class="profile-avatar" id="profile-avatar">?</div>
+    <span class="profile-name-text" id="profile-name-text">로딩 중...</span>
+  </div>
+  <button class="profile-switch-btn" onclick="openProfileModal()">👤 프로필 전환</button>
+</div>
+
+<!-- 프로필 모달 -->
+<div class="profile-overlay hidden" id="profile-overlay" onclick="if(event.target===this)closeProfileModal()">
+  <div class="profile-modal">
+    <div class="profile-modal-title">👤 사용자 선택</div>
+    <div id="profile-list"></div>
+    <div class="profile-add-row">
+      <input class="profile-add-input" id="profile-add-input" placeholder="새 이름 입력..." maxlength="20"
+        onkeydown="if(event.key==='Enter')createProfile()">
+      <button class="profile-add-btn" onclick="createProfile()">+ 추가</button>
+    </div>
+  </div>
+</div>
 
 <header>
   <div class="header-inner">
@@ -1407,9 +1454,98 @@ const RM_TABLE = [
   [6,85],[7,82],[8,80],[10,75],[12,70],[15,65],
 ];
 
+// ── 프로필 시스템 ──────────────────────────────────────────
+function _getProfiles() { try { return JSON.parse(localStorage.getItem('fit_profiles') || '[]'); } catch { return []; } }
+function _saveProfiles(ps) { localStorage.setItem('fit_profiles', JSON.stringify(ps)); }
+function _getActiveId() { return localStorage.getItem('fit_current_profile') || ''; }
+function _setActiveId(id) { localStorage.setItem('fit_current_profile', id); }
+function _genPid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function _activeProfile() { const id = _getActiveId(); const ps = _getProfiles(); return ps.find(p => p.id === id) || ps[0] || null; }
+function pk(key) { const p = _activeProfile(); return p ? `p_${p.id}_${key}` : key; }
+function activeUserId() { const p = _activeProfile(); return p ? p.id : 'default'; }
+
+// 첫 실행 시 기본 프로필 보장
+(function _bootstrapProfiles() {
+  let ps = _getProfiles();
+  if (ps.length === 0) { ps = [{ id: _genPid(), name: '나' }]; _saveProfiles(ps); }
+  if (!ps.find(p => p.id === _getActiveId())) _setActiveId(ps[0].id);
+})();
+
+function renderProfileBar() {
+  const p = _activeProfile(); if (!p) return;
+  const av = document.getElementById('profile-avatar');
+  const nm = document.getElementById('profile-name-text');
+  if (av) av.textContent = [...p.name][0].toUpperCase();
+  if (nm) nm.textContent = p.name;
+}
+
+function renderProfileList() {
+  const ps = _getProfiles(); const aid = _getActiveId();
+  const el = document.getElementById('profile-list'); if (!el) return;
+  el.innerHTML = ps.map(p => `
+    <div class="profile-item${p.id === aid ? ' active' : ''}" onclick="switchProfile('${p.id}')">
+      <div class="profile-item-avatar">${[...p.name][0].toUpperCase()}</div>
+      <span class="profile-item-name">${p.name}</span>
+      ${ps.length > 1 ? `<button class="profile-item-del" onclick="event.stopPropagation();deleteProfile('${p.id}')">✕</button>` : ''}
+    </div>`).join('');
+}
+
+function openProfileModal() {
+  renderProfileList();
+  document.getElementById('profile-overlay').classList.remove('hidden');
+  setTimeout(() => { const i = document.getElementById('profile-add-input'); if (i) i.focus(); }, 50);
+}
+
+function closeProfileModal() { document.getElementById('profile-overlay').classList.add('hidden'); }
+
+function createProfile() {
+  const input = document.getElementById('profile-add-input');
+  const name = (input ? input.value : '').trim();
+  if (!name) { toast('이름을 입력해주세요'); return; }
+  const ps = _getProfiles();
+  if (ps.find(p => p.name === name)) { toast('이미 있는 이름이에요'); return; }
+  const np = { id: _genPid(), name };
+  ps.push(np); _saveProfiles(ps);
+  if (input) input.value = '';
+  switchProfile(np.id);
+}
+
+function deleteProfile(id) {
+  const ps = _getProfiles();
+  if (ps.length <= 1) { toast('마지막 프로필은 삭제할 수 없어요'); return; }
+  const target = ps.find(p => p.id === id);
+  if (!confirm(`'${target ? target.name : ''}' 프로필을 삭제하시겠습니까?\n(운동·식단 기록이 모두 삭제됩니다)`)) return;
+  Object.keys(localStorage).filter(k => k.startsWith(`p_${id}_`)).forEach(k => localStorage.removeItem(k));
+  const newPs = ps.filter(p => p.id !== id); _saveProfiles(newPs);
+  if (_getActiveId() === id) switchProfile(newPs[0].id);
+  else renderProfileList();
+}
+
+function switchProfile(id) {
+  _setActiveId(id);
+  renderProfileBar();
+  renderProfileList();
+  closeProfileModal();
+  // 전환된 프로필 데이터로 전역 변수 갱신
+  bodyWeight = parseFloat(localStorage.getItem(pk('bw_kg'))) || 70;
+  gender = localStorage.getItem(pk('gender')) || 'male';
+  const bwInput = document.getElementById('bw-input');
+  if (bwInput) bwInput.value = bodyWeight;
+  document.querySelectorAll('.gender-btn').forEach(b => b.classList.toggle('active', b.dataset.gender === gender));
+  if (typeof updateBodyweightUI === 'function') updateBodyweightUI();
+  // 운동 기록 다시 로드
+  records = { cardio: [], weight: [] }; window._records = records;
+  loadRecords();
+  // 식단 탭이 활성이면 다시 렌더링
+  if (document.getElementById('tab-diet') && document.getElementById('tab-diet').classList.contains('active')) {
+    if (typeof renderFoodTab === 'function') renderFoodTab();
+  }
+  toast(_activeProfile().name + ' 님 환영해요!');
+}
+
 // ── 상태 ──────────────────────────────────────────────────
-let bodyWeight = parseFloat(localStorage.getItem('bw_kg')) || 70;
-let gender = localStorage.getItem('gender') || 'male';
+let bodyWeight = parseFloat(localStorage.getItem(pk('bw_kg'))) || 70;
+let gender = localStorage.getItem(pk('gender')) || 'male';
 let currentActivity = 'running';
 let currentExType = 'compound';
 let records = { cardio: [], weight: [] };
@@ -1454,8 +1590,8 @@ function todayStr() {
 
 function checkCalorieAchievement(cal) {
   if (cal < 500) return;
-  if (localStorage.getItem('popup_shown_date') === todayStr()) return;
-  localStorage.setItem('popup_shown_date', todayStr());
+  if (localStorage.getItem(pk('popup_shown_date')) === todayStr()) return;
+  localStorage.setItem(pk('popup_shown_date'), todayStr());
   document.getElementById('achievement-popup').classList.add('show');
 }
 
@@ -1466,7 +1602,7 @@ function closeAchievementPopup() {
 // ── API ───────────────────────────────────────────────────
 async function loadRecords() {
   try {
-    const r = await fetch('/api/fitness/records');
+    const r = await fetch('/api/fitness/records?user=' + activeUserId());
     if (r.ok) { records = await r.json(); window._records = records; refreshAll(); }
   } catch { /* 오프라인 */ }
 }
@@ -1476,7 +1612,7 @@ async function saveCardioRec(data) {
     const r = await fetch('/api/fitness/cardio', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, user_id: activeUserId() }),
     });
     const j = await r.json();
     if (j.ok) { records.cardio.unshift(j.record); window._records = records; refreshAll(); toast('🏃 유산소 기록 저장 완료!'); }
@@ -1488,7 +1624,7 @@ async function saveWeightRec(data) {
     const r = await fetch('/api/fitness/weight', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, user_id: activeUserId() }),
     });
     const j = await r.json();
     if (j.ok) { records.weight.unshift(j.record); window._records = records; refreshAll(); toast('💪 웨이트 기록 저장 완료!'); }
@@ -1810,7 +1946,7 @@ function init() {
   document.querySelectorAll('.gender-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       gender = btn.dataset.gender;
-      localStorage.setItem('gender', gender);
+      localStorage.setItem(pk('gender'), gender);
       document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       liveCardio();
@@ -1822,7 +1958,7 @@ function init() {
   // ── 체중 입력 ──
   bwInput.addEventListener('change', () => {
     bodyWeight = parseFloat(bwInput.value) || 70;
-    localStorage.setItem('bw_kg', bodyWeight);
+    localStorage.setItem(pk('bw_kg'), bodyWeight);
     const badge = document.getElementById('bw-badge');
     badge.classList.add('show');
     setTimeout(() => badge.classList.remove('show'), 1500);
@@ -1952,6 +2088,7 @@ function init() {
     if (e.target === this) closeAchievementPopup();
   });
 
+  renderProfileBar();
   loadRecords();
 }
 
@@ -2270,7 +2407,7 @@ function guideSelectEx(idx) {
   const diffStarsEmpty  = '<span class="g-star-off">' + '☆'.repeat(5 - ex.diff) + '</span>';
   const diffLabel = ['','입문','초급','중급','고급','전문가'][ex.diff];
 
-  const savedRm = parseFloat(localStorage.getItem('1rm_' + ex.name) || '') || '';
+  const savedRm = parseFloat(localStorage.getItem(pk('1rm_') + ex.name) || '') || '';
   const _gifFolder = EXERCISE_GIFS[ex.name];
   const _svgFrames = EXERCISE_SVG[ex.name];
   const _BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
@@ -2388,7 +2525,7 @@ function guideSelectEx(idx) {
     rmInp.addEventListener('input', () => {
       const v = parseFloat(rmInp.value);
       const resEl = document.getElementById('guide-rm-results');
-      if (v > 0) { localStorage.setItem('1rm_' + ex.name, v); _drawRmResults(v); }
+      if (v > 0) { localStorage.setItem(pk('1rm_') + ex.name, v); _drawRmResults(v); }
       else if (resEl) resEl.innerHTML = '';
     });
     rmInp.addEventListener('keydown', e => { if (e.key === 'Enter') guideCalcRm(ex.name); });
@@ -2413,7 +2550,7 @@ function guideCalcRm(exName) {
   if (!inp) return;
   const rm = parseFloat(inp.value);
   if (!rm || rm <= 0) { showToast('1RM을 입력해주세요'); return; }
-  localStorage.setItem('1rm_' + exName, rm);
+  localStorage.setItem(pk('1rm_') + exName, rm);
   _drawRmResults(rm);
 }
 
@@ -3218,7 +3355,7 @@ let _serving = 1;
 let _pendingFood = null;
 let _selectedMeal = 'lunch';
 
-function todayFoodKey() { return 'food_log_' + todayStr(); }
+function todayFoodKey() { return pk('food_log_') + todayStr(); }
 
 function loadFoodLog() {
   try { return JSON.parse(localStorage.getItem(todayFoodKey()) || '[]'); }
@@ -3551,7 +3688,7 @@ window.timerSubTab = function(tab) {
 
 // ── 유산소 스톱워치 ──────────────────────────────────────
 (function() {
-  const SW_KEY = 'cardio_timer_log';
+  const SW_KEY = pk('cardio_timer_log');
   let swElapsed  = 0;
   let swRunning  = false;
   let swInterval = null;
