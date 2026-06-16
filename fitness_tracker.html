@@ -770,6 +770,41 @@
       .ex-type-toggle { grid-template-columns: 1fr 1fr; }
       .ex-type-toggle .type-btn:last-child { grid-column: span 2; }
     }
+
+    /* ── 휴식 타이머 탭 ── */
+    .timer-wrap { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 4px 0 12px; }
+    .timer-ring-wrap { position: relative; width: 220px; height: 220px; flex-shrink: 0; }
+    .timer-ring-svg { transform: rotate(-90deg); }
+    .timer-ring-bg   { fill: none; stroke: var(--border); stroke-width: 14; }
+    .timer-ring-prog { fill: none; stroke: var(--primary); stroke-width: 14; stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.4s; }
+    .timer-ring-prog.done { stroke: #16a34a; }
+    .timer-ring-prog.idle { transition: none; }
+    .timer-display { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+    .timer-time { font-size: 3rem; font-weight: 800; color: var(--text); letter-spacing: -2px; font-variant-numeric: tabular-nums; line-height: 1; }
+    .timer-time.done { color: #16a34a; }
+    .timer-goal-label { font-size: 0.7rem; color: var(--muted); font-weight: 600; }
+    .timer-presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
+    .timer-preset-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 11px 4px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.18s; }
+    .timer-preset-btn:hover { border-color: var(--primary); background: rgba(176,120,0,0.06); }
+    .timer-preset-btn.active { border-color: var(--primary); background: rgba(254,229,0,0.28); }
+    .timer-preset-icon { font-size: 1.3rem; }
+    .timer-preset-name { font-size: 0.73rem; font-weight: 700; color: var(--text); }
+    .timer-preset-secs { font-size: 0.67rem; color: var(--muted); }
+    .timer-custom-row { display: flex; align-items: center; gap: 8px; width: 100%; }
+    .timer-custom-label { font-size: 0.75rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+    .timer-custom-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 0.9rem; color: var(--text); text-align: center; outline: none; min-width: 0; }
+    .timer-custom-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(176,120,0,0.12); }
+    .timer-custom-set { background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 0.82rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .timer-controls { display: flex; gap: 14px; align-items: center; }
+    .timer-btn { width: 58px; height: 58px; border-radius: 50%; border: none; cursor: pointer; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; transition: all 0.18s; flex-shrink: 0; }
+    .timer-btn-play  { background: var(--primary); color: #fff; box-shadow: 0 4px 16px rgba(176,120,0,0.38); }
+    .timer-btn-play:hover  { background: var(--primary-light); transform: scale(1.05); }
+    .timer-btn-reset { background: var(--bg); border: 1.5px solid var(--border); color: var(--muted); }
+    .timer-btn-reset:hover { border-color: var(--primary); color: var(--primary); }
+    .timer-done-msg { background: #f0fdf4; border: 2px solid #16a34a; border-radius: 12px; padding: 10px 20px; text-align: center; font-size: 0.88rem; font-weight: 700; color: #16a34a; display: none; width: 100%; box-sizing: border-box; }
+    .timer-done-msg.show { display: block; }
+    @keyframes timerDonePulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
+    .timer-ring-wrap.done { animation: timerDonePulse 0.6s ease 2; }
   </style>
 </head>
 <body>
@@ -833,9 +868,12 @@
     </div>
     <div class="tab-group">
       <div class="tab-group-label">운동 가이드</div>
-      <div class="tab-group-row">
+      <div class="tab-group-row" style="grid-template-columns: repeat(3, 1fr)">
         <button class="tab-btn" data-tab="guide">
           <span class="tab-icon">📚</span>가이드
+        </button>
+        <button class="tab-btn" data-tab="timer">
+          <span class="tab-icon">⏱</span>타이머
         </button>
         <button class="tab-btn" data-tab="routine">
           <span class="tab-icon">📅</span>루틴
@@ -1055,6 +1093,93 @@
       <button class="guide-back-btn" onclick="guideShowList()">← 목록으로</button>
       <div class="card">
         <div id="guide-detail-content"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 휴식 타이머 탭 ── -->
+  <section class="tab-content" id="tab-timer">
+    <div class="card">
+      <h2 style="font-size:1rem;font-weight:800;margin-bottom:16px">⏱ 세트 간 휴식 타이머</h2>
+      <div class="timer-wrap">
+
+        <!-- 원형 링 + 시간 표시 -->
+        <div class="timer-ring-wrap" id="timerRingWrap">
+          <svg class="timer-ring-svg" width="220" height="220" viewBox="0 0 220 220">
+            <circle class="timer-ring-bg"   cx="110" cy="110" r="90"/>
+            <circle class="timer-ring-prog idle" id="timerRingProg" cx="110" cy="110" r="90"
+              stroke-dasharray="565.49" stroke-dashoffset="0"/>
+          </svg>
+          <div class="timer-display">
+            <div class="timer-time" id="timerDisplay">01:30</div>
+            <div class="timer-goal-label" id="timerGoalLabel">근비대</div>
+          </div>
+        </div>
+
+        <!-- 목표별 프리셋 -->
+        <div class="timer-presets">
+          <button class="timer-preset-btn" data-secs="180" onclick="timerSelectPreset(this,180,'근력')">
+            <span class="timer-preset-icon">⚡</span>
+            <span class="timer-preset-name">근력</span>
+            <span class="timer-preset-secs">3분 00초</span>
+          </button>
+          <button class="timer-preset-btn active" data-secs="90" onclick="timerSelectPreset(this,90,'근비대')">
+            <span class="timer-preset-icon">💪</span>
+            <span class="timer-preset-name">근비대</span>
+            <span class="timer-preset-secs">1분 30초</span>
+          </button>
+          <button class="timer-preset-btn" data-secs="45" onclick="timerSelectPreset(this,45,'근지구력')">
+            <span class="timer-preset-icon">🏃</span>
+            <span class="timer-preset-name">근지구력</span>
+            <span class="timer-preset-secs">45초</span>
+          </button>
+        </div>
+
+        <!-- 직접 입력 -->
+        <div class="timer-custom-row">
+          <span class="timer-custom-label">직접 입력</span>
+          <input type="number" id="timerCustomInput" class="timer-custom-input"
+            placeholder="초 단위" min="5" max="600" value="90">
+          <button class="timer-custom-set" onclick="timerSetCustom()">설정</button>
+        </div>
+
+        <!-- 컨트롤 버튼 -->
+        <div class="timer-controls">
+          <button class="timer-btn timer-btn-reset" id="timerResetBtn" onclick="timerReset()" title="초기화">↺</button>
+          <button class="timer-btn timer-btn-play"  id="timerPlayBtn"  onclick="timerToggle()" title="시작/일시정지">▶</button>
+        </div>
+
+        <!-- 완료 메시지 -->
+        <div class="timer-done-msg" id="timerDoneMsg">🎉 휴식 완료! 다음 세트 시작하세요 💪</div>
+
+      </div>
+    </div>
+
+    <!-- 목표별 권장 휴식시간 안내 -->
+    <div class="card" style="margin-top:12px">
+      <h2 style="font-size:0.92rem;font-weight:800;margin-bottom:12px">📋 목표별 권장 휴식시간</h2>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px">
+          <span style="font-size:1.3rem">⚡</span>
+          <div>
+            <div style="font-size:0.82rem;font-weight:800;color:#dc2626">근력 (Strength)</div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">3~5분 · 고중량·저반복 (1~5RM) 위주. 신경계와 근육이 완전히 회복해야 다음 세트에서 최대 힘을 발휘할 수 있어요.</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 12px;background:rgba(176,120,0,0.07);border:1px solid rgba(176,120,0,0.2);border-radius:10px">
+          <span style="font-size:1.3rem">💪</span>
+          <div>
+            <div style="font-size:0.82rem;font-weight:800;color:var(--primary)">근비대 (Hypertrophy)</div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">60~120초 · 중중량·중반복 (6~12RM) 위주. 근육에 대사 스트레스를 충분히 주는 범위예요.</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 12px;background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:10px">
+          <span style="font-size:1.3rem">🏃</span>
+          <div>
+            <div style="font-size:0.82rem;font-weight:800;color:#16a34a">근지구력 (Endurance)</div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">30~60초 · 저중량·고반복 (15RM+) 위주. 짧은 휴식으로 심폐 부하와 근지구력을 동시에 자극해요.</div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -2811,6 +2936,139 @@ function initFoodPresets() {
       <span class="fp-kcal">${f.kcal} kcal</span>
     </button>`).join('');
 }
+
+// ── 휴식 타이머 ──────────────────────────────────────────
+(function() {
+  const CIRCUMFERENCE = 565.49;
+  let timerTotal    = 90;
+  let timerLeft     = 90;
+  let timerRunning  = false;
+  let timerInterval = null;
+  let timerGoalName = '근비대';
+  let audioCtx      = null;
+
+  function getEls() {
+    return {
+      display:   document.getElementById('timerDisplay'),
+      goalLabel: document.getElementById('timerGoalLabel'),
+      prog:      document.getElementById('timerRingProg'),
+      playBtn:   document.getElementById('timerPlayBtn'),
+      doneMsg:   document.getElementById('timerDoneMsg'),
+      ringWrap:  document.getElementById('timerRingWrap'),
+    };
+  }
+
+  function fmt(s) {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+  }
+
+  function updateUI() {
+    const { display, goalLabel, prog } = getEls();
+    if (!display) return;
+    display.textContent = fmt(timerLeft);
+    goalLabel.textContent = timerGoalName;
+    const offset = CIRCUMFERENCE * (1 - timerLeft / timerTotal);
+    prog.style.strokeDashoffset = offset;
+  }
+
+  function beep() {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const ctx = audioCtx;
+      [0, 0.18, 0.36].forEach(delay => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = 'sine'; osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.5, ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.14);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + 0.15);
+      });
+    } catch(e) {}
+  }
+
+  function timerDone() {
+    timerRunning = false;
+    clearInterval(timerInterval);
+    const { display, prog, playBtn, doneMsg, ringWrap } = getEls();
+    display.classList.add('done');
+    prog.classList.add('done');
+    prog.classList.remove('idle');
+    playBtn.textContent = '▶';
+    doneMsg.classList.add('show');
+    ringWrap.classList.add('done');
+    beep();
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  }
+
+  window.timerToggle = function() {
+    const { playBtn, prog, doneMsg, ringWrap, display } = getEls();
+    if (timerLeft <= 0) { timerReset(); return; }
+    timerRunning = !timerRunning;
+    if (timerRunning) {
+      playBtn.textContent = '⏸';
+      prog.classList.remove('idle');
+      doneMsg.classList.remove('show');
+      display.classList.remove('done');
+      prog.classList.remove('done');
+      ringWrap.classList.remove('done');
+      timerInterval = setInterval(() => {
+        timerLeft--;
+        updateUI();
+        if (timerLeft <= 0) timerDone();
+      }, 1000);
+    } else {
+      playBtn.textContent = '▶';
+      clearInterval(timerInterval);
+    }
+  };
+
+  window.timerReset = function() {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    timerLeft = timerTotal;
+    const { playBtn, prog, doneMsg, ringWrap, display } = getEls();
+    playBtn.textContent = '▶';
+    prog.classList.add('idle');
+    prog.classList.remove('done');
+    display.classList.remove('done');
+    doneMsg.classList.remove('show');
+    ringWrap.classList.remove('done');
+    updateUI();
+    // idle 클래스 한 프레임 후 제거 (transition 방지)
+    requestAnimationFrame(() => prog.classList.remove('idle'));
+  };
+
+  window.timerSelectPreset = function(btn, secs, name) {
+    document.querySelectorAll('.timer-preset-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    timerTotal = secs;
+    timerLeft  = secs;
+    timerGoalName = name;
+    document.getElementById('timerCustomInput').value = secs;
+    timerReset();
+  };
+
+  window.timerSetCustom = function() {
+    const val = parseInt(document.getElementById('timerCustomInput').value, 10);
+    if (!val || val < 5 || val > 600) return;
+    document.querySelectorAll('.timer-preset-btn').forEach(b => b.classList.remove('active'));
+    timerTotal = val;
+    timerLeft  = val;
+    timerGoalName = '직접설정';
+    timerReset();
+  };
+
+  // 초기 링 세팅
+  document.addEventListener('DOMContentLoaded', () => {
+    const prog = document.getElementById('timerRingProg');
+    if (prog) { prog.style.strokeDashoffset = '0'; prog.style.strokeDasharray = CIRCUMFERENCE; }
+    updateUI();
+  });
+})();
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
