@@ -28,9 +28,14 @@ function buildMemoryStorage() {
     getProfiles: async () => [...mem.profiles].sort((a, b) => a.created_at - b.created_at),
     getProfile: async (id) => mem.profiles.find(p => p.id === id) || null,
     upsertProfile: async (id, name) => {
-      const row = { id, name, created_at: Date.now() };
+      const existing = mem.profiles.find(p => p.id === id);
+      const row = { id, name, gender: existing?.gender || 'male', body_weight_kg: existing?.body_weight_kg || 70, created_at: existing?.created_at || Date.now() };
       const i = mem.profiles.findIndex(p => p.id === id);
       if (i >= 0) mem.profiles[i] = row; else mem.profiles.push(row);
+    },
+    updateProfileSettings: async (id, fields) => {
+      const i = mem.profiles.findIndex(p => p.id === id);
+      if (i >= 0) mem.profiles[i] = { ...mem.profiles[i], ...fields };
     },
     deleteProfile: async (id) => {
       mem.profiles = mem.profiles.filter(p => p.id !== id);
@@ -148,6 +153,18 @@ function buildTursoStorage(client) {
         ], 'write');
       }
 
+      // 프로필 테이블 (마이그레이션: gender, body_weight_kg 컬럼 추가)
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS fitness_profiles (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          gender TEXT NOT NULL DEFAULT 'male',
+          body_weight_kg REAL NOT NULL DEFAULT 70,
+          created_at INTEGER NOT NULL
+        )`);
+      try { await client.execute(`ALTER TABLE fitness_profiles ADD COLUMN gender TEXT NOT NULL DEFAULT 'male'`); } catch {}
+      try { await client.execute(`ALTER TABLE fitness_profiles ADD COLUMN body_weight_kg REAL NOT NULL DEFAULT 70`); } catch {}
+
       // 피트니스 테이블
       await client.execute(`
         CREATE TABLE IF NOT EXISTS fitness_cardio (
@@ -175,14 +192,6 @@ function buildTursoStorage(client) {
           calories REAL NOT NULL DEFAULT 0,
           created_at INTEGER NOT NULL
         )`);
-      // 프로필 테이블
-      await client.execute(`
-        CREATE TABLE IF NOT EXISTS fitness_profiles (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          created_at INTEGER NOT NULL
-        )`);
-
       // 기존 테이블에 user_id 컬럼 추가 (마이그레이션)
       for (const tbl of ['fitness_cardio', 'fitness_weight']) {
         try { await client.execute(`ALTER TABLE ${tbl} ADD COLUMN user_id TEXT NOT NULL DEFAULT 'default'`); } catch {}
@@ -275,19 +284,34 @@ function buildTursoStorage(client) {
     // ── 프로필 ──
     getProfiles: async () => {
       const r = await client.execute('SELECT * FROM fitness_profiles ORDER BY created_at ASC');
-      return r.rows.map(p => ({ id: p.id, name: p.name, created_at: Number(p.created_at) }));
+      return r.rows.map(p => ({
+        id: p.id, name: p.name,
+        gender: p.gender || 'male',
+        body_weight_kg: p.body_weight_kg != null ? Number(p.body_weight_kg) : 70,
+        created_at: Number(p.created_at),
+      }));
     },
     getProfile: async (id) => {
       const r = await client.execute({ sql: 'SELECT * FROM fitness_profiles WHERE id=?', args: [id] });
       if (!r.rows.length) return null;
-      return { id: r.rows[0].id, name: r.rows[0].name };
+      const p = r.rows[0];
+      return { id: p.id, name: p.name, gender: p.gender || 'male', body_weight_kg: p.body_weight_kg != null ? Number(p.body_weight_kg) : 70 };
     },
     upsertProfile: async (id, name) => {
       await client.execute({
-        sql: `INSERT INTO fitness_profiles (id, name, created_at) VALUES (?,?,?)
+        sql: `INSERT INTO fitness_profiles (id, name, gender, body_weight_kg, created_at) VALUES (?,?,?,?,?)
               ON CONFLICT(id) DO UPDATE SET name=excluded.name`,
-        args: [id, name, Date.now()],
+        args: [id, name, 'male', 70, Date.now()],
       });
+    },
+    updateProfileSettings: async (id, fields) => {
+      const sets = [];
+      const args = [];
+      if (fields.gender !== undefined) { sets.push('gender=?'); args.push(fields.gender); }
+      if (fields.body_weight_kg !== undefined) { sets.push('body_weight_kg=?'); args.push(fields.body_weight_kg); }
+      if (!sets.length) return;
+      args.push(id);
+      await client.execute({ sql: `UPDATE fitness_profiles SET ${sets.join(',')} WHERE id=?`, args });
     },
     deleteProfile: async (id) => {
       await client.batch([
@@ -363,6 +387,16 @@ const server = http.createServer(async (req, res) => {
         const body = await parseBody(req);
         if (!body.id || !body.name) return json(res, { error: 'id and name required' }, 400);
         await storage.upsertProfile(body.id, body.name);
+        return json(res, { ok: true });
+      }
+      if (req.method === 'PATCH' && urlPath.startsWith('/api/profiles/')) {
+        const id = urlPath.slice('/api/profiles/'.length);
+        if (!id) return json(res, { error: 'id required' }, 400);
+        const body = await parseBody(req);
+        const fields = {};
+        if (body.gender !== undefined) fields.gender = body.gender;
+        if (body.body_weight_kg !== undefined) fields.body_weight_kg = Number(body.body_weight_kg);
+        await storage.updateProfileSettings(id, fields);
         return json(res, { ok: true });
       }
       if (req.method === 'DELETE' && urlPath.startsWith('/api/profiles/')) {

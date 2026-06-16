@@ -806,19 +806,6 @@
     .profile-bar-btns { display:flex; align-items:center; gap:6px; }
     .profile-switch-btn { background:var(--bg); border:1.5px solid var(--border); border-radius:20px; padding:5px 13px; font-size:0.76rem; font-weight:700; cursor:pointer; color:var(--muted); transition:all .15s; white-space:nowrap; }
     .profile-switch-btn:hover { border-color:#C8A200; color:var(--text); }
-    .profile-share-btn { background:#FEE500; border:none; border-radius:20px; padding:5px 13px; font-size:0.76rem; font-weight:700; cursor:pointer; color:#1A1200; transition:all .15s; white-space:nowrap; }
-    .profile-share-btn:hover { background:#FFD600; }
-    /* ── 뷰 모드 배너 ── */
-    .view-mode-banner { display:flex; align-items:center; justify-content:space-between; gap:10px; background:linear-gradient(135deg,#1e3a5f,#1d4ed8); color:#fff; padding:10px 16px; position:sticky; top:0; z-index:101; flex-wrap:wrap; }
-    .view-mode-banner.hidden { display:none; }
-    .view-mode-info { display:flex; align-items:center; gap:8px; font-size:0.86rem; font-weight:700; }
-    .view-mode-avatar { width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:0.9rem; font-weight:900; flex-shrink:0; }
-    .view-mode-back { background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.35); border-radius:20px; padding:5px 13px; font-size:0.75rem; font-weight:700; color:#fff; cursor:pointer; white-space:nowrap; text-decoration:none; }
-    .view-mode-back:hover { background:rgba(255,255,255,0.28); }
-    /* 뷰 모드에서 편집 UI 숨김 */
-    body.view-mode .btn-save,
-    body.view-mode .record-delete,
-    body.view-mode .profile-bar { display:none !important; }
     /* 프로필 모달 */
     .profile-overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:2000; display:flex; align-items:flex-start; justify-content:center; padding-top:56px; }
     .profile-overlay.hidden { display:none; }
@@ -947,15 +934,6 @@
 </head>
 <body>
 
-<!-- ── 뷰 모드 배너 (공유 링크로 접속 시) ── -->
-<div class="view-mode-banner hidden" id="view-mode-banner">
-  <div class="view-mode-info">
-    <div class="view-mode-avatar" id="view-mode-avatar">?</div>
-    <span><span id="view-mode-name">누군가</span>님의 운동 기록 보는 중 👀</span>
-  </div>
-  <a class="view-mode-back" href="/">내 기록 보기</a>
-</div>
-
 <!-- ── 프로필 바 ── -->
 <div class="profile-bar" id="profile-bar">
   <div class="profile-current">
@@ -963,7 +941,6 @@
     <span class="profile-name-text" id="profile-name-text">로딩 중...</span>
   </div>
   <div class="profile-bar-btns">
-    <button class="profile-share-btn" onclick="copyShareLink()">🔗 공유</button>
     <button class="profile-switch-btn" onclick="openProfileModal()">👤 전환</button>
   </div>
 </div>
@@ -1549,10 +1526,6 @@ const RM_TABLE = [
   [6,85],[7,82],[8,80],[10,75],[12,70],[15,65],
 ];
 
-// ── 뷰 모드 (공유 링크로 접속) ────────────────────────────
-const _urlParams = new URLSearchParams(window.location.search);
-const VIEW_USER_ID = _urlParams.get('u') || null;
-
 // ── 프로필 시스템 (웹 DB 연동) ────────────────────────────
 let _profilesCache = [];
 function _getActiveId() { return localStorage.getItem('fit_current_profile') || ''; }
@@ -1561,6 +1534,20 @@ function _genPid() { return Date.now().toString(36) + Math.random().toString(36)
 function _activeProfile() { const id = _getActiveId(); return _profilesCache.find(p => p.id === id) || _profilesCache[0] || null; }
 function pk(key) { const p = _activeProfile(); return p ? `p_${p.id}_${key}` : key; }
 function activeUserId() { const p = _activeProfile(); return p ? p.id : 'default'; }
+
+async function saveProfileSettings(fields) {
+  const id = activeUserId();
+  if (!id || id === 'default') return;
+  const p = _activeProfile();
+  if (p) Object.assign(p, fields);
+  try {
+    await fetch(`/api/profiles/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(fields),
+    });
+  } catch { /* 오프라인 — 캐시에는 반영됨 */ }
+}
 
 async function loadProfiles() {
   try {
@@ -1650,8 +1637,9 @@ function switchProfile(id) {
   renderProfileList();
   closeProfileModal();
   // 전환된 프로필 데이터로 전역 변수 갱신
-  bodyWeight = parseFloat(localStorage.getItem(pk('bw_kg'))) || 70;
-  gender = localStorage.getItem(pk('gender')) || 'male';
+  const prof = _activeProfile();
+  bodyWeight = (prof && prof.body_weight_kg) ? Number(prof.body_weight_kg) : 70;
+  gender = (prof && prof.gender) ? prof.gender : 'male';
   const bwInput = document.getElementById('bw-input');
   if (bwInput) bwInput.value = bodyWeight;
   document.querySelectorAll('.gender-btn').forEach(b => b.classList.toggle('active', b.dataset.gender === gender));
@@ -2069,7 +2057,7 @@ function init() {
   document.querySelectorAll('.gender-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       gender = btn.dataset.gender;
-      localStorage.setItem(pk('gender'), gender);
+      saveProfileSettings({ gender });
       document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       liveCardio();
@@ -2081,7 +2069,7 @@ function init() {
   // ── 체중 입력 ──
   bwInput.addEventListener('change', () => {
     bodyWeight = parseFloat(bwInput.value) || 70;
-    localStorage.setItem(pk('bw_kg'), bodyWeight);
+    saveProfileSettings({ body_weight_kg: bodyWeight });
     document.getElementById('bw-popup-overlay').classList.remove('hidden');
     const badge = document.getElementById('bw-badge');
     badge.classList.add('show');
@@ -2213,8 +2201,9 @@ function init() {
   });
 
   loadProfiles().then(() => {
-    bodyWeight = parseFloat(localStorage.getItem(pk('bw_kg'))) || 70;
-    gender = localStorage.getItem(pk('gender')) || 'male';
+    const prof = _activeProfile();
+    bodyWeight = (prof && prof.body_weight_kg) ? Number(prof.body_weight_kg) : 70;
+    gender = (prof && prof.gender) ? prof.gender : 'male';
     document.getElementById('bw-input').value = bodyWeight;
     document.querySelectorAll('.gender-btn').forEach(b => b.classList.toggle('active', b.dataset.gender === gender));
     updateBodyweightUI();
