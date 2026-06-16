@@ -808,6 +808,29 @@
     /* 프로필 모달 */
     .profile-overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:2000; display:flex; align-items:flex-start; justify-content:center; padding-top:56px; }
     .profile-overlay.hidden { display:none; }
+    /* 영양성분 모달 */
+    .nutrition-overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:3100; display:flex; align-items:flex-end; justify-content:center; }
+    .nutrition-overlay.hidden { display:none; }
+    .nutrition-card { background:var(--card); border-radius:24px 24px 0 0; width:min(480px,100vw); max-height:85vh; overflow-y:auto; padding:24px 20px 36px; position:relative; box-shadow:0 -8px 40px rgba(0,0,0,.35); animation:slideUp .22s ease; }
+    @keyframes slideUp { from{transform:translateY(60px);opacity:0} to{transform:translateY(0);opacity:1} }
+    .nm-close { position:absolute; top:16px; right:16px; background:var(--bg); border:none; border-radius:50%; width:30px; height:30px; font-size:0.8rem; cursor:pointer; color:var(--muted); }
+    .nm-header { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+    .nm-icon { font-size:2.2rem; }
+    .nm-name { font-size:1.1rem; font-weight:800; }
+    .nm-serving-txt { font-size:0.78rem; color:var(--muted); margin-top:2px; }
+    .nm-kcal-row { display:flex; align-items:baseline; gap:6px; margin-bottom:14px; }
+    .nm-kcal-num { font-size:2.4rem; font-weight:900; color:var(--accent); }
+    .nm-kcal-unit { font-size:1rem; color:var(--muted); }
+    .nm-divider { height:1px; background:var(--border); margin-bottom:16px; }
+    .nm-row { margin-bottom:14px; }
+    .nm-row-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+    .nm-label { font-size:0.88rem; font-weight:600; }
+    .nm-val { font-size:0.95rem; font-weight:800; }
+    .nm-bar-bg { height:8px; background:var(--bg); border-radius:99px; overflow:hidden; }
+    .nm-bar-fill { height:100%; border-radius:99px; transition:width .4s ease; }
+    .nm-dv { font-size:0.72rem; color:var(--muted); margin-top:3px; text-align:right; }
+    .nm-no-data { text-align:center; color:var(--muted); font-size:0.88rem; line-height:1.7; padding:20px 0; }
+    .food-log-nutr-badge { font-size:0.68rem; color:var(--accent); font-weight:700; margin-left:6px; opacity:0.8; }
     /* 몸무게 팝업 */
     .bw-popup-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:3000; display:flex; align-items:center; justify-content:center; }
     .bw-popup-overlay.hidden { display:none; }
@@ -929,6 +952,26 @@
         onkeydown="if(event.key==='Enter')createProfile()">
       <button class="profile-add-btn" onclick="createProfile()">+ 추가</button>
     </div>
+  </div>
+</div>
+
+<!-- 영양성분 모달 -->
+<div class="nutrition-overlay hidden" id="nutrition-modal" onclick="if(event.target===this)closeNutritionModal()">
+  <div class="nutrition-card">
+    <button class="nm-close" onclick="closeNutritionModal()">✕</button>
+    <div class="nm-header">
+      <span class="nm-icon" id="nm-icon">🍽️</span>
+      <div>
+        <div class="nm-name" id="nm-name"></div>
+        <div class="nm-serving-txt" id="nm-serving"></div>
+      </div>
+    </div>
+    <div class="nm-kcal-row">
+      <span class="nm-kcal-num" id="nm-kcal"></span>
+      <span class="nm-kcal-unit">kcal</span>
+    </div>
+    <div class="nm-divider"></div>
+    <div id="nm-macros"></div>
   </div>
 </div>
 
@@ -3296,78 +3339,78 @@ function renderMonthRoutine(weekDays) {
 // ── 음식/칼로리 밸런스 ─────────────────────────────────────────
 const FOOD_DB = {
   '한식': [
-    { name:'공기밥', kcal:300, icon:'🍚' },
-    { name:'된장찌개', kcal:250, icon:'🍲' },
-    { name:'김치찌개', kcal:300, icon:'🍲' },
-    { name:'순두부찌개', kcal:280, icon:'🥣' },
-    { name:'비빔밥', kcal:550, icon:'🍛' },
-    { name:'불고기', kcal:400, icon:'🥩' },
-    { name:'제육볶음', kcal:500, icon:'🥘' },
-    { name:'삼겹살', kcal:600, icon:'🥓' },
-    { name:'갈비탕', kcal:450, icon:'🍖' },
-    { name:'삼계탕', kcal:600, icon:'🍗' },
-    { name:'냉면', kcal:500, icon:'🍜' },
-    { name:'잡채', kcal:350, icon:'🥗' },
-    { name:'보쌈', kcal:500, icon:'🥩' },
-    { name:'김밥', kcal:350, icon:'🍱' },
-    { name:'해장국', kcal:400, icon:'🍜' },
+    { name:'공기밥',    kcal:300, icon:'🍚', prot:5,  carb:65, fat:1,  sodium:5    },
+    { name:'된장찌개',  kcal:250, icon:'🍲', prot:15, carb:20, fat:8,  sodium:1800 },
+    { name:'김치찌개',  kcal:300, icon:'🍲', prot:18, carb:18, fat:12, sodium:2200 },
+    { name:'순두부찌개',kcal:280, icon:'🥣', prot:18, carb:15, fat:12, sodium:1500 },
+    { name:'비빔밥',    kcal:550, icon:'🍛', prot:20, carb:85, fat:15, sodium:900  },
+    { name:'불고기',    kcal:400, icon:'🥩', prot:30, carb:20, fat:18, sodium:800  },
+    { name:'제육볶음',  kcal:500, icon:'🥘', prot:35, carb:25, fat:25, sodium:1200 },
+    { name:'삼겹살',    kcal:600, icon:'🥓', prot:30, carb:2,  fat:52, sodium:700  },
+    { name:'갈비탕',    kcal:450, icon:'🍖', prot:35, carb:20, fat:20, sodium:1500 },
+    { name:'삼계탕',    kcal:600, icon:'🍗', prot:45, carb:35, fat:25, sodium:900  },
+    { name:'냉면',      kcal:500, icon:'🍜', prot:15, carb:90, fat:8,  sodium:2000 },
+    { name:'잡채',      kcal:350, icon:'🥗', prot:12, carb:55, fat:12, sodium:700  },
+    { name:'보쌈',      kcal:500, icon:'🥩', prot:40, carb:15, fat:28, sodium:900  },
+    { name:'김밥',      kcal:350, icon:'🍱', prot:12, carb:60, fat:8,  sodium:800  },
+    { name:'해장국',    kcal:400, icon:'🍜', prot:25, carb:25, fat:18, sodium:1800 },
   ],
   '중식': [
-    { name:'짜장면', kcal:700, icon:'🍜' },
-    { name:'짬뽕', kcal:600, icon:'🍜' },
-    { name:'볶음밥', kcal:600, icon:'🍳' },
-    { name:'탕수육', kcal:600, icon:'🍖' },
-    { name:'마파두부', kcal:400, icon:'🥘' },
-    { name:'깐풍기', kcal:550, icon:'🍗' },
-    { name:'군만두(5개)', kcal:300, icon:'🥟' },
-    { name:'짬짜면', kcal:650, icon:'🍜' },
+    { name:'짜장면',    kcal:700, icon:'🍜', prot:20, carb:110,fat:20, sodium:1500 },
+    { name:'짬뽕',      kcal:600, icon:'🍜', prot:25, carb:85, fat:18, sodium:2500 },
+    { name:'볶음밥',    kcal:600, icon:'🍳', prot:18, carb:90, fat:20, sodium:1200 },
+    { name:'탕수육',    kcal:600, icon:'🍖', prot:30, carb:55, fat:28, sodium:800  },
+    { name:'마파두부',  kcal:400, icon:'🥘', prot:20, carb:30, fat:22, sodium:1200 },
+    { name:'깐풍기',    kcal:550, icon:'🍗', prot:35, carb:40, fat:25, sodium:900  },
+    { name:'군만두(5개)',kcal:300, icon:'🥟', prot:12, carb:38, fat:12, sodium:600  },
+    { name:'짬짜면',    kcal:650, icon:'🍜', prot:22, carb:98, fat:19, sodium:2000 },
   ],
   '양식': [
-    { name:'파스타', kcal:550, icon:'🍝' },
-    { name:'피자(1조각)', kcal:280, icon:'🍕' },
-    { name:'스테이크', kcal:500, icon:'🥩' },
-    { name:'햄버거', kcal:550, icon:'🍔' },
-    { name:'샌드위치', kcal:400, icon:'🥪' },
-    { name:'샐러드', kcal:150, icon:'🥗' },
-    { name:'리조또', kcal:500, icon:'🍚' },
-    { name:'크림스프', kcal:250, icon:'🥣' },
-    { name:'브런치세트', kcal:600, icon:'🍳' },
+    { name:'파스타',    kcal:550, icon:'🍝', prot:18, carb:80, fat:18, sodium:700  },
+    { name:'피자(1조각)',kcal:280, icon:'🍕', prot:12, carb:30, fat:12, sodium:600  },
+    { name:'스테이크',  kcal:500, icon:'🥩', prot:45, carb:5,  fat:32, sodium:500  },
+    { name:'햄버거',    kcal:550, icon:'🍔', prot:25, carb:50, fat:28, sodium:900  },
+    { name:'샌드위치',  kcal:400, icon:'🥪', prot:20, carb:45, fat:15, sodium:800  },
+    { name:'샐러드',    kcal:150, icon:'🥗', prot:5,  carb:20, fat:5,  sodium:300  },
+    { name:'리조또',    kcal:500, icon:'🍚', prot:15, carb:70, fat:18, sodium:600  },
+    { name:'크림스프',  kcal:250, icon:'🥣', prot:6,  carb:22, fat:15, sodium:700  },
+    { name:'브런치세트',kcal:600, icon:'🍳', prot:25, carb:55, fat:30, sodium:900  },
   ],
   '일식': [
-    { name:'초밥(8피스)', kcal:400, icon:'🍣' },
-    { name:'라멘', kcal:600, icon:'🍜' },
-    { name:'돈까스', kcal:650, icon:'🍱' },
-    { name:'오니기리', kcal:200, icon:'🍙' },
-    { name:'우동', kcal:400, icon:'🍜' },
-    { name:'소바', kcal:350, icon:'🍜' },
-    { name:'텐동', kcal:700, icon:'🍚' },
-    { name:'규동', kcal:600, icon:'🥩' },
-    { name:'오코노미야키', kcal:450, icon:'🥞' },
+    { name:'초밥(8피스)',kcal:400, icon:'🍣', prot:22, carb:65, fat:5,  sodium:900  },
+    { name:'라멘',      kcal:600, icon:'🍜', prot:25, carb:80, fat:22, sodium:2200 },
+    { name:'돈까스',    kcal:650, icon:'🍱', prot:35, carb:60, fat:28, sodium:800  },
+    { name:'오니기리',  kcal:200, icon:'🍙', prot:5,  carb:40, fat:2,  sodium:400  },
+    { name:'우동',      kcal:400, icon:'🍜', prot:12, carb:70, fat:5,  sodium:1800 },
+    { name:'소바',      kcal:350, icon:'🍜', prot:15, carb:65, fat:3,  sodium:1200 },
+    { name:'텐동',      kcal:700, icon:'🍚', prot:25, carb:95, fat:28, sodium:1000 },
+    { name:'규동',      kcal:600, icon:'🥩', prot:30, carb:80, fat:22, sodium:900  },
+    { name:'오코노미야키',kcal:450,icon:'🥞', prot:18, carb:55, fat:18, sodium:800  },
   ],
   '분식': [
-    { name:'떡볶이', kcal:400, icon:'🌶️' },
-    { name:'순대', kcal:350, icon:'🌭' },
-    { name:'라면', kcal:500, icon:'🍜' },
-    { name:'컵라면', kcal:350, icon:'🍜' },
-    { name:'어묵', kcal:150, icon:'🐟' },
-    { name:'핫도그', kcal:300, icon:'🌭' },
-    { name:'삼각김밥', kcal:200, icon:'🍙' },
-    { name:'치즈볼(5개)', kcal:300, icon:'🧀' },
+    { name:'떡볶이',    kcal:400, icon:'🌶️', prot:8,  carb:80, fat:5,  sodium:1200 },
+    { name:'순대',      kcal:350, icon:'🌭', prot:18, carb:35, fat:15, sodium:700  },
+    { name:'라면',      kcal:500, icon:'🍜', prot:12, carb:75, fat:18, sodium:2000 },
+    { name:'컵라면',    kcal:350, icon:'🍜', prot:8,  carb:55, fat:12, sodium:1700 },
+    { name:'어묵',      kcal:150, icon:'🐟', prot:10, carb:18, fat:4,  sodium:800  },
+    { name:'핫도그',    kcal:300, icon:'🌭', prot:10, carb:32, fat:15, sodium:600  },
+    { name:'삼각김밥',  kcal:200, icon:'🍙', prot:5,  carb:38, fat:3,  sodium:400  },
+    { name:'치즈볼(5개)',kcal:300, icon:'🧀', prot:10, carb:28, fat:18, sodium:500  },
   ],
   '간식': [
-    { name:'바나나', kcal:100, icon:'🍌' },
-    { name:'사과', kcal:80, icon:'🍎' },
-    { name:'고구마', kcal:130, icon:'🍠' },
-    { name:'계란(1개)', kcal:70, icon:'🥚' },
-    { name:'닭가슴살', kcal:100, icon:'🐔' },
-    { name:'단백질바', kcal:200, icon:'🍫' },
-    { name:'아이스크림', kcal:250, icon:'🍦' },
-    { name:'과자(1봉)', kcal:300, icon:'🍿' },
-    { name:'커피(라떼)', kcal:150, icon:'☕' },
-    { name:'콜라 500ml', kcal:210, icon:'🥤' },
-    { name:'프로틴 쉐이크', kcal:150, icon:'💪' },
-    { name:'우유 200ml', kcal:120, icon:'🥛' },
-    { name:'빵/케이크', kcal:350, icon:'🍞' },
+    { name:'바나나',     kcal:100, icon:'🍌', prot:1,  carb:23, fat:0,  sodium:1   },
+    { name:'사과',       kcal:80,  icon:'🍎', prot:0,  carb:21, fat:0,  sodium:1   },
+    { name:'고구마',     kcal:130, icon:'🍠', prot:2,  carb:30, fat:0,  sodium:10  },
+    { name:'계란(1개)',  kcal:70,  icon:'🥚', prot:6,  carb:0,  fat:5,  sodium:70  },
+    { name:'닭가슴살',  kcal:100, icon:'🐔', prot:22, carb:0,  fat:2,  sodium:50  },
+    { name:'단백질바',  kcal:200, icon:'🍫', prot:20, carb:18, fat:7,  sodium:150 },
+    { name:'아이스크림',kcal:250, icon:'🍦', prot:4,  carb:32, fat:12, sodium:80  },
+    { name:'과자(1봉)', kcal:300, icon:'🍿', prot:4,  carb:42, fat:15, sodium:400 },
+    { name:'커피(라떼)',kcal:150, icon:'☕', prot:6,  carb:18, fat:5,  sodium:80  },
+    { name:'콜라 500ml',kcal:210, icon:'🥤', prot:0,  carb:55, fat:0,  sodium:45  },
+    { name:'프로틴 쉐이크',kcal:150,icon:'💪',prot:25, carb:8,  fat:3,  sodium:200 },
+    { name:'우유 200ml',kcal:120, icon:'🥛', prot:6,  carb:10, fat:7,  sodium:100 },
+    { name:'빵/케이크', kcal:350, icon:'🍞', prot:6,  carb:55, fat:14, sodium:350 },
   ],
 };
 
@@ -3414,7 +3457,8 @@ function renderFoodGrid() {
 }
 
 function selectFoodItem(name, baseKcal, icon) {
-  _pendingFood = { name, baseKcal, icon };
+  const fd = (FOOD_DB[_cuisine] || []).find(f => f.name === name) || {};
+  _pendingFood = { name, baseKcal, icon, prot: fd.prot ?? null, carb: fd.carb ?? null, fat: fd.fat ?? null, sodium: fd.sodium ?? null };
   _serving = 1;
   const panel = document.getElementById('food-add-panel');
   if (!panel) return;
@@ -3448,7 +3492,9 @@ function confirmFoodAdd() {
   const totalKcal = Math.round(_pendingFood.baseKcal * _serving);
   const sv = _serving % 1 === 0 ? _serving.toString() : _serving.toFixed(1);
   const log = loadFoodLog();
-  log.push({ id: Date.now().toString(), name: _pendingFood.name, baseKcal: _pendingFood.baseKcal, serving: _serving, kcal: totalKcal, meal: _selectedMeal });
+  const r = v => v !== null ? Math.round(v * _serving * 10) / 10 : null;
+  log.push({ id: Date.now().toString(), name: _pendingFood.name, icon: _pendingFood.icon, baseKcal: _pendingFood.baseKcal, serving: _serving, kcal: totalKcal, meal: _selectedMeal,
+    prot: r(_pendingFood.prot), carb: r(_pendingFood.carb), fat: r(_pendingFood.fat), sodium: _pendingFood.sodium !== null ? Math.round(_pendingFood.sodium * _serving) : null });
   saveFoodLog(log);
   const added = _pendingFood.name;
   cancelFoodAdd();
@@ -3474,6 +3520,39 @@ function addFoodItem() {
   document.getElementById('food-kcal-input').value = '';
   renderFoodTab();
 }
+
+function showFoodNutrition(id) {
+  const food = loadFoodLog().find(f => f.id === id);
+  if (!food) return;
+  const modal = document.getElementById('nutrition-modal');
+  document.getElementById('nm-icon').textContent = food.icon || '🍽️';
+  document.getElementById('nm-name').textContent = food.name;
+  const svStr = food.serving && food.serving !== 1 ? ` (${food.serving % 1 === 0 ? food.serving : food.serving.toFixed(1)}인분)` : '';
+  document.getElementById('nm-serving').textContent = svStr;
+  document.getElementById('nm-kcal').textContent = food.kcal.toLocaleString();
+  const hasNutrition = food.prot !== null && food.prot !== undefined;
+  const macroEl = document.getElementById('nm-macros');
+  if (!hasNutrition) {
+    macroEl.innerHTML = '<div class="nm-no-data">등록된 영양 정보가 없어요<br><small>직접 입력한 음식은 영양 정보를 제공하지 않습니다</small></div>';
+  } else {
+    const totalMacro = (food.prot || 0) + (food.carb || 0) + (food.fat || 0);
+    function bar(label, val, unit, color, pct, dv, dvLabel) {
+      const w = Math.min(100, Math.round(pct));
+      return `<div class="nm-row">
+        <div class="nm-row-top"><span class="nm-label">${label}</span><span class="nm-val" style="color:${color}">${val}${unit}</span></div>
+        <div class="nm-bar-bg"><div class="nm-bar-fill" style="width:${w}%;background:${color}"></div></div>
+        <div class="nm-dv">${dvLabel ? `일일 권장량의 ${Math.round(val / dv * 100)}%` : ''}</div>
+      </div>`;
+    }
+    macroEl.innerHTML =
+      bar('🥩 단백질', food.prot, 'g', '#3b82f6', (food.prot / totalMacro) * 100, 55, true) +
+      bar('🌾 탄수화물', food.carb, 'g', '#f97316', (food.carb / totalMacro) * 100, 324, true) +
+      bar('🫒 지방', food.fat, 'g', '#eab308', (food.fat / totalMacro) * 100, 54, true) +
+      bar('🧂 나트륨', food.sodium, 'mg', '#ef4444', Math.min(100, food.sodium / 2000 * 100), 2000, true);
+  }
+  modal.classList.remove('hidden');
+}
+function closeNutritionModal() { document.getElementById('nutrition-modal').classList.add('hidden'); }
 
 function removeFoodItem(id) {
   const log = loadFoodLog().filter(f => f.id !== id);
@@ -3525,9 +3604,10 @@ function renderFoodTab() {
           </div>
           ${items.map(f => {
             const svStr = f.serving && f.serving !== 1 ? `<span class="food-log-serving">${f.serving % 1 === 0 ? f.serving : f.serving.toFixed(1)}인분</span>` : '';
-            return `<div class="food-log-item">
-              <div><span class="food-log-name">${f.name}</span>${svStr}<span class="food-log-kcal">${f.kcal.toLocaleString()} kcal</span></div>
-              <button class="food-log-del" onclick="removeFoodItem('${f.id}')">✕</button>
+            const hasNutrition = f.prot !== null && f.prot !== undefined;
+            return `<div class="food-log-item" onclick="showFoodNutrition('${f.id}')" style="cursor:pointer">
+              <div><span class="food-log-name">${f.icon ? f.icon + ' ' : ''}${f.name}</span>${svStr}<span class="food-log-kcal">${f.kcal.toLocaleString()} kcal</span>${hasNutrition ? '<span class="food-log-nutr-badge">영양성분 ›</span>' : ''}</div>
+              <button class="food-log-del" onclick="event.stopPropagation();removeFoodItem('${f.id}')">✕</button>
             </div>`;
           }).join('')}
         </div>`;
