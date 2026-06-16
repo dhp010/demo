@@ -628,6 +628,10 @@
     .g-badge-bodyweight{ background: rgba(217,119,6,.12); color: #d97706; }
     .guide-back-btn { display: flex; align-items: center; gap: 5px; background: none; border: none; color: var(--primary); font-size: 0.85rem; font-weight: 700; cursor: pointer; padding: 4px 0 12px; }
     .guide-back-btn:hover { opacity: .75; }
+    .ex-demo-box { width:100%; max-width:360px; margin: 0 auto 20px; border-radius:14px; overflow:hidden; background:var(--card); border:1px solid var(--border); position:relative; }
+    .ex-demo-box img { width:100%; display:block; aspect-ratio:4/3; object-fit:contain; background:#f0ede8; }
+    .ex-demo-label { position:absolute; bottom:6px; right:8px; background:rgba(0,0,0,.52); color:#fff; font-size:.65rem; font-weight:700; padding:2px 8px; border-radius:20px; pointer-events:none; }
+    .ex-demo-err { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:150px; color:var(--muted); font-size:.85rem; gap:6px; }
     .guide-detail-header { display: flex; align-items: flex-start; gap: 14px; padding-bottom: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
     .guide-detail-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.9rem; flex-shrink: 0; }
     .guide-detail-icon.compound  { background: rgba(176,120,0,.1); }
@@ -2138,6 +2142,48 @@ function renderGuideList() {
   if (srch) srch.oninput = e => { guideSearch = e.target.value.trim(); renderGuideList(); };
 }
 
+const EXERCISE_GIFS = {
+  '스쿼트':           'Barbell_Squat',
+  '데드리프트':       'Barbell_Deadlift',
+  '벤치프레스':       'Barbell_Bench_Press_-_Medium_Grip',
+  '오버헤드프레스':   'Barbell_Shoulder_Press',
+  '바벨로우':         'Barbell_Bent_Over_Row',
+  '레그프레스':       'Leg_Press_with_Narrow_Stance',
+  '인클라인벤치프레스': 'Barbell_Incline_Bench_Press_-_Medium_Grip',
+  '덤벨로우':         'Dumbbell_One_Arm_Row',
+  '랫풀다운':         'Cable_Lat_Pulldown',
+  '케이블로우':       'Cable_Seated_Row',
+  '덤벨프레스':       'Dumbbell_Bench_Press',
+  '바이셉컬':         'Barbell_Curl',
+  '해머컬':           'Dumbbell_Hammer_Curl',
+  '트라이셉푸쉬다운': 'Cable_Rope_Pushdown',
+  '스컬크러셔':       'EZ_Bar_Skullcrusher',
+  '레그익스텐션':     'Leg_Extension',
+  '레그컬':           'Leg_Curl',
+  '사이드레터럴레이즈': 'Dumbbell_Lateral_Raise',
+  '프론트레이즈':     'Dumbbell_Front_Raise_and_Pull',
+  '케이블크로스오버': 'Cable_Crossover',
+  '힙쓰러스트':       'Barbell_Hip_Thrust',
+  '시티드카프레이즈': 'Seated_Calf_Raise',
+  '페이스풀':         'Face_Pull',
+  '풀업':             'Pull_Up',
+  '친업':             'Chin_Up',
+  '딥스':             'Tricep_Dip',
+  '푸쉬업':           'Push_Up',
+  '파이크푸쉬업':     'Pike_Push_Up',
+  '링딥스':           'Ring_Dip',
+  '머슬업':           'Muscle_Up',
+  '레그레이즈':       'Hanging_Leg_Raise',
+  '행잉니레이즈':     'Hanging_Knee_Hip_Raise',
+  '버피':             'Burpee',
+  '플랭크':           'Plank',
+  '마운틴클라이머':   'Mountain_Climber',
+  '스쿼트(맨몸)':     'Bodyweight_Squat',
+  '런지':             'Bodyweight_Walking_Lunge',
+  'AB슬라이드':       'Ab_Wheel_Rollout',
+};
+let _exDemoTimer = null;
+
 function guideSelectEx(idx) {
   const ex = GUIDE_DATA[idx];
   document.getElementById('guide-list-view').style.display = 'none';
@@ -2148,7 +2194,17 @@ function guideSelectEx(idx) {
   const diffLabel = ['','입문','초급','중급','고급','전문가'][ex.diff];
 
   const savedRm = parseFloat(localStorage.getItem('1rm_' + ex.name) || '') || '';
+  const _gifFolder = EXERCISE_GIFS[ex.name];
+  const _BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
+  const _img0 = _gifFolder ? _BASE + _gifFolder + '/0.jpg' : '';
+  const _img1 = _gifFolder ? _BASE + _gifFolder + '/1.jpg' : '';
+
   document.getElementById('guide-detail-content').innerHTML = `
+    ${_img0 ? `<div class="ex-demo-box">
+      <img id="exDemoImg" src="${_img0}" alt="${ex.name} 동작"
+        onerror="this.parentElement.innerHTML='<div class=ex-demo-err><span style=font-size:2rem>🏋️</span><span>이미지를 불러올 수 없습니다</span></div>'">
+      <div class="ex-demo-label">▶ 동작 미리보기</div>
+    </div>` : ''}
     <div class="guide-detail-header">
       <div class="guide-detail-icon ${ex.cat}">${ex.icon}</div>
       <div>
@@ -2219,6 +2275,21 @@ function guideSelectEx(idx) {
     </div>` : ''}
   `;
 
+  // 운동 미리보기 이미지 플립 애니메이션
+  clearInterval(_exDemoTimer);
+  if (_img0 && _img1) {
+    const demoImg = document.getElementById('exDemoImg');
+    if (demoImg) {
+      let _frame = 0;
+      const _preload1 = new Image(); _preload1.src = _img1;
+      _exDemoTimer = setInterval(() => {
+        if (!document.getElementById('exDemoImg')) { clearInterval(_exDemoTimer); return; }
+        _frame ^= 1;
+        document.getElementById('exDemoImg').src = _frame ? _img1 : _img0;
+      }, 900);
+    }
+  }
+
   // 저장된 1RM 있으면 자동 계산
   if (savedRm) _drawRmResults(savedRm);
 
@@ -2236,6 +2307,7 @@ function guideSelectEx(idx) {
 }
 
 function guideShowList() {
+  clearInterval(_exDemoTimer);
   document.getElementById('guide-list-view').style.display = 'block';
   document.getElementById('guide-detail-view').style.display = 'none';
 }
