@@ -19,9 +19,24 @@ function buildMemoryStorage() {
     notes: [],
     cardio: [],
     weight: [],
+    profiles: [],
   };
   return {
     init: async () => {},
+
+    // ── 프로필 ──
+    getProfiles: async () => [...mem.profiles].sort((a, b) => a.created_at - b.created_at),
+    getProfile: async (id) => mem.profiles.find(p => p.id === id) || null,
+    upsertProfile: async (id, name) => {
+      const row = { id, name, created_at: Date.now() };
+      const i = mem.profiles.findIndex(p => p.id === id);
+      if (i >= 0) mem.profiles[i] = row; else mem.profiles.push(row);
+    },
+    deleteProfile: async (id) => {
+      mem.profiles = mem.profiles.filter(p => p.id !== id);
+      mem.cardio = mem.cardio.filter(r => r.user_id !== id);
+      mem.weight = mem.weight.filter(r => r.user_id !== id);
+    },
 
     // ── 노트 (기존) ──
     getData: async () => ({ notebooks: [...mem.notebooks], notes: mem.notes.map(n => ({ ...n })) }),
@@ -160,6 +175,14 @@ function buildTursoStorage(client) {
           calories REAL NOT NULL DEFAULT 0,
           created_at INTEGER NOT NULL
         )`);
+      // 프로필 테이블
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS fitness_profiles (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          created_at INTEGER NOT NULL
+        )`);
+
       // 기존 테이블에 user_id 컬럼 추가 (마이그레이션)
       for (const tbl of ['fitness_cardio', 'fitness_weight']) {
         try { await client.execute(`ALTER TABLE ${tbl} ADD COLUMN user_id TEXT NOT NULL DEFAULT 'default'`); } catch {}
@@ -248,6 +271,31 @@ function buildTursoStorage(client) {
     deleteWeight: async (id) => {
       await client.execute({ sql: 'DELETE FROM fitness_weight WHERE id=?', args: [id] });
     },
+
+    // ── 프로필 ──
+    getProfiles: async () => {
+      const r = await client.execute('SELECT * FROM fitness_profiles ORDER BY created_at ASC');
+      return r.rows.map(p => ({ id: p.id, name: p.name, created_at: Number(p.created_at) }));
+    },
+    getProfile: async (id) => {
+      const r = await client.execute({ sql: 'SELECT * FROM fitness_profiles WHERE id=?', args: [id] });
+      if (!r.rows.length) return null;
+      return { id: r.rows[0].id, name: r.rows[0].name };
+    },
+    upsertProfile: async (id, name) => {
+      await client.execute({
+        sql: `INSERT INTO fitness_profiles (id, name, created_at) VALUES (?,?,?)
+              ON CONFLICT(id) DO UPDATE SET name=excluded.name`,
+        args: [id, name, Date.now()],
+      });
+    },
+    deleteProfile: async (id) => {
+      await client.batch([
+        { sql: 'DELETE FROM fitness_profiles WHERE id=?', args: [id] },
+        { sql: 'DELETE FROM fitness_cardio WHERE user_id=?', args: [id] },
+        { sql: 'DELETE FROM fitness_weight WHERE user_id=?', args: [id] },
+      ], 'write');
+    },
   };
 }
 
@@ -301,6 +349,29 @@ const server = http.createServer(async (req, res) => {
   if (urlPath.startsWith('/api/')) {
     try {
       // ── 피트니스 API ──────────────────────────────────
+      // ── 프로필 API ───────────────────────────────────────
+      if (req.method === 'GET' && urlPath === '/api/profiles') {
+        return json(res, await storage.getProfiles());
+      }
+      if (req.method === 'GET' && urlPath.startsWith('/api/profiles/')) {
+        const id = urlPath.slice('/api/profiles/'.length);
+        const profile = await storage.getProfile(id);
+        if (!profile) return json(res, { error: 'Not found' }, 404);
+        return json(res, profile);
+      }
+      if (req.method === 'POST' && urlPath === '/api/profiles') {
+        const body = await parseBody(req);
+        if (!body.id || !body.name) return json(res, { error: 'id and name required' }, 400);
+        await storage.upsertProfile(body.id, body.name);
+        return json(res, { ok: true });
+      }
+      if (req.method === 'DELETE' && urlPath.startsWith('/api/profiles/')) {
+        const id = urlPath.slice('/api/profiles/'.length);
+        if (!id) return json(res, { error: 'id required' }, 400);
+        await storage.deleteProfile(id);
+        return json(res, { ok: true });
+      }
+
       if (req.method === 'GET' && urlPath === '/api/fitness/records') {
         const userId = new URL(req.url, 'http://localhost').searchParams.get('user') || 'default';
         return json(res, await storage.getFitnessRecords(userId));

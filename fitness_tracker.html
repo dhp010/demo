@@ -803,8 +803,22 @@
     .profile-current { display:flex; align-items:center; gap:9px; }
     .profile-avatar { width:34px; height:34px; border-radius:50%; background:#FEE500; color:#1A1200; display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:900; flex-shrink:0; }
     .profile-name-text { font-size:0.92rem; font-weight:800; }
+    .profile-bar-btns { display:flex; align-items:center; gap:6px; }
     .profile-switch-btn { background:var(--bg); border:1.5px solid var(--border); border-radius:20px; padding:5px 13px; font-size:0.76rem; font-weight:700; cursor:pointer; color:var(--muted); transition:all .15s; white-space:nowrap; }
     .profile-switch-btn:hover { border-color:#C8A200; color:var(--text); }
+    .profile-share-btn { background:#FEE500; border:none; border-radius:20px; padding:5px 13px; font-size:0.76rem; font-weight:700; cursor:pointer; color:#1A1200; transition:all .15s; white-space:nowrap; }
+    .profile-share-btn:hover { background:#FFD600; }
+    /* ── 뷰 모드 배너 ── */
+    .view-mode-banner { display:flex; align-items:center; justify-content:space-between; gap:10px; background:linear-gradient(135deg,#1e3a5f,#1d4ed8); color:#fff; padding:10px 16px; position:sticky; top:0; z-index:101; flex-wrap:wrap; }
+    .view-mode-banner.hidden { display:none; }
+    .view-mode-info { display:flex; align-items:center; gap:8px; font-size:0.86rem; font-weight:700; }
+    .view-mode-avatar { width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:0.9rem; font-weight:900; flex-shrink:0; }
+    .view-mode-back { background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.35); border-radius:20px; padding:5px 13px; font-size:0.75rem; font-weight:700; color:#fff; cursor:pointer; white-space:nowrap; text-decoration:none; }
+    .view-mode-back:hover { background:rgba(255,255,255,0.28); }
+    /* 뷰 모드에서 편집 UI 숨김 */
+    body.view-mode .btn-save,
+    body.view-mode .record-delete,
+    body.view-mode .profile-bar { display:none !important; }
     /* 프로필 모달 */
     .profile-overlay { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:2000; display:flex; align-items:flex-start; justify-content:center; padding-top:56px; }
     .profile-overlay.hidden { display:none; }
@@ -933,13 +947,25 @@
 </head>
 <body>
 
+<!-- ── 뷰 모드 배너 (공유 링크로 접속 시) ── -->
+<div class="view-mode-banner hidden" id="view-mode-banner">
+  <div class="view-mode-info">
+    <div class="view-mode-avatar" id="view-mode-avatar">?</div>
+    <span><span id="view-mode-name">누군가</span>님의 운동 기록 보는 중 👀</span>
+  </div>
+  <a class="view-mode-back" href="/">내 기록 보기</a>
+</div>
+
 <!-- ── 프로필 바 ── -->
 <div class="profile-bar" id="profile-bar">
   <div class="profile-current">
     <div class="profile-avatar" id="profile-avatar">?</div>
     <span class="profile-name-text" id="profile-name-text">로딩 중...</span>
   </div>
-  <button class="profile-switch-btn" onclick="openProfileModal()">👤 프로필 전환</button>
+  <div class="profile-bar-btns">
+    <button class="profile-share-btn" onclick="copyShareLink()">🔗 공유</button>
+    <button class="profile-switch-btn" onclick="openProfileModal()">👤 전환</button>
+  </div>
 </div>
 
 <!-- 프로필 모달 -->
@@ -1523,22 +1549,38 @@ const RM_TABLE = [
   [6,85],[7,82],[8,80],[10,75],[12,70],[15,65],
 ];
 
-// ── 프로필 시스템 ──────────────────────────────────────────
-function _getProfiles() { try { return JSON.parse(localStorage.getItem('fit_profiles') || '[]'); } catch { return []; } }
-function _saveProfiles(ps) { localStorage.setItem('fit_profiles', JSON.stringify(ps)); }
+// ── 뷰 모드 (공유 링크로 접속) ────────────────────────────
+const _urlParams = new URLSearchParams(window.location.search);
+const VIEW_USER_ID = _urlParams.get('u') || null;
+
+// ── 프로필 시스템 (웹 DB 연동) ────────────────────────────
+let _profilesCache = [];
 function _getActiveId() { return localStorage.getItem('fit_current_profile') || ''; }
 function _setActiveId(id) { localStorage.setItem('fit_current_profile', id); }
 function _genPid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-function _activeProfile() { const id = _getActiveId(); const ps = _getProfiles(); return ps.find(p => p.id === id) || ps[0] || null; }
+function _activeProfile() { const id = _getActiveId(); return _profilesCache.find(p => p.id === id) || _profilesCache[0] || null; }
 function pk(key) { const p = _activeProfile(); return p ? `p_${p.id}_${key}` : key; }
 function activeUserId() { const p = _activeProfile(); return p ? p.id : 'default'; }
 
-// 첫 실행 시 기본 프로필 보장
-(function _bootstrapProfiles() {
-  let ps = _getProfiles();
-  if (ps.length === 0) { ps = [{ id: _genPid(), name: '나' }]; _saveProfiles(ps); }
-  if (!ps.find(p => p.id === _getActiveId())) _setActiveId(ps[0].id);
-})();
+async function loadProfiles() {
+  try {
+    const r = await fetch('/api/profiles');
+    if (r.ok) _profilesCache = await r.json();
+  } catch { /* 오프라인 시 캐시 유지 */ }
+  if (_profilesCache.length === 0) {
+    const id = _genPid();
+    try {
+      await fetch('/api/profiles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, name: '나' }),
+      });
+    } catch {}
+    _profilesCache = [{ id, name: '나', created_at: Date.now() }];
+  }
+  if (!_profilesCache.find(p => p.id === _getActiveId())) _setActiveId(_profilesCache[0].id);
+  return _profilesCache;
+}
 
 function renderProfileBar() {
   const p = _activeProfile(); if (!p) return;
@@ -1549,7 +1591,7 @@ function renderProfileBar() {
 }
 
 function renderProfileList() {
-  const ps = _getProfiles(); const aid = _getActiveId();
+  const ps = _profilesCache; const aid = _getActiveId();
   const el = document.getElementById('profile-list'); if (!el) return;
   el.innerHTML = ps.map(p => `
     <div class="profile-item${p.id === aid ? ' active' : ''}" onclick="switchProfile('${p.id}')">
@@ -1559,7 +1601,8 @@ function renderProfileList() {
     </div>`).join('');
 }
 
-function openProfileModal() {
+async function openProfileModal() {
+  await loadProfiles();
   renderProfileList();
   document.getElementById('profile-overlay').classList.remove('hidden');
   setTimeout(() => { const i = document.getElementById('profile-add-input'); if (i) i.focus(); }, 50);
@@ -1568,26 +1611,36 @@ function openProfileModal() {
 function closeProfileModal() { document.getElementById('profile-overlay').classList.add('hidden'); }
 function closeBwPopup() { document.getElementById('bw-popup-overlay').classList.add('hidden'); }
 
-function createProfile() {
+async function createProfile() {
   const input = document.getElementById('profile-add-input');
   const name = (input ? input.value : '').trim();
   if (!name) { toast('이름을 입력해주세요'); return; }
-  const ps = _getProfiles();
-  if (ps.find(p => p.name === name)) { toast('이미 있는 이름이에요'); return; }
-  const np = { id: _genPid(), name };
-  ps.push(np); _saveProfiles(ps);
+  if (_profilesCache.find(p => p.name === name)) { toast('이미 있는 이름이에요'); return; }
+  const id = _genPid();
+  try {
+    const r = await fetch('/api/profiles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, name }),
+    });
+    if (!r.ok) { toast('저장 실패', true); return; }
+  } catch { toast('저장 실패 — 네트워크를 확인하세요', true); return; }
   if (input) input.value = '';
-  switchProfile(np.id);
+  await loadProfiles();
+  renderProfileList();
+  switchProfile(id);
 }
 
-function deleteProfile(id) {
-  const ps = _getProfiles();
-  if (ps.length <= 1) { toast('마지막 프로필은 삭제할 수 없어요'); return; }
-  const target = ps.find(p => p.id === id);
+async function deleteProfile(id) {
+  if (_profilesCache.length <= 1) { toast('마지막 프로필은 삭제할 수 없어요'); return; }
+  const target = _profilesCache.find(p => p.id === id);
   if (!confirm(`'${target ? target.name : ''}' 프로필을 삭제하시겠습니까?\n(운동·식단 기록이 모두 삭제됩니다)`)) return;
+  try {
+    await fetch(`/api/profiles/${id}`, { method: 'DELETE' });
+  } catch { toast('삭제 실패', true); return; }
   Object.keys(localStorage).filter(k => k.startsWith(`p_${id}_`)).forEach(k => localStorage.removeItem(k));
-  const newPs = ps.filter(p => p.id !== id); _saveProfiles(newPs);
-  if (_getActiveId() === id) switchProfile(newPs[0].id);
+  await loadProfiles();
+  if (_getActiveId() === id) switchProfile(_profilesCache[0].id);
   else renderProfileList();
 }
 
@@ -1614,8 +1667,8 @@ function switchProfile(id) {
 }
 
 // ── 상태 ──────────────────────────────────────────────────
-let bodyWeight = parseFloat(localStorage.getItem(pk('bw_kg'))) || 70;
-let gender = localStorage.getItem(pk('gender')) || 'male';
+let bodyWeight = 70;
+let gender = 'male';
 let currentActivity = 'running';
 let currentExType = 'compound';
 let records = { cardio: [], weight: [] };
@@ -2159,8 +2212,15 @@ function init() {
     if (e.target === this) closeAchievementPopup();
   });
 
-  renderProfileBar();
-  loadRecords();
+  loadProfiles().then(() => {
+    bodyWeight = parseFloat(localStorage.getItem(pk('bw_kg'))) || 70;
+    gender = localStorage.getItem(pk('gender')) || 'male';
+    document.getElementById('bw-input').value = bodyWeight;
+    document.querySelectorAll('.gender-btn').forEach(b => b.classList.toggle('active', b.dataset.gender === gender));
+    updateBodyweightUI();
+    renderProfileBar();
+    loadRecords();
+  });
 }
 
 // ── 운동 가이드 ───────────────────────────────────────────
