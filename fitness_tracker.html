@@ -805,6 +805,37 @@
     .timer-done-msg.show { display: block; }
     @keyframes timerDonePulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
     .timer-ring-wrap.done { animation: timerDonePulse 0.6s ease 2; }
+    /* 타이머 서브탭 */
+    .timer-subtab-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 14px; }
+    .timer-subtab { padding: 10px 4px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.82rem; font-weight: 700; color: var(--muted); cursor: pointer; transition: all 0.18s; }
+    .timer-subtab:hover { border-color: var(--primary); color: var(--primary); }
+    .timer-subtab.active { border-color: var(--primary); background: rgba(254,229,0,0.28); color: #8B6000; }
+    /* 유산소 스톱워치 */
+    .cardio-sw-display { font-size: 3.6rem; font-weight: 800; color: var(--text); letter-spacing: -3px; font-variant-numeric: tabular-nums; text-align: center; padding: 24px 0 8px; line-height: 1; }
+    .cardio-sw-display.running { color: var(--cardio); }
+    .cardio-sw-display.paused  { color: var(--muted); }
+    .cardio-sw-label { font-size: 0.72rem; color: var(--muted); text-align: center; margin-bottom: 20px; font-weight: 600; }
+    .cardio-sw-note { width: 100%; box-sizing: border-box; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 0.85rem; color: var(--text); outline: none; resize: none; }
+    .cardio-sw-note:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(176,120,0,0.1); }
+    .cardio-sw-controls { display: flex; gap: 10px; justify-content: center; align-items: center; }
+    .cardio-sw-btn { height: 52px; border-radius: 26px; border: none; cursor: pointer; font-size: 0.88rem; font-weight: 700; transition: all 0.18s; padding: 0 22px; }
+    .cardio-sw-btn-toggle { background: var(--cardio); color: #fff; box-shadow: 0 4px 14px rgba(239,68,68,0.3); min-width: 80px; }
+    .cardio-sw-btn-toggle:hover { opacity: 0.88; }
+    .cardio-sw-btn-toggle.running { background: #f97316; box-shadow: 0 4px 14px rgba(249,115,22,0.3); }
+    .cardio-sw-btn-save { background: #16a34a; color: #fff; box-shadow: 0 4px 14px rgba(22,163,74,0.25); }
+    .cardio-sw-btn-save:hover { opacity: 0.88; }
+    .cardio-sw-btn-save:disabled { background: var(--border); color: var(--muted); box-shadow: none; cursor: not-allowed; }
+    .cardio-sw-btn-reset { background: var(--bg); border: 1.5px solid var(--border) !important; color: var(--muted); font-size: 1.1rem; width: 52px; padding: 0; border-radius: 50%; }
+    .cardio-sw-btn-reset:hover { border-color: var(--primary) !important; color: var(--primary); }
+    /* 유산소 기록 목록 */
+    .cardio-rec-date-hdr { font-size: 0.7rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; padding: 6px 0 4px; margin-top: 8px; border-bottom: 1px solid var(--border); }
+    .cardio-rec-date-hdr:first-child { margin-top: 0; }
+    .cardio-rec-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+    .cardio-rec-item:last-child { border-bottom: none; }
+    .cardio-rec-time { font-size: 1.05rem; font-weight: 800; color: var(--cardio); min-width: 72px; font-variant-numeric: tabular-nums; }
+    .cardio-rec-note { font-size: 0.8rem; color: var(--muted); flex: 1; }
+    .cardio-rec-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: 2px 6px; border-radius: 6px; }
+    .cardio-rec-del:hover { background: var(--bg); color: #dc2626; }
   </style>
 </head>
 <body>
@@ -1099,89 +1130,108 @@
 
   <!-- ── 휴식 타이머 탭 ── -->
   <section class="tab-content" id="tab-timer">
-    <div class="card">
-      <h2 style="font-size:1rem;font-weight:800;margin-bottom:16px">⏱ 세트 간 휴식 타이머</h2>
-      <div class="timer-wrap">
 
-        <!-- 원형 링 + 시간 표시 -->
-        <div class="timer-ring-wrap" id="timerRingWrap">
-          <svg class="timer-ring-svg" width="220" height="220" viewBox="0 0 220 220">
-            <circle class="timer-ring-bg"   cx="110" cy="110" r="90"/>
-            <circle class="timer-ring-prog idle" id="timerRingProg" cx="110" cy="110" r="90"
-              stroke-dasharray="565.49" stroke-dashoffset="0"/>
-          </svg>
-          <div class="timer-display">
-            <div class="timer-time" id="timerDisplay">01:30</div>
-            <div class="timer-goal-label" id="timerGoalLabel">근비대</div>
+    <!-- 서브탭 선택 -->
+    <div class="timer-subtab-row">
+      <button class="timer-subtab active" id="subtabWeightBtn" onclick="timerSubTab('weight')">💪 웨이트 휴식</button>
+      <button class="timer-subtab"        id="subtabCardioBtn" onclick="timerSubTab('cardio')">🏃 유산소 기록</button>
+    </div>
+
+    <!-- ── 웨이트 휴식 타이머 패널 ── -->
+    <div id="timerWeightPanel">
+      <div class="card">
+        <h2 style="font-size:1rem;font-weight:800;margin-bottom:16px">⏱ 세트 간 휴식 타이머</h2>
+        <div class="timer-wrap">
+          <div class="timer-ring-wrap" id="timerRingWrap">
+            <svg class="timer-ring-svg" width="220" height="220" viewBox="0 0 220 220">
+              <circle class="timer-ring-bg"   cx="110" cy="110" r="90"/>
+              <circle class="timer-ring-prog idle" id="timerRingProg" cx="110" cy="110" r="90"
+                stroke-dasharray="565.49" stroke-dashoffset="0"/>
+            </svg>
+            <div class="timer-display">
+              <div class="timer-time" id="timerDisplay">01:30</div>
+              <div class="timer-goal-label" id="timerGoalLabel">근비대</div>
+            </div>
+          </div>
+          <div class="timer-presets">
+            <button class="timer-preset-btn" data-secs="180" onclick="timerSelectPreset(this,180,'근력')">
+              <span class="timer-preset-icon">⚡</span>
+              <span class="timer-preset-name">근력</span>
+              <span class="timer-preset-secs">3분 00초</span>
+            </button>
+            <button class="timer-preset-btn active" data-secs="90" onclick="timerSelectPreset(this,90,'근비대')">
+              <span class="timer-preset-icon">💪</span>
+              <span class="timer-preset-name">근비대</span>
+              <span class="timer-preset-secs">1분 30초</span>
+            </button>
+            <button class="timer-preset-btn" data-secs="45" onclick="timerSelectPreset(this,45,'근지구력')">
+              <span class="timer-preset-icon">🏃</span>
+              <span class="timer-preset-name">근지구력</span>
+              <span class="timer-preset-secs">45초</span>
+            </button>
+          </div>
+          <div class="timer-custom-row">
+            <span class="timer-custom-label">직접 입력</span>
+            <input type="number" id="timerCustomInput" class="timer-custom-input"
+              placeholder="초 단위" min="5" max="600" value="90">
+            <button class="timer-custom-set" onclick="timerSetCustom()">설정</button>
+          </div>
+          <div class="timer-controls">
+            <button class="timer-btn timer-btn-reset" id="timerResetBtn" onclick="timerReset()" title="초기화">↺</button>
+            <button class="timer-btn timer-btn-play"  id="timerPlayBtn"  onclick="timerToggle()" title="시작/일시정지">▶</button>
+          </div>
+          <div class="timer-done-msg" id="timerDoneMsg">🎉 휴식 완료! 다음 세트 시작하세요 💪</div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h2 style="font-size:0.92rem;font-weight:800;margin-bottom:12px">📋 목표별 권장 휴식시간</h2>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px">
+            <span style="font-size:1.3rem">⚡</span>
+            <div>
+              <div style="font-size:0.82rem;font-weight:800;color:#dc2626">근력 (Strength)</div>
+              <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">3~5분 · 고중량·저반복 (1~5RM) 위주. 신경계와 근육이 완전히 회복해야 다음 세트에서 최대 힘을 발휘할 수 있어요.</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 12px;background:rgba(176,120,0,0.07);border:1px solid rgba(176,120,0,0.2);border-radius:10px">
+            <span style="font-size:1.3rem">💪</span>
+            <div>
+              <div style="font-size:0.82rem;font-weight:800;color:var(--primary)">근비대 (Hypertrophy)</div>
+              <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">60~120초 · 중중량·중반복 (6~12RM) 위주. 근육에 대사 스트레스를 충분히 주는 범위예요.</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 12px;background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:10px">
+            <span style="font-size:1.3rem">🏃</span>
+            <div>
+              <div style="font-size:0.82rem;font-weight:800;color:#16a34a">근지구력 (Endurance)</div>
+              <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">30~60초 · 저중량·고반복 (15RM+) 위주. 짧은 휴식으로 심폐 부하와 근지구력을 동시에 자극해요.</div>
+            </div>
           </div>
         </div>
-
-        <!-- 목표별 프리셋 -->
-        <div class="timer-presets">
-          <button class="timer-preset-btn" data-secs="180" onclick="timerSelectPreset(this,180,'근력')">
-            <span class="timer-preset-icon">⚡</span>
-            <span class="timer-preset-name">근력</span>
-            <span class="timer-preset-secs">3분 00초</span>
-          </button>
-          <button class="timer-preset-btn active" data-secs="90" onclick="timerSelectPreset(this,90,'근비대')">
-            <span class="timer-preset-icon">💪</span>
-            <span class="timer-preset-name">근비대</span>
-            <span class="timer-preset-secs">1분 30초</span>
-          </button>
-          <button class="timer-preset-btn" data-secs="45" onclick="timerSelectPreset(this,45,'근지구력')">
-            <span class="timer-preset-icon">🏃</span>
-            <span class="timer-preset-name">근지구력</span>
-            <span class="timer-preset-secs">45초</span>
-          </button>
-        </div>
-
-        <!-- 직접 입력 -->
-        <div class="timer-custom-row">
-          <span class="timer-custom-label">직접 입력</span>
-          <input type="number" id="timerCustomInput" class="timer-custom-input"
-            placeholder="초 단위" min="5" max="600" value="90">
-          <button class="timer-custom-set" onclick="timerSetCustom()">설정</button>
-        </div>
-
-        <!-- 컨트롤 버튼 -->
-        <div class="timer-controls">
-          <button class="timer-btn timer-btn-reset" id="timerResetBtn" onclick="timerReset()" title="초기화">↺</button>
-          <button class="timer-btn timer-btn-play"  id="timerPlayBtn"  onclick="timerToggle()" title="시작/일시정지">▶</button>
-        </div>
-
-        <!-- 완료 메시지 -->
-        <div class="timer-done-msg" id="timerDoneMsg">🎉 휴식 완료! 다음 세트 시작하세요 💪</div>
-
       </div>
     </div>
 
-    <!-- 목표별 권장 휴식시간 안내 -->
-    <div class="card" style="margin-top:12px">
-      <h2 style="font-size:0.92rem;font-weight:800;margin-bottom:12px">📋 목표별 권장 휴식시간</h2>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px">
-          <span style="font-size:1.3rem">⚡</span>
-          <div>
-            <div style="font-size:0.82rem;font-weight:800;color:#dc2626">근력 (Strength)</div>
-            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">3~5분 · 고중량·저반복 (1~5RM) 위주. 신경계와 근육이 완전히 회복해야 다음 세트에서 최대 힘을 발휘할 수 있어요.</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 12px;background:rgba(176,120,0,0.07);border:1px solid rgba(176,120,0,0.2);border-radius:10px">
-          <span style="font-size:1.3rem">💪</span>
-          <div>
-            <div style="font-size:0.82rem;font-weight:800;color:var(--primary)">근비대 (Hypertrophy)</div>
-            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">60~120초 · 중중량·중반복 (6~12RM) 위주. 근육에 대사 스트레스를 충분히 주는 범위예요.</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 12px;background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:10px">
-          <span style="font-size:1.3rem">🏃</span>
-          <div>
-            <div style="font-size:0.82rem;font-weight:800;color:#16a34a">근지구력 (Endurance)</div>
-            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px">30~60초 · 저중량·고반복 (15RM+) 위주. 짧은 휴식으로 심폐 부하와 근지구력을 동시에 자극해요.</div>
-          </div>
+    <!-- ── 유산소 스톱워치 패널 ── -->
+    <div id="timerCardioPanel" style="display:none">
+      <div class="card">
+        <h2 style="font-size:1rem;font-weight:800;margin-bottom:4px">🏃 유산소 운동 타이머</h2>
+        <p style="font-size:0.75rem;color:var(--muted);margin:0 0 4px">기록 후 저장하면 일자별로 보관돼요</p>
+        <div class="cardio-sw-display running" id="swDisplay">00:00</div>
+        <div class="cardio-sw-label" id="swLabel">대기 중</div>
+        <textarea id="swNote" class="cardio-sw-note" rows="2"
+          placeholder="메모 (선택) — 예: 러닝머신 6km/h, 야외 조깅"></textarea>
+        <div class="cardio-sw-controls" style="margin-top:12px">
+          <button class="cardio-sw-btn cardio-sw-btn-reset" id="swResetBtn" onclick="swReset()" title="초기화">↺</button>
+          <button class="cardio-sw-btn cardio-sw-btn-toggle" id="swToggleBtn" onclick="swToggle()">▶ 시작</button>
+          <button class="cardio-sw-btn cardio-sw-btn-save"  id="swSaveBtn"  onclick="swSave()" disabled>💾 저장</button>
         </div>
       </div>
+      <div class="card" style="margin-top:12px">
+        <h2 style="font-size:0.92rem;font-weight:800;margin-bottom:10px">📅 유산소 기록</h2>
+        <div id="swRecordList"><div style="color:var(--muted);font-size:0.82rem">아직 저장된 기록이 없어요</div></div>
+      </div>
     </div>
+
   </section>
 
   <!-- ── 루틴 탭 ── -->
@@ -2937,7 +2987,16 @@ function initFoodPresets() {
     </button>`).join('');
 }
 
-// ── 휴식 타이머 ──────────────────────────────────────────
+// ── 타이머 서브탭 전환 ────────────────────────────────────
+window.timerSubTab = function(tab) {
+  document.getElementById('subtabWeightBtn').classList.toggle('active', tab === 'weight');
+  document.getElementById('subtabCardioBtn').classList.toggle('active', tab === 'cardio');
+  document.getElementById('timerWeightPanel').style.display = tab === 'weight' ? '' : 'none';
+  document.getElementById('timerCardioPanel').style.display = tab === 'cardio'  ? '' : 'none';
+  if (tab === 'cardio') swRenderRecords();
+};
+
+// ── 웨이트 휴식 타이머 ───────────────────────────────────
 (function() {
   const CIRCUMFERENCE = 565.49;
   let timerTotal    = 90;
@@ -2959,8 +3018,7 @@ function initFoodPresets() {
   }
 
   function fmt(s) {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
+    const m = Math.floor(s / 60), sec = s % 60;
     return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
   }
 
@@ -2969,23 +3027,20 @@ function initFoodPresets() {
     if (!display) return;
     display.textContent = fmt(timerLeft);
     goalLabel.textContent = timerGoalName;
-    const offset = CIRCUMFERENCE * (1 - timerLeft / timerTotal);
-    prog.style.strokeDashoffset = offset;
+    prog.style.strokeDashoffset = CIRCUMFERENCE * (1 - timerLeft / timerTotal);
   }
 
   function beep() {
     try {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       const ctx = audioCtx;
-      [0, 0.18, 0.36].forEach(delay => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
+      [0, 0.18, 0.36].forEach(d => {
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
         osc.connect(gain); gain.connect(ctx.destination);
         osc.type = 'sine'; osc.frequency.value = 880;
-        gain.gain.setValueAtTime(0.5, ctx.currentTime + delay);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.14);
-        osc.start(ctx.currentTime + delay);
-        osc.stop(ctx.currentTime + delay + 0.15);
+        gain.gain.setValueAtTime(0.5, ctx.currentTime + d);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + d + 0.14);
+        osc.start(ctx.currentTime + d); osc.stop(ctx.currentTime + d + 0.15);
       });
     } catch(e) {}
   }
@@ -2994,12 +3049,8 @@ function initFoodPresets() {
     timerRunning = false;
     clearInterval(timerInterval);
     const { display, prog, playBtn, doneMsg, ringWrap } = getEls();
-    display.classList.add('done');
-    prog.classList.add('done');
-    prog.classList.remove('idle');
-    playBtn.textContent = '▶';
-    doneMsg.classList.add('show');
-    ringWrap.classList.add('done');
+    display.classList.add('done'); prog.classList.add('done'); prog.classList.remove('idle');
+    playBtn.textContent = '▶'; doneMsg.classList.add('show'); ringWrap.classList.add('done');
     beep();
     if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
   }
@@ -3010,16 +3061,9 @@ function initFoodPresets() {
     timerRunning = !timerRunning;
     if (timerRunning) {
       playBtn.textContent = '⏸';
-      prog.classList.remove('idle');
-      doneMsg.classList.remove('show');
-      display.classList.remove('done');
-      prog.classList.remove('done');
-      ringWrap.classList.remove('done');
-      timerInterval = setInterval(() => {
-        timerLeft--;
-        updateUI();
-        if (timerLeft <= 0) timerDone();
-      }, 1000);
+      prog.classList.remove('idle'); doneMsg.classList.remove('show');
+      display.classList.remove('done'); prog.classList.remove('done'); ringWrap.classList.remove('done');
+      timerInterval = setInterval(() => { timerLeft--; updateUI(); if (timerLeft <= 0) timerDone(); }, 1000);
     } else {
       playBtn.textContent = '▶';
       clearInterval(timerInterval);
@@ -3028,26 +3072,19 @@ function initFoodPresets() {
 
   window.timerReset = function() {
     clearInterval(timerInterval);
-    timerRunning = false;
-    timerLeft = timerTotal;
+    timerRunning = false; timerLeft = timerTotal;
     const { playBtn, prog, doneMsg, ringWrap, display } = getEls();
     playBtn.textContent = '▶';
-    prog.classList.add('idle');
-    prog.classList.remove('done');
-    display.classList.remove('done');
-    doneMsg.classList.remove('show');
-    ringWrap.classList.remove('done');
+    prog.classList.add('idle'); prog.classList.remove('done');
+    display.classList.remove('done'); doneMsg.classList.remove('show'); ringWrap.classList.remove('done');
     updateUI();
-    // idle 클래스 한 프레임 후 제거 (transition 방지)
     requestAnimationFrame(() => prog.classList.remove('idle'));
   };
 
   window.timerSelectPreset = function(btn, secs, name) {
     document.querySelectorAll('.timer-preset-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    timerTotal = secs;
-    timerLeft  = secs;
-    timerGoalName = name;
+    timerTotal = secs; timerLeft = secs; timerGoalName = name;
     document.getElementById('timerCustomInput').value = secs;
     timerReset();
   };
@@ -3056,18 +3093,118 @@ function initFoodPresets() {
     const val = parseInt(document.getElementById('timerCustomInput').value, 10);
     if (!val || val < 5 || val > 600) return;
     document.querySelectorAll('.timer-preset-btn').forEach(b => b.classList.remove('active'));
-    timerTotal = val;
-    timerLeft  = val;
-    timerGoalName = '직접설정';
+    timerTotal = val; timerLeft = val; timerGoalName = '직접설정';
     timerReset();
   };
 
-  // 초기 링 세팅
   document.addEventListener('DOMContentLoaded', () => {
     const prog = document.getElementById('timerRingProg');
     if (prog) { prog.style.strokeDashoffset = '0'; prog.style.strokeDasharray = CIRCUMFERENCE; }
     updateUI();
   });
+})();
+
+// ── 유산소 스톱워치 ──────────────────────────────────────
+(function() {
+  const SW_KEY = 'cardio_timer_log';
+  let swElapsed  = 0;
+  let swRunning  = false;
+  let swInterval = null;
+
+  function fmtSW(s) {
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    if (h > 0) return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+    return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+  }
+
+  function fmtLabel(s) {
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    const parts = [];
+    if (h) parts.push(h + '시간');
+    if (m) parts.push(m + '분');
+    if (sec || !parts.length) parts.push(sec + '초');
+    return parts.join(' ');
+  }
+
+  function updateSwUI() {
+    const disp = document.getElementById('swDisplay');
+    const lbl  = document.getElementById('swLabel');
+    if (!disp) return;
+    disp.textContent = fmtSW(swElapsed);
+    disp.className = 'cardio-sw-display ' + (swRunning ? 'running' : swElapsed > 0 ? 'paused' : 'running');
+    lbl.textContent = swRunning ? '진행 중 🔴' : swElapsed > 0 ? '일시정지' : '대기 중';
+    const saveBtn = document.getElementById('swSaveBtn');
+    if (saveBtn) saveBtn.disabled = swElapsed < 1;
+  }
+
+  window.swToggle = function() {
+    const btn = document.getElementById('swToggleBtn');
+    swRunning = !swRunning;
+    if (swRunning) {
+      btn.textContent = '⏸ 일시정지';
+      btn.classList.add('running');
+      swInterval = setInterval(() => { swElapsed++; updateSwUI(); }, 1000);
+    } else {
+      btn.textContent = '▶ 계속';
+      btn.classList.remove('running');
+      clearInterval(swInterval);
+    }
+    updateSwUI();
+  };
+
+  window.swReset = function() {
+    clearInterval(swInterval);
+    swRunning = false; swElapsed = 0;
+    const btn = document.getElementById('swToggleBtn');
+    if (btn) { btn.textContent = '▶ 시작'; btn.classList.remove('running'); }
+    document.getElementById('swNote').value = '';
+    updateSwUI();
+  };
+
+  window.swSave = function() {
+    if (swElapsed < 1) return;
+    const note = (document.getElementById('swNote').value || '').trim();
+    const log = JSON.parse(localStorage.getItem(SW_KEY) || '[]');
+    log.push({ id: Date.now(), date: todayStr(), seconds: swElapsed, note });
+    localStorage.setItem(SW_KEY, JSON.stringify(log));
+    swReset();
+    swRenderRecords();
+    if (typeof toast === 'function') toast('✅ 유산소 기록이 저장됐어요!');
+  };
+
+  window.swDeleteRecord = function(id) {
+    const log = JSON.parse(localStorage.getItem(SW_KEY) || '[]').filter(r => r.id !== id);
+    localStorage.setItem(SW_KEY, JSON.stringify(log));
+    swRenderRecords();
+  };
+
+  window.swRenderRecords = function() {
+    const el = document.getElementById('swRecordList');
+    if (!el) return;
+    const log = JSON.parse(localStorage.getItem(SW_KEY) || '[]');
+    if (!log.length) { el.innerHTML = '<div style="color:var(--muted);font-size:0.82rem">아직 저장된 기록이 없어요</div>'; return; }
+
+    // 날짜별로 그룹화, 최신순
+    const byDate = {};
+    [...log].reverse().forEach(r => { (byDate[r.date] = byDate[r.date] || []).push(r); });
+
+    el.innerHTML = Object.entries(byDate).sort((a,b) => b[0].localeCompare(a[0])).map(([date, recs]) => {
+      const d = new Date(date + 'T00:00:00');
+      const dateStr = (d.getMonth()+1) + '월 ' + d.getDate() + '일';
+      const isToday = date === todayStr();
+      const totalSec = recs.reduce((s,r) => s + r.seconds, 0);
+      const header = `<div class="cardio-rec-date-hdr">${isToday ? '오늘 ' : ''}${dateStr} · 총 ${fmtLabel(totalSec)}</div>`;
+      const items = recs.map(r => `
+        <div class="cardio-rec-item">
+          <span class="cardio-rec-time">${fmtSW(r.seconds)}</span>
+          <span class="cardio-rec-note">${r.note || '—'}</span>
+          <button class="cardio-rec-del" onclick="swDeleteRecord(${r.id})" title="삭제">✕</button>
+        </div>`).join('');
+      return header + items;
+    }).join('');
+  };
+
+  document.addEventListener('DOMContentLoaded', () => { updateSwUI(); });
 })();
 
 document.addEventListener('DOMContentLoaded', init);
