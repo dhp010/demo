@@ -930,6 +930,35 @@
     .cardio-rec-note { font-size: 0.8rem; color: var(--muted); flex: 1; }
     .cardio-rec-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: 2px 6px; border-radius: 6px; }
     .cardio-rec-del:hover { background: var(--bg); color: #dc2626; }
+
+    /* ── 식단 추천 ── */
+    .rec-goal-tabs { display:flex; gap:6px; margin-bottom:14px; }
+    .rec-goal-btn { flex:1; padding:9px 4px; border-radius:10px; border:1.5px solid var(--border); background:var(--bg); color:var(--muted); font-size:0.8rem; font-weight:700; cursor:pointer; transition:all .15s; }
+    .rec-goal-btn.active[data-goal="bulk"]    { background:rgba(124,58,237,.1); border-color:#7c3aed; color:#7c3aed; }
+    .rec-goal-btn.active[data-goal="balance"] { background:rgba(176,120,0,.1);  border-color:var(--primary); color:var(--primary); }
+    .rec-goal-btn.active[data-goal="cut"]     { background:rgba(220,38,38,.1);  border-color:#dc2626; color:#dc2626; }
+    .rec-filter-section { margin-bottom:10px; }
+    .rec-filter-label { font-size:0.65rem; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:5px; }
+    .rec-filter-row { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:6px; }
+    .rec-filter-btn { background:var(--bg); border:1px solid var(--border); border-radius:20px; padding:4px 11px; font-size:0.74rem; font-weight:600; color:var(--muted); cursor:pointer; transition:all .15s; white-space:nowrap; }
+    .rec-filter-btn.active { background:rgba(176,120,0,.12); border-color:var(--primary); color:var(--primary); }
+    .rec-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+    .rec-card { background:var(--bg); border:1.5px solid var(--border); border-radius:12px; padding:12px; cursor:default; transition:border-color .15s; }
+    .rec-card:hover { border-color:var(--primary); }
+    .rec-card-top { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+    .rec-card-icon { font-size:1.5rem; }
+    .rec-card-name { font-size:0.85rem; font-weight:800; color:var(--text); line-height:1.2; }
+    .rec-card-kcal { font-size:1rem; font-weight:900; color:var(--primary); margin-bottom:3px; }
+    .rec-card-macros { display:flex; gap:6px; margin-bottom:6px; }
+    .rec-macro { font-size:0.68rem; background:var(--card); border:1px solid var(--border); border-radius:6px; padding:2px 6px; color:var(--muted); font-weight:600; }
+    .rec-macro.p { border-color:#3b82f6; color:#3b82f6; background:rgba(59,130,246,.06); }
+    .rec-macro.c { border-color:#f97316; color:#f97316; background:rgba(249,115,22,.06); }
+    .rec-macro.f { border-color:#eab308; color:#eab308; background:rgba(234,179,8,.06); }
+    .rec-card-desc { font-size:0.72rem; color:var(--muted); line-height:1.4; }
+    .rec-card-tags { display:flex; gap:4px; flex-wrap:wrap; margin-top:6px; }
+    .rec-tag { font-size:0.62rem; background:rgba(176,120,0,.08); border-radius:4px; padding:2px 6px; color:var(--primary); font-weight:600; }
+    .rec-empty { text-align:center; color:var(--muted); font-size:0.85rem; padding:24px 0; }
+    @media(max-width:400px) { .rec-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -1466,6 +1495,24 @@
         <div class="diet-hint">음식을 추가하면 밸런스가 계산됩니다</div>
       </div>
     </div>
+    <!-- 식단 추천 -->
+    <div class="card" id="diet-recommend-card">
+      <h2 style="font-size:1rem;font-weight:800;margin-bottom:14px">🥗 맞춤 식단 추천</h2>
+      <div class="rec-goal-tabs" id="rec-goal-tabs">
+        <button class="rec-goal-btn active" data-goal="balance" onclick="setRecGoal('balance')">⚖️ 밸런스</button>
+        <button class="rec-goal-btn" data-goal="bulk"    onclick="setRecGoal('bulk')">💪 벌크업</button>
+        <button class="rec-goal-btn" data-goal="cut"     onclick="setRecGoal('cut')">🔥 체지방감소</button>
+      </div>
+      <div class="rec-filter-section">
+        <div class="rec-filter-label">음식 문화</div>
+        <div class="rec-filter-row" id="rec-culture-row"></div>
+        <div class="rec-filter-label">음식 유형</div>
+        <div class="rec-filter-row" id="rec-type-row"></div>
+        <div class="rec-filter-label">식이 성향</div>
+        <div class="rec-filter-row" id="rec-diet-row"></div>
+      </div>
+      <div class="rec-grid" id="rec-list"></div>
+    </div>
   </section>
 
 </div>
@@ -1649,7 +1696,7 @@ function switchProfile(id) {
   loadRecords();
   // 식단 탭이 활성이면 다시 렌더링
   if (document.getElementById('tab-diet') && document.getElementById('tab-diet').classList.contains('active')) {
-    if (typeof renderFoodTab === 'function') renderFoodTab();
+    if (typeof renderFoodTab === 'function') loadFoodLog().then(renderFoodTab);
   }
   toast(_activeProfile().name + ' 님 환영해요!');
 }
@@ -2091,7 +2138,7 @@ function init() {
       if (btn.dataset.tab === 'stats') renderStats();
       if (btn.dataset.tab === 'guide') renderGuideList();
       if (btn.dataset.tab === 'routine') initRoutineSelectors();
-      if (btn.dataset.tab === 'diet') { initFoodBrowser(); renderFoodTab(); }
+      if (btn.dataset.tab === 'diet') { loadFoodLog().then(() => { initFoodBrowser(); renderFoodTab(); initRecFilters(); renderRecList(); }); }
     });
   });
 
@@ -3461,6 +3508,68 @@ const FOOD_DB = {
     { name:'우유 200ml',kcal:120, icon:'🥛', prot:6,  carb:10, fat:7,  sodium:100 },
     { name:'빵/케이크', kcal:350, icon:'🍞', prot:6,  carb:55, fat:14, sodium:350 },
   ],
+  '주류': [
+    { name:'소주(1병)',       kcal:400, icon:'🍶', prot:0, carb:18, fat:0, sodium:0   },
+    { name:'소주(1잔)',       kcal:65,  icon:'🍶', prot:0, carb:3,  fat:0, sodium:0   },
+    { name:'맥주 캔(355ml)', kcal:155, icon:'🍺', prot:1, carb:13, fat:0, sodium:15  },
+    { name:'맥주 캔(500ml)', kcal:215, icon:'🍺', prot:2, carb:18, fat:0, sodium:20  },
+    { name:'생맥주(500ml)',  kcal:200, icon:'🍺', prot:2, carb:17, fat:0, sodium:15  },
+    { name:'크래프트맥주',   kcal:220, icon:'🍺', prot:2, carb:20, fat:0, sodium:15  },
+    { name:'흑맥주(350ml)', kcal:195, icon:'🍺', prot:2, carb:18, fat:0, sodium:20  },
+    { name:'IPA(350ml)',    kcal:210, icon:'🍺', prot:2, carb:19, fat:0, sodium:15  },
+    { name:'와인 레드(1잔)', kcal:125, icon:'🍷', prot:0, carb:4,  fat:0, sodium:7   },
+    { name:'와인 화이트(1잔)',kcal:120, icon:'🥂', prot:0, carb:4,  fat:0, sodium:7   },
+    { name:'스파클링(1잔)',  kcal:90,  icon:'🥂', prot:0, carb:3,  fat:0, sodium:5   },
+    { name:'막걸리(1잔300ml)',kcal:200, icon:'🍶', prot:3, carb:30, fat:0, sodium:10  },
+    { name:'막걸리(1병750ml)',kcal:500, icon:'🍶', prot:7, carb:75, fat:0, sodium:25  },
+    { name:'동동주(1잔)',    kcal:180, icon:'🍶', prot:2, carb:28, fat:0, sodium:8   },
+    { name:'위스키(1샷30ml)',kcal:65,  icon:'🥃', prot:0, carb:0,  fat:0, sodium:0   },
+    { name:'보드카(1샷30ml)',kcal:65,  icon:'🥃', prot:0, carb:0,  fat:0, sodium:0   },
+    { name:'럼(1샷30ml)',    kcal:65,  icon:'🥃', prot:0, carb:0,  fat:0, sodium:0   },
+    { name:'진(1샷30ml)',    kcal:60,  icon:'🥃', prot:0, carb:0,  fat:0, sodium:0   },
+    { name:'사케/청주(1잔)', kcal:200, icon:'🍶', prot:0, carb:9,  fat:0, sodium:5   },
+    { name:'매실주(1잔)',    kcal:160, icon:'🍵', prot:0, carb:20, fat:0, sodium:3   },
+    { name:'복분자주(1잔)',  kcal:120, icon:'🍇', prot:0, carb:15, fat:0, sodium:3   },
+    { name:'하이볼(350ml)', kcal:175, icon:'🥃', prot:0, carb:12, fat:0, sodium:5   },
+    { name:'모히토(350ml)', kcal:150, icon:'🍹', prot:0, carb:22, fat:0, sodium:8   },
+    { name:'마가리타(250ml)',kcal:200, icon:'🍹', prot:0, carb:18, fat:0, sodium:5   },
+    { name:'칵테일 롱아일랜드',kcal:280,icon:'🍹', prot:0, carb:15, fat:0, sodium:5   },
+  ],
+  '음료': [
+    { name:'아이스아메리카노',kcal:10,  icon:'☕', prot:1, carb:2,  fat:0, sodium:5   },
+    { name:'따뜻한아메리카노',kcal:10,  icon:'☕', prot:1, carb:2,  fat:0, sodium:5   },
+    { name:'아이스라떼',     kcal:130, icon:'🥛', prot:7, carb:13, fat:5, sodium:80  },
+    { name:'따뜻한라떼',     kcal:120, icon:'☕', prot:7, carb:12, fat:5, sodium:80  },
+    { name:'바닐라라떼',     kcal:260, icon:'☕', prot:8, carb:38, fat:8, sodium:120 },
+    { name:'카라멜마끼아또', kcal:250, icon:'☕', prot:7, carb:36, fat:7, sodium:110 },
+    { name:'카페모카',       kcal:280, icon:'☕', prot:8, carb:40,fat:10, sodium:120 },
+    { name:'카푸치노',       kcal:120, icon:'☕', prot:7, carb:12, fat:5, sodium:80  },
+    { name:'에스프레소',     kcal:5,   icon:'☕', prot:0, carb:1,  fat:0, sodium:3   },
+    { name:'말차라떼',       kcal:200, icon:'🍵', prot:7, carb:30, fat:5, sodium:90  },
+    { name:'오트라떼',       kcal:180, icon:'☕', prot:5, carb:28, fat:5, sodium:90  },
+    { name:'프라푸치노',     kcal:380, icon:'🧋', prot:6, carb:58,fat:14, sodium:150 },
+    { name:'콜라(350ml)',    kcal:153, icon:'🥤', prot:0, carb:39, fat:0, sodium:45  },
+    { name:'제로콜라',       kcal:1,   icon:'🥤', prot:0, carb:0,  fat:0, sodium:40  },
+    { name:'사이다(350ml)',  kcal:133, icon:'🥤', prot:0, carb:34, fat:0, sodium:25  },
+    { name:'환타오렌지',     kcal:145, icon:'🥤', prot:0, carb:37, fat:0, sodium:30  },
+    { name:'스프라이트',     kcal:140, icon:'🥤', prot:0, carb:36, fat:0, sodium:30  },
+    { name:'에너지드링크',   kcal:110, icon:'⚡', prot:1, carb:27, fat:0, sodium:100 },
+    { name:'이온음료',       kcal:80,  icon:'💧', prot:0, carb:20, fat:0, sodium:200 },
+    { name:'오렌지주스(200ml)',kcal:90, icon:'🍊', prot:1, carb:21, fat:0, sodium:2   },
+    { name:'사과주스(200ml)', kcal:95, icon:'🍎', prot:0, carb:24, fat:0, sodium:5   },
+    { name:'포도주스(200ml)', kcal:130,icon:'🍇', prot:1, carb:32, fat:0, sodium:5   },
+    { name:'복숭아주스',     kcal:90,  icon:'🍑', prot:0, carb:22, fat:0, sodium:5   },
+    { name:'토마토주스',     kcal:35,  icon:'🍅', prot:2, carb:7,  fat:0, sodium:300 },
+    { name:'우유(200ml)',    kcal:130, icon:'🥛', prot:6, carb:10, fat:7, sodium:100 },
+    { name:'초코우유',       kcal:160, icon:'🥛', prot:5, carb:24, fat:5, sodium:100 },
+    { name:'두유(200ml)',    kcal:100, icon:'🥛', prot:5, carb:10, fat:4, sodium:80  },
+    { name:'녹차(200ml)',    kcal:5,   icon:'🍵', prot:0, carb:1,  fat:0, sodium:2   },
+    { name:'홍차(200ml)',    kcal:5,   icon:'🍵', prot:0, carb:1,  fat:0, sodium:2   },
+    { name:'코코아(200ml)',  kcal:180, icon:'🍫', prot:5, carb:28, fat:6, sodium:120 },
+    { name:'딸기라떼',       kcal:250, icon:'🍓', prot:6, carb:40, fat:6, sodium:90  },
+    { name:'스무디(딸기)',   kcal:200, icon:'🥤', prot:2, carb:45, fat:1, sodium:20  },
+    { name:'스무디(망고)',   kcal:210, icon:'🥭', prot:2, carb:48, fat:1, sodium:15  },
+  ],
 };
 
 const MEALS = [
@@ -3475,15 +3584,35 @@ let _serving = 1;
 let _pendingFood = null;
 let _selectedMeal = 'lunch';
 
-function todayFoodKey() { return pk('food_log_') + todayStr(); }
+// ── 음식 로그 (서버 DB) ──────────────────────────────────
+let _foodLogCache = [];
 
-function loadFoodLog() {
-  try { return JSON.parse(localStorage.getItem(todayFoodKey()) || '[]'); }
-  catch { return []; }
+async function loadFoodLog() {
+  try {
+    const r = await fetch(`/api/fitness/food?user=${activeUserId()}&date=${todayStr()}`);
+    if (r.ok) _foodLogCache = await r.json();
+  } catch { /* 오프라인 시 캐시 유지 */ }
+  return _foodLogCache;
 }
 
-function saveFoodLog(log) {
-  localStorage.setItem(todayFoodKey(), JSON.stringify(log));
+async function addFoodToServer(entry) {
+  try {
+    const r = await fetch('/api/fitness/food', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...entry, user_id: activeUserId(), date: todayStr() }),
+    });
+    const j = await r.json();
+    if (j.ok) { _foodLogCache.push(j.record); return true; }
+  } catch {}
+  return false;
+}
+
+async function deleteFoodFromServer(id) {
+  try {
+    await fetch(`/api/fitness/food/${id}`, { method: 'DELETE' });
+    _foodLogCache = _foodLogCache.filter(f => f.id !== id);
+  } catch { toast('삭제 실패', true); }
 }
 
 function selectCuisine(name) {
@@ -3536,17 +3665,20 @@ function selectMeal(meal) {
   document.querySelectorAll('.meal-btn').forEach(b => b.classList.toggle('active', b.dataset.m === meal));
 }
 
-function confirmFoodAdd() {
+async function confirmFoodAdd() {
   if (!_pendingFood) return;
   const totalKcal = Math.round(_pendingFood.baseKcal * _serving);
   const sv = _serving % 1 === 0 ? _serving.toString() : _serving.toFixed(1);
-  const log = loadFoodLog();
-  const r = v => v !== null ? Math.round(v * _serving * 10) / 10 : null;
-  log.push({ id: Date.now().toString(), name: _pendingFood.name, icon: _pendingFood.icon, baseKcal: _pendingFood.baseKcal, serving: _serving, kcal: totalKcal, meal: _selectedMeal,
-    prot: r(_pendingFood.prot), carb: r(_pendingFood.carb), fat: r(_pendingFood.fat), sodium: _pendingFood.sodium !== null ? Math.round(_pendingFood.sodium * _serving) : null });
-  saveFoodLog(log);
+  const round = v => v !== null ? Math.round(v * _serving * 10) / 10 : null;
+  const entry = {
+    name: _pendingFood.name, icon: _pendingFood.icon,
+    baseKcal: _pendingFood.baseKcal, serving: _serving, kcal: totalKcal, meal: _selectedMeal,
+    prot: round(_pendingFood.prot), carb: round(_pendingFood.carb), fat: round(_pendingFood.fat),
+    sodium: _pendingFood.sodium !== null ? Math.round(_pendingFood.sodium * _serving) : null,
+  };
   const added = _pendingFood.name;
   cancelFoodAdd();
+  await addFoodToServer(entry);
   renderFoodTab();
   toast(added + ' ' + sv + '인분 추가됐어요!');
 }
@@ -3557,21 +3689,19 @@ function cancelFoodAdd() {
   if (panel) panel.style.display = 'none';
 }
 
-function addFoodItem() {
+async function addFoodItem() {
   const name = document.getElementById('food-name-input').value.trim();
   const kcal = parseInt(document.getElementById('food-kcal-input').value, 10);
   const meal = (document.getElementById('food-meal-input') || {}).value || 'lunch';
   if (!name || !kcal || kcal <= 0) { toast('음식 이름과 칼로리를 입력하세요'); return; }
-  const log = loadFoodLog();
-  log.push({ id: Date.now().toString(), name, baseKcal: kcal, serving: 1, kcal, meal });
-  saveFoodLog(log);
   document.getElementById('food-name-input').value = '';
   document.getElementById('food-kcal-input').value = '';
+  await addFoodToServer({ name, icon: '', baseKcal: kcal, serving: 1, kcal, meal });
   renderFoodTab();
 }
 
 function showFoodNutrition(id) {
-  const food = loadFoodLog().find(f => f.id === id);
+  const food = _foodLogCache.find(f => f.id === id);
   if (!food) return;
   const modal = document.getElementById('nutrition-modal');
   document.getElementById('nm-icon').textContent = food.icon || '🍽️';
@@ -3603,10 +3733,134 @@ function showFoodNutrition(id) {
 }
 function closeNutritionModal() { document.getElementById('nutrition-modal').classList.add('hidden'); }
 
-function removeFoodItem(id) {
-  const log = loadFoodLog().filter(f => f.id !== id);
-  saveFoodLog(log);
+async function removeFoodItem(id) {
+  await deleteFoodFromServer(id);
   renderFoodTab();
+}
+
+// ── 식단 추천 데이터 ──────────────────────────────────────
+const DIET_RECS = [
+  // ── 벌크업 ──
+  { goal:'bulk', culture:'한식', type:'일품요리', diet:'육식위주', name:'불고기덮밥',      icon:'🥩', kcal:750, prot:45, carb:95, fat:18, sodium:900,  desc:'고단백 탄수 황금비율, 근성장 최적화' },
+  { goal:'bulk', culture:'한식', type:'국/탕',   diet:'균형',    name:'삼계탕',          icon:'🍗', kcal:650, prot:48, carb:38, fat:22, sodium:900,  desc:'닭고기+찹쌀, 전통 고단백 보양식' },
+  { goal:'bulk', culture:'한식', type:'일품요리', diet:'육식위주', name:'제육볶음+공기밥', icon:'🥘', kcal:850, prot:50, carb:98, fat:25, sodium:1200, desc:'포화지방 낮은 돼지고기로 벌크업' },
+  { goal:'bulk', culture:'한식', type:'국/탕',   diet:'균형',    name:'갈비탕+공기밥',   icon:'🍖', kcal:750, prot:45, carb:80, fat:22, sodium:1500, desc:'뼈국물 무기질 + 소고기 단백질' },
+  { goal:'bulk', culture:'한식', type:'도시락',  diet:'육식위주', name:'닭가슴살 도시락', icon:'🐔', kcal:520, prot:55, carb:58, fat:8,  sodium:500,  desc:'초고단백 저지방, 린매스업 최적' },
+  { goal:'bulk', culture:'양식', type:'일품요리', diet:'육식위주', name:'소고기 스테이크', icon:'🥩', kcal:800, prot:55, carb:50, fat:30, sodium:500,  desc:'고품질 단백질+건강한 지방 조합' },
+  { goal:'bulk', culture:'양식', type:'일품요리', diet:'균형',    name:'치킨 파스타',     icon:'🍝', kcal:720, prot:45, carb:85, fat:18, sodium:700,  desc:'탄수+단백 황금비, 운동 후 최적' },
+  { goal:'bulk', culture:'양식', type:'샐러드',  diet:'균형',    name:'그릴드치킨 샐러드',icon:'🥗',kcal:550, prot:48, carb:40, fat:20, sodium:600,  desc:'고단백 저칼로리 린매스업 샐러드' },
+  { goal:'bulk', culture:'일식', type:'일품요리', diet:'균형',    name:'규동+된장국',     icon:'🥩', kcal:720, prot:38, carb:90, fat:20, sodium:900,  desc:'소고기+밥, 일본 전통 벌크 식단' },
+  { goal:'bulk', culture:'일식', type:'일품요리', diet:'육식위주', name:'가츠동',          icon:'🍱', kcal:750, prot:40, carb:88, fat:25, sodium:900,  desc:'돈까스+달걀+밥, 고칼로리 단백식' },
+  { goal:'bulk', culture:'일식', type:'도시락',  diet:'균형',    name:'연어 도시락',      icon:'🐟', kcal:580, prot:42, carb:62, fat:18, sodium:700,  desc:'오메가3+단백질, 근육 회복 식단' },
+  { goal:'bulk', culture:'지중해식', type:'일품요리', diet:'균형', name:'그릴닭+후무스',   icon:'🫘', kcal:620, prot:50, carb:55, fat:18, sodium:500,  desc:'지중해식 건강 단백질 조합' },
+  { goal:'bulk', culture:'지중해식', type:'일품요리', diet:'균형', name:'연어+올리브라이스',icon:'🐟',kcal:700, prot:45, carb:68, fat:25, sodium:600,  desc:'건강 지방+고단백 지중해 벌크식' },
+  { goal:'bulk', culture:'인도식', type:'일품요리', diet:'육식위주', name:'탄두리치킨+난', icon:'🍗', kcal:680, prot:48, carb:72, fat:18, sodium:900,  desc:'향신료 항염 효과+고단백 인도식' },
+  { goal:'bulk', culture:'중식', type:'일품요리', diet:'균형',    name:'마파두부덮밥',    icon:'🥘', kcal:650, prot:28, carb:90, fat:20, sodium:1200, desc:'두부 식물성 단백+든든한 탄수' },
+  { goal:'bulk', culture:'한식', type:'샐러드',  diet:'채식위주', name:'두부구이 비빔밥', icon:'🍚', kcal:580, prot:30, carb:85, fat:12, sodium:700,  desc:'식물성 단백+복합탄수 채식 벌크' },
+  { goal:'bulk', culture:'양식', type:'간편식',  diet:'균형',    name:'프로틴 오트밀',   icon:'🥣', kcal:500, prot:38, carb:65, fat:10, sodium:200,  desc:'단백질+복합탄수, 간편 벌크 아침' },
+  { goal:'bulk', culture:'인도식', type:'일품요리', diet:'채식위주', name:'팔라크파니르+밥',icon:'🫘',kcal:600, prot:25, carb:80, fat:20, sodium:700,  desc:'치즈+시금치, 채식 고칼로리 인도식' },
+
+  // ── 밸런스 ──
+  { goal:'balance', culture:'한식', type:'일품요리', diet:'균형',    name:'비빔밥',          icon:'🍛', kcal:550, prot:20, carb:85, fat:15, sodium:900,  desc:'오색 나물+밥, 균형잡힌 전통 한식' },
+  { goal:'balance', culture:'한식', type:'국/탕',   diet:'균형',    name:'된장찌개+밥',     icon:'🍲', kcal:550, prot:22, carb:85, fat:12, sodium:1800, desc:'발효 된장 프로바이오틱스+영양균형' },
+  { goal:'balance', culture:'한식', type:'일품요리', diet:'균형',    name:'고등어구이 정식', icon:'🐟', kcal:580, prot:38, carb:68, fat:18, sodium:900,  desc:'오메가3 풍부한 등푸른 생선 정식' },
+  { goal:'balance', culture:'한식', type:'일품요리', diet:'채식위주', name:'잡채+밥',        icon:'🥗', kcal:580, prot:18, carb:95, fat:12, sodium:700,  desc:'당면+채소 비타민 풍부한 한식' },
+  { goal:'balance', culture:'한식', type:'도시락',  diet:'균형',    name:'도시락 삼색나물', icon:'🍱', kcal:480, prot:22, carb:75, fat:12, sodium:600,  desc:'영양 균형 잡힌 가정식 도시락' },
+  { goal:'balance', culture:'중식', type:'일품요리', diet:'균형',    name:'볶음밥',          icon:'🍳', kcal:600, prot:18, carb:90, fat:20, sodium:1200, desc:'채소+달걀 볶음밥, 간편 균형식' },
+  { goal:'balance', culture:'중식', type:'일품요리', diet:'균형',    name:'마파두부+밥',     icon:'🥘', kcal:650, prot:28, carb:90, fat:20, sodium:1200, desc:'두부 단백+매콤 향신료 조합' },
+  { goal:'balance', culture:'양식', type:'일품요리', diet:'균형',    name:'치킨 샌드위치',  icon:'🥪', kcal:550, prot:30, carb:60, fat:18, sodium:800,  desc:'닭가슴살+채소, 간편 균형 양식' },
+  { goal:'balance', culture:'양식', type:'일품요리', diet:'균형',    name:'토마토 파스타',  icon:'🍝', kcal:580, prot:20, carb:90, fat:14, sodium:700,  desc:'라이코펜 풍부 토마토+파스타' },
+  { goal:'balance', culture:'양식', type:'샐러드',  diet:'균형',    name:'니소와즈 샐러드',icon:'🥗', kcal:400, prot:30, carb:28, fat:16, sodium:600,  desc:'참치+달걀+채소, 프렌치 클래식' },
+  { goal:'balance', culture:'일식', type:'일품요리', diet:'균형',    name:'초밥 세트(8피스)',icon:'🍣',kcal:550, prot:28, carb:82, fat:8,  sodium:900,  desc:'신선한 생선+밥, 단백질 균형식' },
+  { goal:'balance', culture:'일식', type:'일품요리', diet:'균형',    name:'우동+텐푸라',    icon:'🍜', kcal:620, prot:22, carb:88, fat:18, sodium:1800, desc:'탄수+채소튀김, 일본 균형 정식' },
+  { goal:'balance', culture:'일식', type:'도시락',  diet:'균형',    name:'오니기리 세트',  icon:'🍙', kcal:420, prot:14, carb:78, fat:6,  sodium:700,  desc:'참치+연어 오니기리, 간편 균형식' },
+  { goal:'balance', culture:'지중해식', type:'샐러드', diet:'균형', name:'그리스식 샐러드',icon:'🥗', kcal:480, prot:38, carb:30, fat:22, sodium:700,  desc:'페타치즈+올리브+채소 지중해식' },
+  { goal:'balance', culture:'지중해식', type:'일품요리', diet:'균형', name:'구운생선+채소', icon:'🐟', kcal:450, prot:42, carb:28, fat:18, sodium:500,  desc:'지중해 방식 구운 생선 식단' },
+  { goal:'balance', culture:'인도식', type:'일품요리', diet:'채식위주', name:'달바트(렌틸+밥)',icon:'🫘',kcal:500, prot:22, carb:82, fat:8,  sodium:600, desc:'렌틸콩 고단백 채식 균형 인도식' },
+  { goal:'balance', culture:'한식', type:'간편식',  diet:'균형',    name:'그릭요거트+과일',icon:'🥣', kcal:300, prot:20, carb:40, fat:5,  sodium:60,   desc:'프로바이오틱스+비타민, 간편 아침' },
+  { goal:'balance', culture:'양식', type:'도시락',  diet:'채식위주', name:'두부 카레+현미', icon:'🍛', kcal:500, prot:18, carb:80, fat:12, sodium:600,  desc:'강황 항염+두부 단백 채식 카레' },
+  { goal:'balance', culture:'한식', type:'샐러드',  diet:'채식위주', name:'두부 샐러드',    icon:'🥗', kcal:280, prot:15, carb:20, fat:12, sodium:400,  desc:'두부+채소 가볍고 영양 풍부한 샐러드' },
+
+  // ── 체지방 감소 ──
+  { goal:'cut', culture:'한식', type:'국/탕',   diet:'균형',    name:'콩나물국밥',       icon:'🌱', kcal:380, prot:18, carb:70, fat:4,  sodium:1200, desc:'저칼로리 속풀이, 식이섬유 풍부' },
+  { goal:'cut', culture:'한식', type:'국/탕',   diet:'채식위주', name:'미역국+반공기밥',  icon:'🥣', kcal:300, prot:12, carb:50, fat:4,  sodium:900,  desc:'요오드+철분, 저칼로리 다이어트식' },
+  { goal:'cut', culture:'한식', type:'일품요리', diet:'육식위주', name:'닭가슴살구이+쌈', icon:'🥬', kcal:300, prot:40, carb:12, fat:5,  sodium:300,  desc:'초고단백 극저칼로리 다이어트식' },
+  { goal:'cut', culture:'한식', type:'일품요리', diet:'균형',    name:'된장국+반공기밥+나물', icon:'🍲', kcal:320, prot:16, carb:52, fat:6, sodium:1000, desc:'발효식품+채소, 저칼로리 한식 다이어트' },
+  { goal:'cut', culture:'한식', type:'도시락',  diet:'육식위주', name:'저칼로리 닭도시락', icon:'🍱', kcal:380, prot:38, carb:45, fat:6,  sodium:500,  desc:'단백질 충분, 칼로리 최소화 도시락' },
+  { goal:'cut', culture:'양식', type:'샐러드',  diet:'채식위주', name:'그린 샐러드+발사믹',icon:'🥗',kcal:180, prot:5,  carb:22, fat:6,  sodium:300,  desc:'최저칼로리 고섬유질 다이어트 샐러드' },
+  { goal:'cut', culture:'양식', type:'샐러드',  diet:'육식위주', name:'연어 샐러드',      icon:'🐟', kcal:350, prot:32, carb:18, fat:18, sodium:500,  desc:'오메가3+고단백, 다이어트 최적 샐러드' },
+  { goal:'cut', culture:'양식', type:'일품요리', diet:'균형',    name:'구운닭가슴살+구운채소',icon:'🥦',kcal:350, prot:42, carb:22, fat:10, sodium:400, desc:'오븐 구이 방식, 기름 최소화 다이어트' },
+  { goal:'cut', culture:'양식', type:'간편식',  diet:'육식위주', name:'닭가슴살+삶은달걀', icon:'🥚', kcal:250, prot:45, carb:5,  fat:8,  sodium:300,  desc:'초단순 고단백 극저칼로리 식단' },
+  { goal:'cut', culture:'일식', type:'일품요리', diet:'균형',    name:'자루소바',         icon:'🍜', kcal:350, prot:15, carb:65, fat:3,  sodium:1200, desc:'저지방 고탄수, 메밀 식이섬유 풍부' },
+  { goal:'cut', culture:'일식', type:'도시락',  diet:'균형',    name:'오니기리+된장국',   icon:'🍙', kcal:320, prot:12, carb:60, fat:4,  sodium:900,  desc:'간편 저칼로리, 포만감 높은 다이어트식' },
+  { goal:'cut', culture:'지중해식', type:'샐러드', diet:'균형', name:'지중해식 샐러드',  icon:'🫒', kcal:280, prot:12, carb:20, fat:16, sodium:500,  desc:'올리브오일 건강 지방+항산화 채소' },
+  { goal:'cut', culture:'지중해식', type:'일품요리', diet:'균형', name:'구운생선+채소',   icon:'🐟', kcal:320, prot:38, carb:18, fat:10, sodium:450,  desc:'고단백 저칼로리 지중해 다이어트식' },
+  { goal:'cut', culture:'한식', type:'샐러드',  diet:'채식위주', name:'두부 채소 샐러드', icon:'🥗', kcal:200, prot:14, carb:14, fat:8,  sodium:400,  desc:'식물성 단백질 최저칼로리 샐러드' },
+  { goal:'cut', culture:'인도식', type:'일품요리', diet:'채식위주', name:'달(렌틸수프)',   icon:'🫘', kcal:220, prot:14, carb:35, fat:3,  sodium:400,  desc:'렌틸 저칼로리 고섬유질 인도 수프' },
+  { goal:'cut', culture:'양식', type:'간편식',  diet:'채식위주', name:'채소 스무디볼',    icon:'🫐', kcal:250, prot:8,  carb:45, fat:5,  sodium:80,   desc:'항산화 베리+채소, 아침 다이어트식' },
+  { goal:'cut', culture:'중식', type:'일품요리', diet:'채식위주', name:'두부 볶음+현미밥', icon:'🥢', kcal:380, prot:20, carb:55, fat:10, sodium:700,  desc:'저지방 두부+현미, 식이섬유 풍부' },
+];
+
+let _recGoal = 'balance', _recCulture = '', _recType = '', _recDiet = '';
+
+function setRecGoal(goal) {
+  _recGoal = goal;
+  document.querySelectorAll('.rec-goal-btn').forEach(b => b.classList.toggle('active', b.dataset.goal === goal));
+  renderRecList();
+}
+
+function setRecFilter(type, val, el) {
+  if (type === 'culture') _recCulture = val;
+  else if (type === 'type') _recType = val;
+  else if (type === 'diet') _recDiet = val;
+  el.closest('.rec-filter-row').querySelectorAll('.rec-filter-btn').forEach(b => b.classList.toggle('active', b.dataset.val === val));
+  renderRecList();
+}
+
+function initRecFilters() {
+  const cultures = ['', ...new Set(DIET_RECS.map(r => r.culture))];
+  const types    = ['', ...new Set(DIET_RECS.map(r => r.type))];
+  const diets    = ['', ...new Set(DIET_RECS.map(r => r.diet))];
+  const labels = { culture: { '':'전체', '한식':'한식', '중식':'중식', '양식':'양식', '일식':'일식', '지중해식':'지중해식', '인도식':'인도식' },
+                   type:    { '':'전체', '일품요리':'일품요리', '국/탕':'국/탕', '샐러드':'샐러드', '간편식':'간편식', '도시락':'도시락' },
+                   diet:    { '':'전체', '균형':'균형위주', '육식위주':'육식위주', '채식위주':'채식위주' } };
+  [['culture', cultures, _recCulture, 'rec-culture-row'],
+   ['type', types, _recType, 'rec-type-row'],
+   ['diet', diets, _recDiet, 'rec-diet-row']].forEach(([ftype, vals, cur, rowId]) => {
+    const row = document.getElementById(rowId); if (!row || row.dataset.init) return;
+    row.dataset.init = '1';
+    row.innerHTML = vals.map(v => `<button class="rec-filter-btn${v === cur ? ' active' : ''}" data-val="${v}" onclick="setRecFilter('${ftype}','${v}',this)">${(labels[ftype][v] || v)}</button>`).join('');
+  });
+}
+
+function renderRecList() {
+  const el = document.getElementById('rec-list'); if (!el) return;
+  const filtered = DIET_RECS.filter(r =>
+    r.goal === _recGoal &&
+    (!_recCulture || r.culture === _recCulture) &&
+    (!_recType    || r.type    === _recType) &&
+    (!_recDiet    || r.diet    === _recDiet)
+  );
+  if (!filtered.length) { el.innerHTML = '<div class="rec-empty" style="grid-column:1/-1">해당 조건의 추천 식단이 없어요 🥲<br><small>필터를 변경해보세요</small></div>'; return; }
+  el.innerHTML = filtered.map(r => `
+    <div class="rec-card">
+      <div class="rec-card-top">
+        <span class="rec-card-icon">${r.icon}</span>
+        <span class="rec-card-name">${r.name}</span>
+      </div>
+      <div class="rec-card-kcal">${r.kcal.toLocaleString()} kcal</div>
+      <div class="rec-card-macros">
+        <span class="rec-macro p">단백 ${r.prot}g</span>
+        <span class="rec-macro c">탄수 ${r.carb}g</span>
+        <span class="rec-macro f">지방 ${r.fat}g</span>
+      </div>
+      <div class="rec-card-desc">${r.desc}</div>
+      <div class="rec-card-tags">
+        <span class="rec-tag">${r.culture}</span>
+        <span class="rec-tag">${r.type}</span>
+        <span class="rec-tag">${r.diet}</span>
+      </div>
+    </div>`).join('');
 }
 
 function getTodayExerciseKcal() {
@@ -3632,7 +3886,7 @@ function getDietStatus(net) {
 }
 
 function renderFoodTab() {
-  const log = loadFoodLog();
+  const log = _foodLogCache;
   const totalFood = log.reduce((s, f) => s + f.kcal, 0);
   const listEl = document.getElementById('food-log-list');
   const totalRow = document.getElementById('food-total-row');

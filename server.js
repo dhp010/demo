@@ -20,6 +20,7 @@ function buildMemoryStorage() {
     cardio: [],
     weight: [],
     profiles: [],
+    food_log: [],
   };
   return {
     init: async () => {},
@@ -41,6 +42,7 @@ function buildMemoryStorage() {
       mem.profiles = mem.profiles.filter(p => p.id !== id);
       mem.cardio = mem.cardio.filter(r => r.user_id !== id);
       mem.weight = mem.weight.filter(r => r.user_id !== id);
+      mem.food_log = mem.food_log.filter(r => r.user_id !== id);
     },
 
     // ── 노트 (기존) ──
@@ -76,6 +78,11 @@ function buildMemoryStorage() {
     addWeight: async (rec) => { mem.weight.unshift(rec); },
     deleteCardio: async (id) => { mem.cardio = mem.cardio.filter(r => r.id !== id); },
     deleteWeight: async (id) => { mem.weight = mem.weight.filter(r => r.id !== id); },
+
+    // ── 음식 로그 ──
+    getFoodLog: async (userId, date) => [...mem.food_log].filter(r => r.user_id === userId && r.date === date).sort((a, b) => a.created_at - b.created_at),
+    addFoodLog: async (rec) => { mem.food_log.push(rec); },
+    deleteFoodLog: async (id) => { mem.food_log = mem.food_log.filter(r => r.id !== id); },
   };
 }
 
@@ -192,6 +199,25 @@ function buildTursoStorage(client) {
           calories REAL NOT NULL DEFAULT 0,
           created_at INTEGER NOT NULL
         )`);
+      // 음식 로그 테이블
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS fitness_food_log (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL DEFAULT 'default',
+          date TEXT NOT NULL,
+          name TEXT NOT NULL,
+          icon TEXT DEFAULT '',
+          base_kcal REAL NOT NULL DEFAULT 0,
+          serving REAL NOT NULL DEFAULT 1,
+          kcal REAL NOT NULL DEFAULT 0,
+          meal TEXT NOT NULL DEFAULT 'lunch',
+          prot REAL,
+          carb REAL,
+          fat REAL,
+          sodium REAL,
+          created_at INTEGER NOT NULL
+        )`);
+
       // 기존 테이블에 user_id 컬럼 추가 (마이그레이션)
       for (const tbl of ['fitness_cardio', 'fitness_weight']) {
         try { await client.execute(`ALTER TABLE ${tbl} ADD COLUMN user_id TEXT NOT NULL DEFAULT 'default'`); } catch {}
@@ -318,7 +344,33 @@ function buildTursoStorage(client) {
         { sql: 'DELETE FROM fitness_profiles WHERE id=?', args: [id] },
         { sql: 'DELETE FROM fitness_cardio WHERE user_id=?', args: [id] },
         { sql: 'DELETE FROM fitness_weight WHERE user_id=?', args: [id] },
+        { sql: 'DELETE FROM fitness_food_log WHERE user_id=?', args: [id] },
       ], 'write');
+    },
+
+    // ── 음식 로그 ──
+    getFoodLog: async (userId, date) => {
+      const r = await client.execute({ sql: 'SELECT * FROM fitness_food_log WHERE user_id=? AND date=? ORDER BY created_at ASC', args: [userId, date] });
+      return r.rows.map(f => ({
+        id: f.id, name: f.name, icon: f.icon || '', date: f.date,
+        baseKcal: Number(f.base_kcal), serving: Number(f.serving),
+        kcal: Number(f.kcal), meal: f.meal,
+        prot: f.prot != null ? Number(f.prot) : null,
+        carb: f.carb != null ? Number(f.carb) : null,
+        fat: f.fat != null ? Number(f.fat) : null,
+        sodium: f.sodium != null ? Number(f.sodium) : null,
+      }));
+    },
+    addFoodLog: async (rec) => {
+      await client.execute({
+        sql: `INSERT INTO fitness_food_log (id,user_id,date,name,icon,base_kcal,serving,kcal,meal,prot,carb,fat,sodium,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        args: [rec.id, rec.user_id || 'default', rec.date, rec.name, rec.icon || '',
+               rec.baseKcal, rec.serving, rec.kcal, rec.meal,
+               rec.prot ?? null, rec.carb ?? null, rec.fat ?? null, rec.sodium ?? null, rec.created_at],
+      });
+    },
+    deleteFoodLog: async (id) => {
+      await client.execute({ sql: 'DELETE FROM fitness_food_log WHERE id=?', args: [id] });
     },
   };
 }
@@ -403,6 +455,24 @@ const server = http.createServer(async (req, res) => {
         const id = urlPath.slice('/api/profiles/'.length);
         if (!id) return json(res, { error: 'id required' }, 400);
         await storage.deleteProfile(id);
+        return json(res, { ok: true });
+      }
+
+      if (req.method === 'GET' && urlPath === '/api/fitness/food') {
+        const params = new URL(req.url, 'http://localhost').searchParams;
+        const userId = params.get('user') || 'default';
+        const date = params.get('date') || '';
+        return json(res, await storage.getFoodLog(userId, date));
+      }
+      if (req.method === 'POST' && urlPath === '/api/fitness/food') {
+        const body = await parseBody(req);
+        const record = { id: genId(), ...body, created_at: Date.now() };
+        await storage.addFoodLog(record);
+        return json(res, { ok: true, record });
+      }
+      if (req.method === 'DELETE' && urlPath.startsWith('/api/fitness/food/')) {
+        const id = urlPath.slice('/api/fitness/food/'.length);
+        await storage.deleteFoodLog(id);
         return json(res, { ok: true });
       }
 
