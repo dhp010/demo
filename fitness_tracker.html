@@ -932,11 +932,6 @@
     .cardio-rec-del:hover { background: var(--bg); color: #dc2626; }
 
     /* ── 식단 서브탭 ── */
-    .diet-sub-nav { display:flex; gap:6px; margin-bottom:12px; }
-    .diet-sub-btn { flex:1; padding:10px 4px; border-radius:10px; border:1.5px solid var(--border); background:var(--bg); color:var(--muted); font-size:0.84rem; font-weight:700; cursor:pointer; transition:all .15s; }
-    .diet-sub-btn.active { background:rgba(254,229,0,.3); border-color:#C8A200; color:#8B6000; }
-    .diet-subtab { display:none; }
-    .diet-subtab.active { display:block; }
 
     /* ── 식단 추천 ── */
     .rec-goal-tabs { display:flex; gap:6px; margin-bottom:14px; }
@@ -1114,8 +1109,11 @@
     <div class="tab-group">
       <div class="tab-group-label">다이어트 관리</div>
       <div class="tab-group-row">
-        <button class="tab-btn" data-tab="diet" style="grid-column: span 2">
+        <button class="tab-btn" data-tab="diet">
           <span class="tab-icon">🍽️</span>오늘의 칼로리
+        </button>
+        <button class="tab-btn" data-tab="recommend">
+          <span class="tab-icon">🥗</span>식단 추천
         </button>
       </div>
     </div>
@@ -1450,85 +1448,71 @@
     <div class="rt-result" id="rt-result"></div>
   </section>
 
-  <!-- ── 다이어트/칼로리 탭 ── -->
+  <!-- ── 오늘의 칼로리 탭 ── -->
   <section class="tab-content" id="tab-diet">
-    <!-- 서브탭 내비 -->
-    <div class="diet-sub-nav">
-      <button class="diet-sub-btn active" data-subtab="calories"  onclick="switchDietSubtab('calories')">🍽️ 오늘의 칼로리</button>
-      <button class="diet-sub-btn"        data-subtab="recommend" onclick="switchDietSubtab('recommend')">🥗 식단 추천</button>
-    </div>
-
-    <!-- 서브탭 1: 오늘의 칼로리 -->
-    <div class="diet-subtab active" id="diet-subtab-calories">
-      <!-- 음식 입력 -->
-      <div class="card" style="margin-bottom:12px">
-        <h2 style="font-size:1rem;font-weight:800;margin-bottom:12px">🍽️ 오늘 먹은 음식</h2>
-        <!-- 음식 종류 탭 -->
-        <div class="cuisine-tabs" id="cuisine-tabs"></div>
-        <!-- 음식 그리드 -->
-        <div class="food-grid" id="food-grid"></div>
-        <!-- 선택된 음식 추가 패널 -->
-        <div class="food-add-panel" id="food-add-panel" style="display:none">
-          <div class="food-add-panel-name" id="fap-name"></div>
-          <div class="food-add-panel-row">
-            <span style="font-size:.8rem;color:var(--muted);font-weight:700">인분</span>
-            <div class="serving-ctrl">
-              <button class="serving-btn" onclick="changeServing(-0.5)">−</button>
-              <span id="serving-display">1</span>
-              <button class="serving-btn" onclick="changeServing(0.5)">+</button>
-            </div>
-            <span class="fap-kcal" id="fap-kcal">0 kcal</span>
+    <!-- 음식 입력 -->
+    <div class="card" style="margin-bottom:12px">
+      <h2 style="font-size:1rem;font-weight:800;margin-bottom:12px">🍽️ 오늘 먹은 음식</h2>
+      <div class="cuisine-tabs" id="cuisine-tabs"></div>
+      <div class="food-grid" id="food-grid"></div>
+      <div class="food-add-panel" id="food-add-panel" style="display:none">
+        <div class="food-add-panel-name" id="fap-name"></div>
+        <div class="food-add-panel-row">
+          <span style="font-size:.8rem;color:var(--muted);font-weight:700">인분</span>
+          <div class="serving-ctrl">
+            <button class="serving-btn" onclick="changeServing(-0.5)">−</button>
+            <span id="serving-display">1</span>
+            <button class="serving-btn" onclick="changeServing(0.5)">+</button>
           </div>
-          <div class="meal-btns" id="meal-btns"></div>
-          <button class="fap-confirm" id="fap-confirm">+ 추가</button>
-          <button class="fap-cancel" onclick="cancelFoodAdd()">취소</button>
+          <span class="fap-kcal" id="fap-kcal">0 kcal</span>
         </div>
-        <!-- 직접 입력 -->
-        <div class="diet-label" style="margin-top:4px">직접 입력</div>
-        <div class="food-manual-row">
-          <input type="text" id="food-name-input" class="food-manual-input" placeholder="음식 이름">
-          <input type="number" id="food-kcal-input" class="food-kcal-input" placeholder="kcal" min="1" max="9999">
-          <select id="food-meal-input" class="food-meal-select">
-            <option value="breakfast">아침</option>
-            <option value="lunch" selected>점심</option>
-            <option value="dinner">저녁</option>
-            <option value="snack">간식</option>
-          </select>
-          <button class="food-add-btn" onclick="addFoodItem()">추가</button>
-        </div>
-        <!-- 한끼별 식사 로그 -->
-        <div id="food-log-list" style="margin-top:12px"></div>
-        <div id="food-total-row" style="display:none" class="food-total-row">
-          <span>오늘 총 섭취</span>
-          <span id="food-total-kcal" class="food-total-val">0 kcal</span>
-        </div>
+        <div class="meal-btns" id="meal-btns"></div>
+        <button class="fap-confirm" id="fap-confirm">+ 추가</button>
+        <button class="fap-cancel" onclick="cancelFoodAdd()">취소</button>
       </div>
-      <!-- 칼로리 밸런스 -->
-      <div class="card" id="diet-balance-card">
-        <div id="diet-balance-content">
-          <div class="diet-hint">음식을 추가하면 밸런스가 계산됩니다</div>
-        </div>
+      <div class="diet-label" style="margin-top:4px">직접 입력</div>
+      <div class="food-manual-row">
+        <input type="text" id="food-name-input" class="food-manual-input" placeholder="음식 이름">
+        <input type="number" id="food-kcal-input" class="food-kcal-input" placeholder="kcal" min="1" max="9999">
+        <select id="food-meal-input" class="food-meal-select">
+          <option value="breakfast">아침</option>
+          <option value="lunch" selected>점심</option>
+          <option value="dinner">저녁</option>
+          <option value="snack">간식</option>
+        </select>
+        <button class="food-add-btn" onclick="addFoodItem()">추가</button>
+      </div>
+      <div id="food-log-list" style="margin-top:12px"></div>
+      <div id="food-total-row" style="display:none" class="food-total-row">
+        <span>오늘 총 섭취</span>
+        <span id="food-total-kcal" class="food-total-val">0 kcal</span>
       </div>
     </div>
-
-    <!-- 서브탭 2: 식단 추천 -->
-    <div class="diet-subtab" id="diet-subtab-recommend">
-      <div class="card" id="diet-recommend-card">
-        <div class="rec-goal-tabs" id="rec-goal-tabs">
-          <button class="rec-goal-btn active" data-goal="balance" onclick="setRecGoal('balance')">⚖️ 밸런스</button>
-          <button class="rec-goal-btn" data-goal="bulk"    onclick="setRecGoal('bulk')">💪 벌크업</button>
-          <button class="rec-goal-btn" data-goal="cut"     onclick="setRecGoal('cut')">🔥 체지방감소</button>
-        </div>
-        <div class="rec-filter-section">
-          <div class="rec-filter-label">음식 문화</div>
-          <div class="rec-filter-row" id="rec-culture-row"></div>
-          <div class="rec-filter-label">음식 유형</div>
-          <div class="rec-filter-row" id="rec-type-row"></div>
-          <div class="rec-filter-label">식이 성향</div>
-          <div class="rec-filter-row" id="rec-diet-row"></div>
-        </div>
-        <div class="rec-grid" id="rec-list"></div>
+    <!-- 칼로리 밸런스 -->
+    <div class="card" id="diet-balance-card">
+      <div id="diet-balance-content">
+        <div class="diet-hint">음식을 추가하면 밸런스가 계산됩니다</div>
       </div>
+    </div>
+  </section>
+
+  <!-- ── 식단 추천 탭 ── -->
+  <section class="tab-content" id="tab-recommend">
+    <div class="card" id="diet-recommend-card">
+      <div class="rec-goal-tabs" id="rec-goal-tabs">
+        <button class="rec-goal-btn active" data-goal="balance" onclick="setRecGoal('balance')">⚖️ 밸런스</button>
+        <button class="rec-goal-btn" data-goal="bulk"    onclick="setRecGoal('bulk')">💪 벌크업</button>
+        <button class="rec-goal-btn" data-goal="cut"     onclick="setRecGoal('cut')">🔥 체지방감소</button>
+      </div>
+      <div class="rec-filter-section">
+        <div class="rec-filter-label">음식 문화</div>
+        <div class="rec-filter-row" id="rec-culture-row"></div>
+        <div class="rec-filter-label">음식 유형</div>
+        <div class="rec-filter-row" id="rec-type-row"></div>
+        <div class="rec-filter-label">식이 성향</div>
+        <div class="rec-filter-row" id="rec-diet-row"></div>
+      </div>
+      <div class="rec-grid" id="rec-list"></div>
     </div>
   </section>
 
@@ -2155,7 +2139,8 @@ function init() {
       if (btn.dataset.tab === 'stats') renderStats();
       if (btn.dataset.tab === 'guide') renderGuideList();
       if (btn.dataset.tab === 'routine') initRoutineSelectors();
-      if (btn.dataset.tab === 'diet') { loadFoodLog().then(() => { initFoodBrowser(); renderFoodTab(); if (_dietSubtab === 'recommend') { initRecFilters(); renderRecList(); } }); }
+      if (btn.dataset.tab === 'diet') { loadFoodLog().then(() => { initFoodBrowser(); renderFoodTab(); }); }
+      if (btn.dataset.tab === 'recommend') { initRecFilters(); renderRecList(); }
     });
   });
 
@@ -3868,14 +3853,6 @@ const DIET_RECS = [
 ];
 
 let _recGoal = 'balance', _recCulture = '', _recType = '', _recDiet = '';
-let _dietSubtab = 'calories';
-
-function switchDietSubtab(tab) {
-  _dietSubtab = tab;
-  document.querySelectorAll('.diet-sub-btn').forEach(b => b.classList.toggle('active', b.dataset.subtab === tab));
-  document.querySelectorAll('.diet-subtab').forEach(el => el.classList.toggle('active', el.id === 'diet-subtab-' + tab));
-  if (tab === 'recommend') { initRecFilters(); renderRecList(); }
-}
 
 function setRecGoal(goal) {
   _recGoal = goal;
