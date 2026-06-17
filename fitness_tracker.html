@@ -1583,8 +1583,8 @@ const ACTIVITIES = {
   running:  { name: '달리기', icon: '🏃', distFactor: 1.036, met: 9 },
   walking:  { name: '걷기',   icon: '🚶', distFactor: 0.55,  met: 3.5 },
   cycling:  { name: '자전거', icon: '🚴', distFactor: 0.45,  met: 8 },
-  swimming:     { name: '수영',       icon: '🏊', distFactor: 8.5,  met: 8 },
-  stairmaster:  { name: '천국의 계단', icon: '🪜', distFactor: 0.9,  met: 10 },
+  swimming:     { name: '수영',       icon: '🏊', distFactor: 8.5,  met: 6 },
+  stairmaster:  { name: '천국의 계단', icon: '🪜', distFactor: 0.9,  met: 9 },
 };
 
 const EXERCISES = {
@@ -1773,7 +1773,7 @@ function speedMET(activity, speedKmh) {
       return Math.max(3, 0.5 * speedKmh - 0.5);
     case 'swimming':
       // Compendium 수영: 1.5km/h≈6, 2km/h≈7.5, 2.5km/h≈9 → MET ≈ 3×v+1.5
-      return Math.max(4, 3 * speedKmh + 1.5);
+      return Math.max(3.5, 3 * speedKmh + 1.5);
     case 'stairmaster':
       // km 환산 불명확 → MET 고정
       return ACTIVITIES['stairmaster'].met;
@@ -3598,9 +3598,9 @@ const FOOD_DB = {
       {name:'충무김밥',kcal:280,icon:'🍙',prot:8,carb:55,fat:4,sodium:600},
     ]},
     { group:'찌개', icon:'🍲', items:[
-      {name:'된장찌개',kcal:250,icon:'🍲',prot:15,carb:20,fat:8,sodium:1800},
-      {name:'김치찌개',kcal:300,icon:'🍲',prot:18,carb:18,fat:12,sodium:2200},
-      {name:'순두부찌개',kcal:280,icon:'🥣',prot:18,carb:15,fat:12,sodium:1500},
+      {name:'된장찌개',kcal:200,icon:'🍲',prot:12,carb:15,fat:7,sodium:1800},
+      {name:'김치찌개',kcal:250,icon:'🍲',prot:15,carb:16,fat:10,sodium:2000},
+      {name:'순두부찌개',kcal:260,icon:'🥣',prot:18,carb:14,fat:11,sodium:1500},
       {name:'부대찌개',kcal:520,icon:'🍲',prot:28,carb:45,fat:22,sodium:2500},
       {name:'청국장찌개',kcal:260,icon:'🫘',prot:16,carb:18,fat:10,sodium:1600},
       {name:'동태찌개',kcal:280,icon:'🍲',prot:22,carb:15,fat:10,sodium:1800},
@@ -3608,7 +3608,7 @@ const FOOD_DB = {
     ]},
     { group:'국·탕', icon:'🫕', items:[
       {name:'갈비탕',kcal:450,icon:'🍖',prot:35,carb:20,fat:20,sodium:1500},
-      {name:'삼계탕',kcal:600,icon:'🍗',prot:45,carb:35,fat:25,sodium:900},
+      {name:'삼계탕',kcal:850,icon:'🍗',prot:58,carb:42,fat:38,sodium:1200},
       {name:'감자탕',kcal:480,icon:'🍖',prot:35,carb:35,fat:20,sodium:1800},
       {name:'해장국',kcal:400,icon:'🍜',prot:25,carb:25,fat:18,sodium:1800},
       {name:'설렁탕',kcal:400,icon:'🥣',prot:32,carb:22,fat:16,sodium:1400},
@@ -3627,7 +3627,7 @@ const FOOD_DB = {
     { group:'구이·볶음', icon:'🥩', items:[
       {name:'불고기',kcal:400,icon:'🥩',prot:30,carb:20,fat:18,sodium:800},
       {name:'제육볶음',kcal:500,icon:'🥘',prot:35,carb:25,fat:25,sodium:1200},
-      {name:'삼겹살',kcal:600,icon:'🥓',prot:30,carb:2,fat:52,sodium:700},
+      {name:'삼겹살',kcal:600,icon:'🥓',prot:28,carb:0,fat:54,sodium:700},
       {name:'곱창볶음',kcal:420,icon:'🥘',prot:28,carb:25,fat:22,sodium:1100},
       {name:'오징어볶음',kcal:320,icon:'🦑',prot:25,carb:28,fat:10,sodium:1400},
       {name:'낙지볶음',kcal:280,icon:'🦑',prot:25,carb:22,fat:8,sodium:1200},
@@ -3638,9 +3638,8 @@ const FOOD_DB = {
       {name:'닭갈비',kcal:480,icon:'🍗',prot:38,carb:30,fat:20,sodium:1300},
       {name:'닭도리탕',kcal:480,icon:'🍗',prot:38,carb:30,fat:20,sodium:1300},
       {name:'닭볶음탕',kcal:520,icon:'🍗',prot:40,carb:32,fat:22,sodium:1400},
-      {name:'치킨(후라이드)',kcal:250,icon:'🍗',prot:22,carb:12,fat:14,sodium:600},
-      {name:'치킨(양념)',kcal:290,icon:'🍗',prot:20,carb:22,fat:14,sodium:800},
-      {name:'삼계탕',kcal:600,icon:'🍗',prot:45,carb:35,fat:25,sodium:900},
+      {name:'치킨(후라이드)',kcal:220,icon:'🍗',prot:18,carb:8,fat:13,sodium:550},
+      {name:'치킨(양념)',kcal:250,icon:'🍗',prot:16,carb:18,fat:12,sodium:750},
     ]},
     { group:'보쌈·수육', icon:'🐷', items:[
       {name:'보쌈',kcal:500,icon:'🥩',prot:40,carb:15,fat:28,sodium:900},
@@ -3810,11 +3809,11 @@ const FOOD_DB = {
   ],
   '분식': [
     { group:'떡볶이', icon:'🌶️', items:[
-      {name:'떡볶이',kcal:400,icon:'🌶️',prot:8,carb:80,fat:5,sodium:1200},
-      {name:'엽기떡볶이',kcal:480,icon:'🌶️',prot:10,carb:90,fat:8,sodium:1500},
-      {name:'치즈떡볶이',kcal:520,icon:'🧀',prot:15,carb:85,fat:15,sodium:1400},
-      {name:'마약떡볶이',kcal:420,icon:'🌶️',prot:8,carb:85,fat:5,sodium:1300},
-      {name:'궁중떡볶이',kcal:450,icon:'🥘',prot:12,carb:80,fat:10,sodium:1100},
+      {name:'떡볶이',kcal:300,icon:'🌶️',prot:7,carb:58,fat:4,sodium:950},
+      {name:'엽기떡볶이',kcal:380,icon:'🌶️',prot:9,carb:72,fat:6,sodium:1300},
+      {name:'치즈떡볶이',kcal:430,icon:'🧀',prot:14,carb:68,fat:13,sodium:1200},
+      {name:'마약떡볶이',kcal:320,icon:'🌶️',prot:7,carb:62,fat:4,sodium:1050},
+      {name:'궁중떡볶이',kcal:380,icon:'🥘',prot:11,carb:65,fat:9,sodium:900},
     ]},
     { group:'라면', icon:'🍜', items:[
       {name:'라면',kcal:500,icon:'🍜',prot:12,carb:75,fat:18,sodium:2000},
@@ -4004,7 +4003,7 @@ const FOOD_DB = {
   ],
   '주류': [
     { group:'소주', icon:'🍶', items:[
-      {name:'소주(1병)',kcal:400,icon:'🍶',prot:0,carb:18,fat:0,sodium:0},
+      {name:'소주(1병)',kcal:350,icon:'🍶',prot:0,carb:15,fat:0,sodium:0},
       {name:'소주(1잔)',kcal:65,icon:'🍶',prot:0,carb:3,fat:0,sodium:0},
       {name:'소맥(1잔)',kcal:120,icon:'🍺',prot:1,carb:10,fat:0,sodium:10},
     ]},
@@ -4024,8 +4023,8 @@ const FOOD_DB = {
       {name:'산그리아(200ml)',kcal:160,icon:'🍷',prot:0,carb:20,fat:0,sodium:8},
     ]},
     { group:'막걸리·전통주', icon:'🫙', items:[
-      {name:'막걸리(1잔300ml)',kcal:200,icon:'🍶',prot:3,carb:30,fat:0,sodium:10},
-      {name:'막걸리(1병750ml)',kcal:500,icon:'🍶',prot:7,carb:75,fat:0,sodium:25},
+      {name:'막걸리(1잔300ml)',kcal:150,icon:'🍶',prot:2,carb:22,fat:0,sodium:10},
+      {name:'막걸리(1병750ml)',kcal:380,icon:'🍶',prot:5,carb:55,fat:0,sodium:25},
       {name:'동동주(1잔)',kcal:180,icon:'🍶',prot:2,carb:28,fat:0,sodium:8},
       {name:'사케/청주(1잔)',kcal:200,icon:'🍶',prot:0,carb:9,fat:0,sodium:5},
       {name:'매실주(1잔)',kcal:160,icon:'🍵',prot:0,carb:20,fat:0,sodium:3},
