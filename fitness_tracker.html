@@ -783,6 +783,11 @@
     .food-log-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: 2px 6px; border-radius: 6px; }
     .food-log-del:hover { background: var(--bg); color: var(--danger); }
     .food-total-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0 0; border-top: 2px solid var(--border); margin-top: 4px; font-weight: 700; font-size: 0.9rem; }
+    .food-search-wrap { margin-bottom:8px; }
+    .food-search-input { width:100%; box-sizing:border-box; border:1.5px solid var(--border); border-radius:10px; padding:8px 12px; font-size:0.83rem; background:var(--bg); color:var(--fg); outline:none; }
+    .food-search-input:focus { border-color:#C8A200; box-shadow:0 0 0 3px rgba(254,229,0,.2); }
+    .food-group-label { font-size:0.72rem; font-weight:800; color:var(--muted); letter-spacing:.04em; padding:8px 0 4px; }
+    .food-group-label:first-child { padding-top:2px; }
     .food-total-nutr { display:flex; gap:6px; flex-wrap:wrap; padding:6px 0 2px; }
     .food-nutr-chip { font-size:0.75rem; font-weight:700; padding:3px 10px; border-radius:20px; }
     .food-nutr-chip.nutr-p { background:rgba(59,130,246,.15); color:#1d4ed8; }
@@ -1467,7 +1472,10 @@
     <div class="card" style="margin-bottom:12px">
       <h2 style="font-size:1rem;font-weight:800;margin-bottom:12px">🍽️ 오늘 먹은 음식</h2>
       <div class="cuisine-tabs" id="cuisine-tabs"></div>
-      <div class="food-grid" id="food-grid"></div>
+      <div class="food-search-wrap">
+        <input class="food-search-input" id="food-search-input" type="text" placeholder="🔍 음식 검색..." oninput="onFoodSearch(this.value)">
+      </div>
+      <div id="food-grid"></div>
       <div class="food-add-panel" id="food-add-panel" style="display:none">
         <div class="food-add-panel-name" id="fap-name"></div>
         <div class="food-add-panel-row">
@@ -3451,7 +3459,596 @@ function renderMonthRoutine(weekDays) {
 
 // ── 음식/칼로리 밸런스 ─────────────────────────────────────────
 const FOOD_DB = {
-  '밑반찬': [
+  '밑반찬': [ // 그룹 구조: { group, icon, items:[{name,kcal,icon,prot,carb,fat,sodium}] }
+    { group:'김치류', icon:'🌶️', items:[
+      {name:'김치(100g)',kcal:18,icon:'🌶️',prot:1,carb:3,fat:0,sodium:500},
+      {name:'깍두기(100g)',kcal:22,icon:'🌶️',prot:1,carb:4,fat:0,sodium:550},
+      {name:'오이소박이',kcal:25,icon:'🥒',prot:1,carb:4,fat:0,sodium:600},
+      {name:'백김치',kcal:18,icon:'🥬',prot:1,carb:3,fat:0,sodium:380},
+      {name:'총각김치',kcal:20,icon:'🌶️',prot:1,carb:4,fat:0,sodium:520},
+      {name:'열무김치',kcal:15,icon:'🌿',prot:1,carb:3,fat:0,sodium:450},
+      {name:'파김치',kcal:22,icon:'🌱',prot:1,carb:4,fat:0,sodium:480},
+      {name:'갓김치',kcal:20,icon:'🥬',prot:1,carb:3,fat:0,sodium:500},
+      {name:'나박김치',kcal:15,icon:'🫙',prot:1,carb:3,fat:0,sodium:400},
+    ]},
+    { group:'나물류', icon:'🌿', items:[
+      {name:'시금치나물',kcal:30,icon:'🥬',prot:2,carb:4,fat:1,sodium:300},
+      {name:'콩나물무침',kcal:35,icon:'🌱',prot:3,carb:5,fat:1,sodium:350},
+      {name:'도라지무침',kcal:40,icon:'🥗',prot:1,carb:8,fat:1,sodium:300},
+      {name:'고사리나물',kcal:45,icon:'🌿',prot:2,carb:7,fat:1,sodium:350},
+      {name:'취나물',kcal:30,icon:'🌿',prot:2,carb:4,fat:1,sodium:280},
+      {name:'무생채',kcal:25,icon:'🥗',prot:1,carb:5,fat:0,sodium:400},
+      {name:'무나물',kcal:35,icon:'🥗',prot:1,carb:7,fat:1,sodium:300},
+      {name:'숙주나물',kcal:28,icon:'🌱',prot:3,carb:4,fat:0,sodium:300},
+      {name:'시래기나물',kcal:40,icon:'🥬',prot:2,carb:7,fat:1,sodium:320},
+      {name:'브로콜리무침',kcal:45,icon:'🥦',prot:3,carb:7,fat:1,sodium:250},
+      {name:'깻잎무침',kcal:35,icon:'🌿',prot:2,carb:5,fat:1,sodium:400},
+      {name:'들깨무침(호박)',kcal:60,icon:'🥗',prot:2,carb:8,fat:2,sodium:300},
+    ]},
+    { group:'젓갈류', icon:'🫙', items:[
+      {name:'오징어젓갈',kcal:80,icon:'🦑',prot:10,carb:5,fat:2,sodium:1200},
+      {name:'낙지젓갈',kcal:70,icon:'🐙',prot:9,carb:5,fat:1,sodium:1300},
+      {name:'명란젓',kcal:90,icon:'🐟',prot:12,carb:2,fat:4,sodium:1500},
+      {name:'창란젓',kcal:75,icon:'🐟',prot:10,carb:3,fat:2,sodium:1400},
+      {name:'새우젓',kcal:40,icon:'🦐',prot:6,carb:2,fat:1,sodium:2000},
+    ]},
+    { group:'조림류', icon:'🍳', items:[
+      {name:'감자조림',kcal:120,icon:'🥔',prot:2,carb:25,fat:2,sodium:500},
+      {name:'연근조림',kcal:110,icon:'🥗',prot:2,carb:24,fat:1,sodium:450},
+      {name:'두부조림',kcal:120,icon:'⬜',prot:10,carb:6,fat:6,sodium:550},
+      {name:'갈치조림',kcal:180,icon:'🐟',prot:20,carb:12,fat:6,sodium:800},
+      {name:'고등어조림',kcal:200,icon:'🐟',prot:22,carb:10,fat:8,sodium:900},
+    ]},
+    { group:'볶음류', icon:'🥘', items:[
+      {name:'멸치볶음',kcal:100,icon:'🐟',prot:12,carb:5,fat:4,sodium:600},
+      {name:'마른오징어볶음',kcal:130,icon:'🦑',prot:15,carb:8,fat:4,sodium:700},
+      {name:'어묵볶음',kcal:120,icon:'🐟',prot:7,carb:14,fat:4,sodium:700},
+      {name:'햄볶음',kcal:150,icon:'🥓',prot:8,carb:5,fat:12,sodium:600},
+      {name:'진미채볶음',kcal:110,icon:'🦑',prot:12,carb:8,fat:3,sodium:650},
+    ]},
+    { group:'계란반찬', icon:'🥚', items:[
+      {name:'계란말이',kcal:150,icon:'🥚',prot:10,carb:3,fat:11,sodium:350},
+      {name:'계란찜',kcal:100,icon:'🥚',prot:8,carb:2,fat:6,sodium:400},
+      {name:'삶은계란',kcal:70,icon:'🥚',prot:6,carb:0,fat:5,sodium:70},
+      {name:'스크램블에그',kcal:120,icon:'🍳',prot:8,carb:1,fat:9,sodium:200},
+    ]},
+    { group:'기타반찬', icon:'🍽️', items:[
+      {name:'잡채(소)',kcal:180,icon:'🥗',prot:5,carb:28,fat:6,sodium:350},
+      {name:'김구이',kcal:25,icon:'🌿',prot:2,carb:2,fat:1,sodium:150},
+      {name:'두부김치',kcal:180,icon:'🌶️',prot:12,carb:10,fat:8,sodium:800},
+      {name:'깍두기볶음밥',kcal:350,icon:'🍳',prot:8,carb:60,fat:8,sodium:900},
+      {name:'된장(1큰술)',kcal:30,icon:'🫙',prot:2,carb:4,fat:1,sodium:500},
+      {name:'고추장(1큰술)',kcal:40,icon:'🌶️',prot:1,carb:8,fat:0,sodium:350},
+    ]},
+  ],
+  '한식': [
+    { group:'밥·비빔밥', icon:'🍚', items:[
+      {name:'공기밥',kcal:300,icon:'🍚',prot:5,carb:65,fat:1,sodium:5},
+      {name:'잡곡밥',kcal:280,icon:'🍚',prot:6,carb:60,fat:1,sodium:5},
+      {name:'비빔밥',kcal:550,icon:'🍛',prot:20,carb:85,fat:15,sodium:900},
+      {name:'쌈밥정식',kcal:480,icon:'🥬',prot:20,carb:72,fat:12,sodium:800},
+      {name:'김치볶음밥',kcal:520,icon:'🍳',prot:12,carb:88,fat:14,sodium:1200},
+      {name:'제육볶음밥',kcal:580,icon:'🍳',prot:20,carb:85,fat:18,sodium:1300},
+    ]},
+    { group:'김밥', icon:'🍱', items:[
+      {name:'김밥',kcal:350,icon:'🍱',prot:12,carb:60,fat:8,sodium:800},
+      {name:'참치김밥',kcal:380,icon:'🍱',prot:18,carb:58,fat:10,sodium:900},
+      {name:'치즈김밥',kcal:400,icon:'🍱',prot:15,carb:60,fat:14,sodium:950},
+      {name:'야채김밥',kcal:300,icon:'🍱',prot:8,carb:58,fat:5,sodium:700},
+      {name:'소고기김밥',kcal:420,icon:'🍱',prot:18,carb:60,fat:16,sodium:900},
+      {name:'충무김밥',kcal:280,icon:'🍙',prot:8,carb:55,fat:4,sodium:600},
+    ]},
+    { group:'찌개', icon:'🍲', items:[
+      {name:'된장찌개',kcal:250,icon:'🍲',prot:15,carb:20,fat:8,sodium:1800},
+      {name:'김치찌개',kcal:300,icon:'🍲',prot:18,carb:18,fat:12,sodium:2200},
+      {name:'순두부찌개',kcal:280,icon:'🥣',prot:18,carb:15,fat:12,sodium:1500},
+      {name:'부대찌개',kcal:520,icon:'🍲',prot:28,carb:45,fat:22,sodium:2500},
+      {name:'청국장찌개',kcal:260,icon:'🫘',prot:16,carb:18,fat:10,sodium:1600},
+      {name:'동태찌개',kcal:280,icon:'🍲',prot:22,carb:15,fat:10,sodium:1800},
+      {name:'꽃게탕',kcal:300,icon:'🦀',prot:25,carb:15,fat:12,sodium:1800},
+    ]},
+    { group:'국·탕', icon:'🫕', items:[
+      {name:'갈비탕',kcal:450,icon:'🍖',prot:35,carb:20,fat:20,sodium:1500},
+      {name:'삼계탕',kcal:600,icon:'🍗',prot:45,carb:35,fat:25,sodium:900},
+      {name:'감자탕',kcal:480,icon:'🍖',prot:35,carb:35,fat:20,sodium:1800},
+      {name:'해장국',kcal:400,icon:'🍜',prot:25,carb:25,fat:18,sodium:1800},
+      {name:'설렁탕',kcal:400,icon:'🥣',prot:32,carb:22,fat:16,sodium:1400},
+      {name:'꼬리곰탕',kcal:450,icon:'🥣',prot:38,carb:18,fat:20,sodium:1200},
+      {name:'육개장+밥',kcal:580,icon:'🍲',prot:30,carb:82,fat:16,sodium:1800},
+      {name:'된장국+밥',kcal:380,icon:'🍲',prot:14,carb:68,fat:6,sodium:1400},
+      {name:'떡국',kcal:450,icon:'🥣',prot:15,carb:80,fat:10,sodium:1200},
+      {name:'만두국',kcal:480,icon:'🥣',prot:18,carb:78,fat:12,sodium:1300},
+    ]},
+    { group:'국밥', icon:'🥣', items:[
+      {name:'순대국밥',kcal:520,icon:'🍲',prot:28,carb:55,fat:18,sodium:1800},
+      {name:'콩나물국밥',kcal:380,icon:'🍲',prot:15,carb:65,fat:6,sodium:1500},
+      {name:'돼지국밥',kcal:500,icon:'🥣',prot:30,carb:52,fat:20,sodium:1700},
+      {name:'내장탕',kcal:350,icon:'🥣',prot:28,carb:18,fat:16,sodium:1800},
+    ]},
+    { group:'구이·볶음', icon:'🥩', items:[
+      {name:'불고기',kcal:400,icon:'🥩',prot:30,carb:20,fat:18,sodium:800},
+      {name:'제육볶음',kcal:500,icon:'🥘',prot:35,carb:25,fat:25,sodium:1200},
+      {name:'삼겹살',kcal:600,icon:'🥓',prot:30,carb:2,fat:52,sodium:700},
+      {name:'곱창볶음',kcal:420,icon:'🥘',prot:28,carb:25,fat:22,sodium:1100},
+      {name:'오징어볶음',kcal:320,icon:'🦑',prot:25,carb:28,fat:10,sodium:1400},
+      {name:'낙지볶음',kcal:280,icon:'🦑',prot:25,carb:22,fat:8,sodium:1200},
+      {name:'고등어구이',kcal:380,icon:'🐟',prot:30,carb:5,fat:22,sodium:800},
+      {name:'꽁치구이',kcal:300,icon:'🐟',prot:28,carb:2,fat:18,sodium:600},
+    ]},
+    { group:'닭요리', icon:'🍗', items:[
+      {name:'닭갈비',kcal:480,icon:'🍗',prot:38,carb:30,fat:20,sodium:1300},
+      {name:'닭도리탕',kcal:480,icon:'🍗',prot:38,carb:30,fat:20,sodium:1300},
+      {name:'닭볶음탕',kcal:520,icon:'🍗',prot:40,carb:32,fat:22,sodium:1400},
+      {name:'치킨(후라이드)',kcal:250,icon:'🍗',prot:22,carb:12,fat:14,sodium:600},
+      {name:'치킨(양념)',kcal:290,icon:'🍗',prot:20,carb:22,fat:14,sodium:800},
+      {name:'삼계탕',kcal:600,icon:'🍗',prot:45,carb:35,fat:25,sodium:900},
+    ]},
+    { group:'보쌈·수육', icon:'🐷', items:[
+      {name:'보쌈',kcal:500,icon:'🥩',prot:40,carb:15,fat:28,sodium:900},
+      {name:'족발',kcal:520,icon:'🦶',prot:45,carb:10,fat:32,sodium:1000},
+      {name:'수육',kcal:450,icon:'🥩',prot:38,carb:5,fat:30,sodium:700},
+    ]},
+    { group:'찜·조림', icon:'🫕', items:[
+      {name:'갈비찜',kcal:580,icon:'🍖',prot:42,carb:28,fat:28,sodium:1400},
+      {name:'닭찜',kcal:450,icon:'🍗',prot:38,carb:22,fat:20,sodium:1200},
+      {name:'아구찜',kcal:320,icon:'🐟',prot:35,carb:18,fat:12,sodium:1500},
+      {name:'조기찜',kcal:280,icon:'🐟',prot:30,carb:5,fat:14,sodium:800},
+    ]},
+    { group:'돈까스', icon:'🍽️', items:[
+      {name:'돈까스(한식)',kcal:620,icon:'🍽️',prot:30,carb:60,fat:28,sodium:800},
+      {name:'치즈돈까스',kcal:720,icon:'🧀',prot:33,carb:62,fat:38,sodium:950},
+      {name:'왕돈까스',kcal:850,icon:'🍽️',prot:42,carb:78,fat:38,sodium:1000},
+      {name:'등심돈까스',kcal:680,icon:'🥩',prot:35,carb:60,fat:32,sodium:800},
+      {name:'안심돈까스',kcal:580,icon:'🥩',prot:32,carb:58,fat:22,sodium:750},
+      {name:'새우까스',kcal:520,icon:'🦐',prot:22,carb:55,fat:22,sodium:700},
+      {name:'생선까스',kcal:480,icon:'🐟',prot:20,carb:52,fat:20,sodium:650},
+      {name:'함박스테이크',kcal:580,icon:'🍖',prot:32,carb:35,fat:32,sodium:900},
+    ]},
+    { group:'전·부침', icon:'🥞', items:[
+      {name:'파전',kcal:420,icon:'🥞',prot:12,carb:55,fat:18,sodium:800},
+      {name:'빈대떡',kcal:380,icon:'🥞',prot:15,carb:40,fat:18,sodium:700},
+      {name:'감자전',kcal:350,icon:'🥞',prot:6,carb:55,fat:12,sodium:400},
+      {name:'김치전',kcal:380,icon:'🥞',prot:10,carb:52,fat:16,sodium:900},
+      {name:'해물파전',kcal:480,icon:'🥞',prot:18,carb:58,fat:20,sodium:1000},
+    ]},
+    { group:'면류', icon:'🍜', items:[
+      {name:'냉면',kcal:500,icon:'🍜',prot:15,carb:90,fat:8,sodium:2000},
+      {name:'쫄면',kcal:450,icon:'🍜',prot:12,carb:82,fat:8,sodium:1500},
+      {name:'콩국수',kcal:420,icon:'🍜',prot:18,carb:65,fat:10,sodium:600},
+      {name:'칼국수',kcal:480,icon:'🍜',prot:15,carb:88,fat:8,sodium:1500},
+      {name:'수제비',kcal:450,icon:'🥣',prot:12,carb:82,fat:8,sodium:1400},
+      {name:'잡채',kcal:350,icon:'🥗',prot:12,carb:55,fat:12,sodium:700},
+    ]},
+  ],
+  '중식': [
+    { group:'면류', icon:'🍜', items:[
+      {name:'짜장면',kcal:700,icon:'🍜',prot:20,carb:110,fat:20,sodium:1500},
+      {name:'짬뽕',kcal:600,icon:'🍜',prot:25,carb:85,fat:18,sodium:2500},
+      {name:'짬짜면',kcal:650,icon:'🍜',prot:22,carb:98,fat:19,sodium:2000},
+      {name:'냉짜장',kcal:680,icon:'🍜',prot:18,carb:108,fat:18,sodium:1200},
+      {name:'울면',kcal:550,icon:'🍜',prot:20,carb:80,fat:18,sodium:2200},
+    ]},
+    { group:'밥·덮밥', icon:'🍳', items:[
+      {name:'볶음밥',kcal:600,icon:'🍳',prot:18,carb:90,fat:20,sodium:1200},
+      {name:'잡탕밥',kcal:620,icon:'🍳',prot:28,carb:88,fat:22,sodium:1500},
+    ]},
+    { group:'고기요리', icon:'🥩', items:[
+      {name:'탕수육',kcal:600,icon:'🍖',prot:30,carb:55,fat:28,sodium:800},
+      {name:'깐풍기',kcal:550,icon:'🍗',prot:35,carb:40,fat:25,sodium:900},
+      {name:'유린기',kcal:520,icon:'🍗',prot:38,carb:30,fat:25,sodium:900},
+      {name:'꿔바로우',kcal:580,icon:'🍖',prot:28,carb:60,fat:25,sodium:800},
+      {name:'동파육',kcal:680,icon:'🥩',prot:35,carb:20,fat:48,sodium:1200},
+      {name:'오향장육',kcal:350,icon:'🥩',prot:32,carb:8,fat:20,sodium:900},
+      {name:'양꼬치(5개)',kcal:400,icon:'🍢',prot:35,carb:5,fat:28,sodium:700},
+    ]},
+    { group:'해산물', icon:'🦐', items:[
+      {name:'깐소새우',kcal:380,icon:'🦐',prot:22,carb:35,fat:18,sodium:900},
+      {name:'팔보채',kcal:350,icon:'🦐',prot:28,carb:25,fat:15,sodium:900},
+      {name:'새우볶음',kcal:320,icon:'🦐',prot:25,carb:18,fat:15,sodium:900},
+    ]},
+    { group:'만두·딤섬', icon:'🥟', items:[
+      {name:'군만두(5개)',kcal:300,icon:'🥟',prot:12,carb:38,fat:12,sodium:600},
+      {name:'물만두(5개)',kcal:250,icon:'🥟',prot:12,carb:35,fat:8,sodium:550},
+      {name:'딤섬(4개)',kcal:280,icon:'🥟',prot:10,carb:35,fat:10,sodium:550},
+    ]},
+    { group:'탕·냄비', icon:'🌶️', items:[
+      {name:'마라탕',kcal:650,icon:'🌶️',prot:30,carb:55,fat:35,sodium:2500},
+      {name:'마라샹궈',kcal:720,icon:'🌶️',prot:35,carb:40,fat:45,sodium:2800},
+      {name:'훠궈(1인분)',kcal:550,icon:'🫕',prot:32,carb:45,fat:28,sodium:2000},
+    ]},
+    { group:'기타', icon:'🥢', items:[
+      {name:'마파두부',kcal:400,icon:'🥘',prot:20,carb:30,fat:22,sodium:1200},
+    ]},
+  ],
+  '양식': [
+    { group:'파스타', icon:'🍝', items:[
+      {name:'파스타(토마토)',kcal:520,icon:'🍝',prot:18,carb:82,fat:12,sodium:700},
+      {name:'카르보나라',kcal:680,icon:'🍝',prot:22,carb:78,fat:30,sodium:800},
+      {name:'알리오올리오',kcal:580,icon:'🍝',prot:15,carb:80,fat:22,sodium:600},
+      {name:'봉골레파스타',kcal:520,icon:'🍝',prot:22,carb:78,fat:15,sodium:900},
+      {name:'미트볼파스타',kcal:620,icon:'🍝',prot:28,carb:82,fat:22,sodium:900},
+      {name:'시푸드파스타',kcal:560,icon:'🍝',prot:28,carb:80,fat:16,sodium:1000},
+    ]},
+    { group:'피자', icon:'🍕', items:[
+      {name:'피자(1조각)',kcal:280,icon:'🍕',prot:12,carb:30,fat:12,sodium:600},
+      {name:'피자(1판)',kcal:1680,icon:'🍕',prot:72,carb:180,fat:72,sodium:3600},
+      {name:'마르게리타(1조각)',kcal:250,icon:'🍕',prot:10,carb:28,fat:10,sodium:550},
+    ]},
+    { group:'버거', icon:'🍔', items:[
+      {name:'햄버거',kcal:550,icon:'🍔',prot:25,carb:50,fat:28,sodium:900},
+      {name:'치킨버거',kcal:500,icon:'🍔',prot:28,carb:48,fat:22,sodium:850},
+      {name:'더블버거',kcal:750,icon:'🍔',prot:40,carb:52,fat:42,sodium:1200},
+      {name:'베이컨버거',kcal:620,icon:'🍔',prot:30,carb:50,fat:35,sodium:1100},
+    ]},
+    { group:'샐러드', icon:'🥗', items:[
+      {name:'샐러드',kcal:150,icon:'🥗',prot:5,carb:20,fat:5,sodium:300},
+      {name:'시저샐러드',kcal:320,icon:'🥗',prot:18,carb:15,fat:22,sodium:700},
+      {name:'포케볼',kcal:480,icon:'🥗',prot:28,carb:58,fat:14,sodium:650},
+      {name:'그릭샐러드',kcal:250,icon:'🥗',prot:8,carb:18,fat:16,sodium:600},
+    ]},
+    { group:'스테이크·육류', icon:'🥩', items:[
+      {name:'스테이크',kcal:500,icon:'🥩',prot:45,carb:5,fat:32,sodium:500},
+      {name:'비프스튜',kcal:420,icon:'🥘',prot:32,carb:28,fat:20,sodium:900},
+      {name:'치킨로스트',kcal:480,icon:'🍗',prot:42,carb:20,fat:26,sodium:700},
+      {name:'램촙',kcal:480,icon:'🥩',prot:38,carb:2,fat:34,sodium:500},
+    ]},
+    { group:'수프', icon:'🥣', items:[
+      {name:'크림스프',kcal:250,icon:'🥣',prot:6,carb:22,fat:15,sodium:700},
+      {name:'클램차우더',kcal:320,icon:'🥣',prot:12,carb:28,fat:18,sodium:900},
+      {name:'프렌치어니언수프',kcal:280,icon:'🥣',prot:8,carb:30,fat:12,sodium:1000},
+      {name:'미네스트로네',kcal:180,icon:'🥣',prot:6,carb:28,fat:5,sodium:700},
+    ]},
+    { group:'기타', icon:'🍽️', items:[
+      {name:'샌드위치',kcal:400,icon:'🥪',prot:20,carb:45,fat:15,sodium:800},
+      {name:'리조또',kcal:500,icon:'🍚',prot:15,carb:70,fat:18,sodium:600},
+      {name:'뇨끼',kcal:480,icon:'🥘',prot:12,carb:72,fat:16,sodium:650},
+      {name:'그라탱',kcal:450,icon:'🧀',prot:18,carb:40,fat:24,sodium:750},
+      {name:'에그베네딕트',kcal:580,icon:'🍳',prot:28,carb:45,fat:30,sodium:950},
+      {name:'브런치세트',kcal:600,icon:'🍳',prot:25,carb:55,fat:30,sodium:900},
+    ]},
+  ],
+  '일식': [
+    { group:'초밥·회', icon:'🍣', items:[
+      {name:'초밥(8피스)',kcal:400,icon:'🍣',prot:22,carb:65,fat:5,sodium:900},
+      {name:'연어초밥(2피스)',kcal:150,icon:'🍣',prot:8,carb:22,fat:5,sodium:300},
+      {name:'참치초밥(2피스)',kcal:140,icon:'🍣',prot:10,carb:22,fat:2,sodium:280},
+      {name:'카이센동',kcal:620,icon:'🦞',prot:32,carb:85,fat:18,sodium:1100},
+    ]},
+    { group:'라멘', icon:'🍜', items:[
+      {name:'라멘',kcal:600,icon:'🍜',prot:25,carb:80,fat:22,sodium:2200},
+      {name:'쯔케멘',kcal:620,icon:'🍜',prot:28,carb:82,fat:20,sodium:2000},
+      {name:'마제소바',kcal:650,icon:'🍜',prot:25,carb:88,fat:22,sodium:1800},
+      {name:'미소라멘',kcal:580,icon:'🍜',prot:22,carb:78,fat:20,sodium:2100},
+      {name:'돈코츠라멘',kcal:650,icon:'🍜',prot:28,carb:82,fat:25,sodium:2300},
+    ]},
+    { group:'우동·소바', icon:'🥣', items:[
+      {name:'우동',kcal:400,icon:'🍜',prot:12,carb:70,fat:5,sodium:1800},
+      {name:'소바',kcal:350,icon:'🍜',prot:15,carb:65,fat:3,sodium:1200},
+      {name:'카레우동',kcal:520,icon:'🍜',prot:16,carb:85,fat:14,sodium:1800},
+    ]},
+    { group:'돈부리(덮밥)', icon:'🍛', items:[
+      {name:'가츠동',kcal:700,icon:'🍛',prot:35,carb:85,fat:22,sodium:1000},
+      {name:'오야코동',kcal:620,icon:'🍛',prot:30,carb:80,fat:18,sodium:900},
+      {name:'규동',kcal:600,icon:'🥩',prot:30,carb:80,fat:22,sodium:900},
+      {name:'텐동',kcal:700,icon:'🍚',prot:25,carb:95,fat:28,sodium:1000},
+      {name:'낫토덮밥',kcal:420,icon:'🍱',prot:20,carb:70,fat:8,sodium:600},
+      {name:'마구로동',kcal:520,icon:'🐟',prot:32,carb:80,fat:10,sodium:900},
+    ]},
+    { group:'돈까스·튀김', icon:'🍱', items:[
+      {name:'돈까스',kcal:650,icon:'🍱',prot:35,carb:60,fat:28,sodium:800},
+      {name:'에비후라이',kcal:380,icon:'🦐',prot:20,carb:38,fat:18,sodium:700},
+      {name:'텐푸라정식',kcal:650,icon:'🍤',prot:28,carb:85,fat:22,sodium:900},
+    ]},
+    { group:'분식·기타', icon:'🍙', items:[
+      {name:'오니기리',kcal:200,icon:'🍙',prot:5,carb:40,fat:2,sodium:400},
+      {name:'오코노미야키',kcal:450,icon:'🥞',prot:18,carb:55,fat:18,sodium:800},
+      {name:'야끼소바',kcal:520,icon:'🍜',prot:20,carb:78,fat:16,sodium:1200},
+      {name:'타코야키(6개)',kcal:320,icon:'🐙',prot:12,carb:40,fat:14,sodium:700},
+      {name:'미소국',kcal:50,icon:'🥣',prot:4,carb:5,fat:2,sodium:900},
+      {name:'스키야키',kcal:580,icon:'🍲',prot:35,carb:55,fat:22,sodium:1500},
+      {name:'이자카야세트',kcal:680,icon:'🍶',prot:32,carb:55,fat:32,sodium:1400},
+    ]},
+  ],
+  '분식': [
+    { group:'떡볶이', icon:'🌶️', items:[
+      {name:'떡볶이',kcal:400,icon:'🌶️',prot:8,carb:80,fat:5,sodium:1200},
+      {name:'엽기떡볶이',kcal:480,icon:'🌶️',prot:10,carb:90,fat:8,sodium:1500},
+      {name:'치즈떡볶이',kcal:520,icon:'🧀',prot:15,carb:85,fat:15,sodium:1400},
+      {name:'마약떡볶이',kcal:420,icon:'🌶️',prot:8,carb:85,fat:5,sodium:1300},
+      {name:'궁중떡볶이',kcal:450,icon:'🥘',prot:12,carb:80,fat:10,sodium:1100},
+    ]},
+    { group:'라면', icon:'🍜', items:[
+      {name:'라면',kcal:500,icon:'🍜',prot:12,carb:75,fat:18,sodium:2000},
+      {name:'컵라면',kcal:350,icon:'🍜',prot:8,carb:55,fat:12,sodium:1700},
+      {name:'짜파게티',kcal:520,icon:'🍜',prot:11,carb:82,fat:17,sodium:1400},
+      {name:'신라면',kcal:500,icon:'🍜',prot:11,carb:80,fat:16,sodium:1930},
+    ]},
+    { group:'순대·어묵', icon:'🍢', items:[
+      {name:'순대',kcal:350,icon:'🌭',prot:18,carb:35,fat:15,sodium:700},
+      {name:'어묵',kcal:150,icon:'🐟',prot:10,carb:18,fat:4,sodium:800},
+      {name:'꼬치어묵(3개)',kcal:180,icon:'🍢',prot:12,carb:22,fat:5,sodium:900},
+      {name:'오뎅국',kcal:120,icon:'🍲',prot:8,carb:12,fat:3,sodium:1200},
+    ]},
+    { group:'길거리간식', icon:'🌭', items:[
+      {name:'핫도그',kcal:300,icon:'🌭',prot:10,carb:32,fat:15,sodium:600},
+      {name:'소떡소떡',kcal:260,icon:'🌭',prot:8,carb:35,fat:10,sodium:700},
+      {name:'삼각김밥',kcal:200,icon:'🍙',prot:5,carb:38,fat:3,sodium:400},
+      {name:'치즈볼(5개)',kcal:300,icon:'🧀',prot:10,carb:28,fat:18,sodium:500},
+      {name:'포테이토(중)',kcal:350,icon:'🍟',prot:5,carb:50,fat:16,sodium:400},
+      {name:'붕어빵(2개)',kcal:200,icon:'🐟',prot:5,carb:38,fat:4,sodium:200},
+      {name:'호떡(1개)',kcal:230,icon:'🥞',prot:4,carb:42,fat:7,sodium:200},
+      {name:'계란빵(1개)',kcal:180,icon:'🥚',prot:8,carb:28,fat:5,sodium:250},
+      {name:'김말이(3개)',kcal:250,icon:'🍢',prot:6,carb:35,fat:10,sodium:500},
+      {name:'떡꼬치(3개)',kcal:220,icon:'🍢',prot:4,carb:45,fat:3,sodium:600},
+      {name:'쌀떡(100g)',kcal:230,icon:'🍡',prot:4,carb:52,fat:1,sodium:10},
+    ]},
+  ],
+  '간식': [
+    { group:'과일', icon:'🍎', items:[
+      {name:'바나나',kcal:100,icon:'🍌',prot:1,carb:23,fat:0,sodium:1},
+      {name:'사과',kcal:80,icon:'🍎',prot:0,carb:21,fat:0,sodium:1},
+      {name:'오렌지',kcal:65,icon:'🍊',prot:1,carb:16,fat:0,sodium:1},
+      {name:'포도(1송이)',kcal:90,icon:'🍇',prot:1,carb:23,fat:0,sodium:2},
+      {name:'고구마(중)',kcal:130,icon:'🍠',prot:2,carb:30,fat:0,sodium:10},
+      {name:'군고구마',kcal:140,icon:'🍠',prot:2,carb:32,fat:0,sodium:10},
+      {name:'찐옥수수',kcal:130,icon:'🌽',prot:4,carb:28,fat:2,sodium:10},
+      {name:'딸기(100g)',kcal:35,icon:'🍓',prot:1,carb:8,fat:0,sodium:1},
+      {name:'수박(1조각)',kcal:50,icon:'🍉',prot:1,carb:12,fat:0,sodium:2},
+      {name:'과일컵(200g)',kcal:120,icon:'🍑',prot:1,carb:30,fat:0,sodium:5},
+    ]},
+    { group:'계란·단백질', icon:'🥚', items:[
+      {name:'계란(1개)',kcal:70,icon:'🥚',prot:6,carb:0,fat:5,sodium:70},
+      {name:'삶은계란(2개)',kcal:140,icon:'🥚',prot:12,carb:0,fat:10,sodium:140},
+      {name:'닭가슴살',kcal:100,icon:'🐔',prot:22,carb:0,fat:2,sodium:50},
+      {name:'단백질바',kcal:200,icon:'🍫',prot:20,carb:18,fat:7,sodium:150},
+      {name:'에너지바',kcal:230,icon:'🍫',prot:8,carb:35,fat:8,sodium:100},
+      {name:'프로틴쉐이크',kcal:150,icon:'💪',prot:25,carb:8,fat:3,sodium:200},
+      {name:'두부(100g)',kcal:80,icon:'⬜',prot:9,carb:2,fat:4,sodium:5},
+      {name:'참치통조림(100g)',kcal:100,icon:'🐟',prot:22,carb:0,fat:1,sodium:300},
+    ]},
+    { group:'유제품', icon:'🥛', items:[
+      {name:'요거트(플레인)',kcal:100,icon:'🥛',prot:8,carb:12,fat:2,sodium:50},
+      {name:'그리스요거트',kcal:130,icon:'🥛',prot:15,carb:8,fat:3,sodium:50},
+      {name:'그래놀라(50g)',kcal:220,icon:'🥣',prot:5,carb:35,fat:8,sodium:100},
+      {name:'치즈(1장)',kcal:70,icon:'🧀',prot:4,carb:1,fat:6,sodium:180},
+      {name:'아이스크림',kcal:250,icon:'🍦',prot:4,carb:32,fat:12,sodium:80},
+      {name:'아이스바',kcal:120,icon:'🧊',prot:1,carb:28,fat:0,sodium:30},
+    ]},
+    { group:'견과류', icon:'🌰', items:[
+      {name:'아몬드(30g)',kcal:180,icon:'🌰',prot:6,carb:6,fat:16,sodium:0},
+      {name:'견과류믹스(30g)',kcal:190,icon:'🌰',prot:5,carb:8,fat:16,sodium:5},
+      {name:'호두(30g)',kcal:200,icon:'🌰',prot:5,carb:4,fat:20,sodium:1},
+      {name:'캐슈넛(30g)',kcal:165,icon:'🌰',prot:5,carb:9,fat:13,sodium:3},
+    ]},
+    { group:'빵류', icon:'🍞', items:[
+      {name:'식빵(2장)',kcal:180,icon:'🍞',prot:6,carb:34,fat:2,sodium:280},
+      {name:'모닝빵(2개)',kcal:200,icon:'🍞',prot:5,carb:38,fat:3,sodium:250},
+      {name:'크로와상',kcal:280,icon:'🥐',prot:5,carb:30,fat:16,sodium:320},
+      {name:'소금빵',kcal:320,icon:'🥐',prot:6,carb:42,fat:14,sodium:450},
+      {name:'단팥빵',kcal:280,icon:'🍞',prot:7,carb:50,fat:6,sodium:280},
+      {name:'크림빵',kcal:320,icon:'🥐',prot:6,carb:48,fat:12,sodium:250},
+      {name:'카스테라(1조각)',kcal:230,icon:'🍰',prot:5,carb:42,fat:5,sodium:120},
+      {name:'케이크(1조각)',kcal:380,icon:'🎂',prot:5,carb:55,fat:16,sodium:200},
+      {name:'마카롱(2개)',kcal:200,icon:'🍬',prot:3,carb:30,fat:8,sodium:60},
+      {name:'도넛(1개)',kcal:280,icon:'🍩',prot:4,carb:38,fat:13,sodium:250},
+      {name:'머핀(1개)',kcal:320,icon:'🧁',prot:5,carb:48,fat:13,sodium:280},
+      {name:'와플(1개)',kcal:300,icon:'🧇',prot:6,carb:44,fat:12,sodium:350},
+    ]},
+    { group:'과자·초콜릿', icon:'🍫', items:[
+      {name:'초콜릿(밀크)',kcal:150,icon:'🍫',prot:2,carb:18,fat:9,sodium:30},
+      {name:'다크초콜릿(30g)',kcal:155,icon:'🍫',prot:2,carb:16,fat:10,sodium:5},
+      {name:'허쉬초콜릿(1개)',kcal:80,icon:'🍫',prot:1,carb:10,fat:4,sodium:20},
+      {name:'킷캣(1개)',kcal:100,icon:'🍫',prot:1,carb:13,fat:5,sodium:20},
+      {name:'과자(1봉)',kcal:300,icon:'🍿',prot:4,carb:42,fat:15,sodium:400},
+      {name:'새우깡(1봉)',kcal:280,icon:'🍿',prot:4,carb:38,fat:12,sodium:500},
+      {name:'포카칩(1봉)',kcal:320,icon:'🍟',prot:3,carb:38,fat:18,sodium:350},
+      {name:'오레오(3개)',kcal:160,icon:'🍪',prot:2,carb:24,fat:7,sodium:150},
+      {name:'빼빼로(1개)',kcal:140,icon:'🍬',prot:2,carb:20,fat:6,sodium:60},
+      {name:'젤리(1봉)',kcal:120,icon:'🍬',prot:2,carb:28,fat:0,sodium:20},
+      {name:'팝콘(50g)',kcal:200,icon:'🍿',prot:3,carb:28,fat:10,sodium:250},
+    ]},
+  ],
+  '동남아식': [
+    { group:'태국요리', icon:'🍛', items:[
+      {name:'팟타이(새우)',kcal:530,icon:'🍜',prot:22,carb:72,fat:20,sodium:1100},
+      {name:'팟카파오',kcal:420,icon:'🌿',prot:28,carb:35,fat:18,sodium:1100},
+      {name:'그린커리',kcal:480,icon:'🍛',prot:25,carb:35,fat:28,sodium:1000},
+      {name:'레드커리',kcal:500,icon:'🍛',prot:22,carb:38,fat:30,sodium:1000},
+      {name:'똠얌꿍',kcal:180,icon:'🍲',prot:12,carb:18,fat:6,sodium:1500},
+      {name:'카오만가이',kcal:580,icon:'🍗',prot:38,carb:75,fat:12,sodium:900},
+      {name:'망고찹쌀밥',kcal:620,icon:'🥭',prot:8,carb:95,fat:22,sodium:100},
+      {name:'파파야샐러드',kcal:180,icon:'🥗',prot:5,carb:35,fat:3,sodium:700},
+    ]},
+    { group:'베트남요리', icon:'🍜', items:[
+      {name:'쌀국수/포',kcal:420,icon:'🍜',prot:22,carb:62,fat:8,sodium:1200},
+      {name:'분짜',kcal:450,icon:'🥩',prot:35,carb:45,fat:15,sodium:1000},
+      {name:'반미샌드위치',kcal:480,icon:'🥖',prot:25,carb:60,fat:15,sodium:900},
+      {name:'생춘권(2개)',kcal:180,icon:'🌮',prot:8,carb:28,fat:4,sodium:400},
+      {name:'쌀국수볶음',kcal:490,icon:'🍜',prot:18,carb:72,fat:15,sodium:1000},
+    ]},
+    { group:'인도네시아·말레이', icon:'🍳', items:[
+      {name:'나시고렝',kcal:580,icon:'🍳',prot:22,carb:78,fat:22,sodium:1100},
+      {name:'미고렝',kcal:540,icon:'🍜',prot:18,carb:75,fat:20,sodium:1200},
+      {name:'싱가포르치킨라이스',kcal:520,icon:'🍗',prot:35,carb:70,fat:12,sodium:800},
+      {name:'락사',kcal:520,icon:'🍜',prot:22,carb:62,fat:22,sodium:1800},
+      {name:'새우칠리',kcal:380,icon:'🦐',prot:28,carb:30,fat:18,sodium:1200},
+    ]},
+  ],
+  '멕시코식': [
+    { group:'타코·부리또', icon:'🌮', items:[
+      {name:'타코(소고기3개)',kcal:450,icon:'🌮',prot:25,carb:45,fat:20,sodium:900},
+      {name:'치킨타코(3개)',kcal:420,icon:'🌮',prot:28,carb:42,fat:16,sodium:850},
+      {name:'치킨부리또',kcal:680,icon:'🌯',prot:40,carb:80,fat:22,sodium:1200},
+      {name:'부리또볼',kcal:580,icon:'🥙',prot:32,carb:70,fat:18,sodium:1000},
+      {name:'퀘사디아',kcal:580,icon:'🫔',prot:28,carb:52,fat:28,sodium:900},
+    ]},
+    { group:'기타', icon:'🥑', items:[
+      {name:'나초+치즈',kcal:420,icon:'🫔',prot:10,carb:52,fat:22,sodium:900},
+      {name:'과카몰리+칩스',kcal:420,icon:'🥑',prot:5,carb:38,fat:28,sodium:500},
+      {name:'엔칠라다',kcal:520,icon:'🥘',prot:28,carb:48,fat:22,sodium:1100},
+      {name:'파히타',kcal:500,icon:'🥘',prot:32,carb:48,fat:20,sodium:900},
+      {name:'칠리콘카르네',kcal:380,icon:'🫘',prot:25,carb:38,fat:12,sodium:1000},
+    ]},
+  ],
+  '인도식': [
+    { group:'커리', icon:'🍛', items:[
+      {name:'버터치킨커리+난',kcal:650,icon:'🍛',prot:32,carb:72,fat:25,sodium:1000},
+      {name:'치킨티카마살라',kcal:480,icon:'🍛',prot:35,carb:30,fat:22,sodium:1000},
+      {name:'팔락파니르',kcal:380,icon:'🧀',prot:18,carb:20,fat:24,sodium:700},
+      {name:'달(렌틸수프)',kcal:280,icon:'🫘',prot:15,carb:42,fat:5,sodium:600},
+      {name:'비리야니',kcal:580,icon:'🍛',prot:28,carb:82,fat:18,sodium:900},
+    ]},
+    { group:'빵·밥', icon:'🫓', items:[
+      {name:'난(1장)',kcal:260,icon:'🫓',prot:8,carb:48,fat:5,sodium:400},
+      {name:'갈릭난',kcal:290,icon:'🫓',prot:8,carb:50,fat:7,sodium:450},
+      {name:'쌀(바스마티)',kcal:280,icon:'🍚',prot:5,carb:62,fat:1,sodium:5},
+    ]},
+    { group:'기타', icon:'🥘', items:[
+      {name:'탄두리치킨',kcal:320,icon:'🍗',prot:38,carb:8,fat:12,sodium:700},
+      {name:'사모사(2개)',kcal:280,icon:'🫔',prot:7,carb:38,fat:12,sodium:500},
+      {name:'망고라씨',kcal:200,icon:'🥭',prot:6,carb:35,fat:4,sodium:80},
+      {name:'마살라차이',kcal:90,icon:'☕',prot:3,carb:15,fat:2,sodium:50},
+    ]},
+  ],
+  '건강식': [
+    { group:'샐러드·채소', icon:'🥗', items:[
+      {name:'닭가슴살샐러드',kcal:280,icon:'🥗',prot:35,carb:12,fat:8,sodium:400},
+      {name:'연어샐러드',kcal:380,icon:'🐟',prot:28,carb:15,fat:22,sodium:500},
+      {name:'채소스틱+후무스',kcal:200,icon:'🥕',prot:7,carb:25,fat:8,sodium:400},
+      {name:'병아리콩샐러드',kcal:320,icon:'🫘',prot:14,carb:45,fat:10,sodium:400},
+      {name:'삶은브로콜리',kcal:55,icon:'🥦',prot:5,carb:10,fat:1,sodium:50},
+      {name:'아사이볼',kcal:350,icon:'🫐',prot:6,carb:55,fat:10,sodium:100},
+    ]},
+    { group:'단백질', icon:'🐔', items:[
+      {name:'닭가슴살도시락',kcal:380,icon:'🍱',prot:42,carb:35,fat:8,sodium:500},
+      {name:'찐닭가슴살100g',kcal:100,icon:'🐔',prot:22,carb:0,fat:2,sodium:50},
+      {name:'구운연어',kcal:280,icon:'🐟',prot:32,carb:0,fat:16,sodium:400},
+      {name:'에그화이트오믈렛',kcal:120,icon:'🍳',prot:20,carb:2,fat:2,sodium:250},
+      {name:'참치통조림(100g)',kcal:100,icon:'🐟',prot:22,carb:0,fat:1,sodium:300},
+      {name:'두부스테이크',kcal:200,icon:'⬜',prot:18,carb:8,fat:10,sodium:400},
+    ]},
+    { group:'곡물·밥', icon:'🌾', items:[
+      {name:'현미밥',kcal:250,icon:'🍚',prot:5,carb:55,fat:1,sodium:5},
+      {name:'퀴노아볼',kcal:380,icon:'🌾',prot:15,carb:58,fat:10,sodium:300},
+      {name:'오트밀(플레인)',kcal:180,icon:'🥣',prot:6,carb:32,fat:3,sodium:100},
+      {name:'그래놀라볼',kcal:350,icon:'🥣',prot:8,carb:55,fat:10,sodium:120},
+    ]},
+    { group:'유제품·음료', icon:'🥛', items:[
+      {name:'그릭요거트볼',kcal:200,icon:'🥛',prot:18,carb:22,fat:3,sodium:80},
+      {name:'저지방우유200ml',kcal:80,icon:'🥛',prot:7,carb:10,fat:1,sodium:100},
+      {name:'그린스무디',kcal:160,icon:'🥤',prot:4,carb:32,fat:2,sodium:80},
+    ]},
+    { group:'기타', icon:'🥑', items:[
+      {name:'아보카도토스트',kcal:320,icon:'🥑',prot:8,carb:28,fat:18,sodium:350},
+      {name:'단백질팬케이크',kcal:320,icon:'🥞',prot:28,carb:35,fat:8,sodium:250},
+    ]},
+  ],
+  '주류': [
+    { group:'소주', icon:'🍶', items:[
+      {name:'소주(1병)',kcal:400,icon:'🍶',prot:0,carb:18,fat:0,sodium:0},
+      {name:'소주(1잔)',kcal:65,icon:'🍶',prot:0,carb:3,fat:0,sodium:0},
+      {name:'소맥(1잔)',kcal:120,icon:'🍺',prot:1,carb:10,fat:0,sodium:10},
+    ]},
+    { group:'맥주', icon:'🍺', items:[
+      {name:'맥주 캔(355ml)',kcal:155,icon:'🍺',prot:1,carb:13,fat:0,sodium:15},
+      {name:'맥주 캔(500ml)',kcal:215,icon:'🍺',prot:2,carb:18,fat:0,sodium:20},
+      {name:'생맥주(500ml)',kcal:200,icon:'🍺',prot:2,carb:17,fat:0,sodium:15},
+      {name:'크래프트맥주',kcal:220,icon:'🍺',prot:2,carb:20,fat:0,sodium:15},
+      {name:'흑맥주(350ml)',kcal:195,icon:'🍺',prot:2,carb:18,fat:0,sodium:20},
+      {name:'IPA(350ml)',kcal:210,icon:'🍺',prot:2,carb:19,fat:0,sodium:15},
+      {name:'에일(500ml)',kcal:230,icon:'🍺',prot:2,carb:22,fat:0,sodium:15},
+    ]},
+    { group:'와인', icon:'🍷', items:[
+      {name:'와인 레드(1잔)',kcal:125,icon:'🍷',prot:0,carb:4,fat:0,sodium:7},
+      {name:'와인 화이트(1잔)',kcal:120,icon:'🥂',prot:0,carb:4,fat:0,sodium:7},
+      {name:'스파클링(1잔)',kcal:90,icon:'🥂',prot:0,carb:3,fat:0,sodium:5},
+      {name:'산그리아(200ml)',kcal:160,icon:'🍷',prot:0,carb:20,fat:0,sodium:8},
+    ]},
+    { group:'막걸리·전통주', icon:'🫙', items:[
+      {name:'막걸리(1잔300ml)',kcal:200,icon:'🍶',prot:3,carb:30,fat:0,sodium:10},
+      {name:'막걸리(1병750ml)',kcal:500,icon:'🍶',prot:7,carb:75,fat:0,sodium:25},
+      {name:'동동주(1잔)',kcal:180,icon:'🍶',prot:2,carb:28,fat:0,sodium:8},
+      {name:'사케/청주(1잔)',kcal:200,icon:'🍶',prot:0,carb:9,fat:0,sodium:5},
+      {name:'매실주(1잔)',kcal:160,icon:'🍵',prot:0,carb:20,fat:0,sodium:3},
+      {name:'복분자주(1잔)',kcal:120,icon:'🍇',prot:0,carb:15,fat:0,sodium:3},
+    ]},
+    { group:'양주', icon:'🥃', items:[
+      {name:'위스키(1샷30ml)',kcal:65,icon:'🥃',prot:0,carb:0,fat:0,sodium:0},
+      {name:'보드카(1샷30ml)',kcal:65,icon:'🥃',prot:0,carb:0,fat:0,sodium:0},
+      {name:'럼(1샷30ml)',kcal:65,icon:'🥃',prot:0,carb:0,fat:0,sodium:0},
+      {name:'진(1샷30ml)',kcal:60,icon:'🥃',prot:0,carb:0,fat:0,sodium:0},
+      {name:'테킬라(1샷30ml)',kcal:65,icon:'🥃',prot:0,carb:0,fat:0,sodium:0},
+      {name:'하이볼(350ml)',kcal:175,icon:'🥃',prot:0,carb:12,fat:0,sodium:5},
+    ]},
+    { group:'칵테일', icon:'🍹', items:[
+      {name:'모히토(350ml)',kcal:150,icon:'🍹',prot:0,carb:22,fat:0,sodium:8},
+      {name:'마가리타(250ml)',kcal:200,icon:'🍹',prot:0,carb:18,fat:0,sodium:5},
+      {name:'칵테일 롱아일랜드',kcal:280,icon:'🍹',prot:0,carb:15,fat:0,sodium:5},
+      {name:'피냐콜라다',kcal:245,icon:'🍹',prot:1,carb:32,fat:10,sodium:20},
+      {name:'코스모폴리탄',kcal:140,icon:'🍹',prot:0,carb:14,fat:0,sodium:5},
+    ]},
+  ],
+  '음료': [
+    { group:'커피', icon:'☕', items:[
+      {name:'아이스아메리카노',kcal:10,icon:'☕',prot:1,carb:2,fat:0,sodium:5},
+      {name:'따뜻한아메리카노',kcal:10,icon:'☕',prot:1,carb:2,fat:0,sodium:5},
+      {name:'에스프레소',kcal:5,icon:'☕',prot:0,carb:1,fat:0,sodium:3},
+      {name:'콜드브루',kcal:15,icon:'☕',prot:1,carb:2,fat:0,sodium:5},
+      {name:'아이스라떼',kcal:130,icon:'🥛',prot:7,carb:13,fat:5,sodium:80},
+      {name:'따뜻한라떼',kcal:120,icon:'☕',prot:7,carb:12,fat:5,sodium:80},
+      {name:'바닐라라떼',kcal:260,icon:'☕',prot:8,carb:38,fat:8,sodium:120},
+      {name:'카라멜마끼아또',kcal:250,icon:'☕',prot:7,carb:36,fat:7,sodium:110},
+      {name:'카페모카',kcal:280,icon:'☕',prot:8,carb:40,fat:10,sodium:120},
+      {name:'카푸치노',kcal:120,icon:'☕',prot:7,carb:12,fat:5,sodium:80},
+      {name:'말차라떼',kcal:200,icon:'🍵',prot:7,carb:30,fat:5,sodium:90},
+      {name:'오트라떼',kcal:180,icon:'☕',prot:5,carb:28,fat:5,sodium:90},
+      {name:'프라푸치노',kcal:380,icon:'🧋',prot:6,carb:58,fat:14,sodium:150},
+    ]},
+    { group:'버블티', icon:'🧋', items:[
+      {name:'버블티(타피오카)',kcal:350,icon:'🧋',prot:3,carb:70,fat:5,sodium:80},
+      {name:'흑당버블티',kcal:400,icon:'🧋',prot:3,carb:80,fat:5,sodium:90},
+      {name:'딸기버블티',kcal:360,icon:'🧋',prot:3,carb:72,fat:5,sodium:75},
+      {name:'말차버블티',kcal:340,icon:'🧋',prot:4,carb:68,fat:5,sodium:80},
+    ]},
+    { group:'탄산음료', icon:'🥤', items:[
+      {name:'콜라(350ml)',kcal:153,icon:'🥤',prot:0,carb:39,fat:0,sodium:45},
+      {name:'제로콜라',kcal:1,icon:'🥤',prot:0,carb:0,fat:0,sodium:40},
+      {name:'사이다(350ml)',kcal:133,icon:'🥤',prot:0,carb:34,fat:0,sodium:25},
+      {name:'환타오렌지',kcal:145,icon:'🥤',prot:0,carb:37,fat:0,sodium:30},
+      {name:'에너지드링크',kcal:110,icon:'⚡',prot:1,carb:27,fat:0,sodium:100},
+    ]},
+    { group:'주스', icon:'🍊', items:[
+      {name:'오렌지주스(200ml)',kcal:90,icon:'🍊',prot:1,carb:21,fat:0,sodium:2},
+      {name:'사과주스(200ml)',kcal:95,icon:'🍎',prot:0,carb:24,fat:0,sodium:5},
+      {name:'포도주스(200ml)',kcal:130,icon:'🍇',prot:1,carb:32,fat:0,sodium:5},
+      {name:'복숭아주스',kcal:90,icon:'🍑',prot:0,carb:22,fat:0,sodium:5},
+      {name:'토마토주스',kcal:35,icon:'🍅',prot:2,carb:7,fat:0,sodium:300},
+      {name:'레모네이드',kcal:120,icon:'🍋',prot:0,carb:30,fat:0,sodium:10},
+    ]},
+    { group:'우유', icon:'🥛', items:[
+      {name:'우유(200ml)',kcal:130,icon:'🥛',prot:6,carb:10,fat:7,sodium:100},
+      {name:'저지방우유(200ml)',kcal:80,icon:'🥛',prot:7,carb:10,fat:1,sodium:100},
+      {name:'딸기우유(200ml)',kcal:130,icon:'🍓',prot:5,carb:20,fat:4,sodium:80},
+      {name:'커피우유(200ml)',kcal:120,icon:'☕',prot:4,carb:18,fat:4,sodium:80},
+      {name:'바나나우유(240ml)',kcal:150,icon:'🍌',prot:5,carb:24,fat:4,sodium:90},
+      {name:'메론우유(200ml)',kcal:130,icon:'🍈',prot:4,carb:20,fat:4,sodium:80},
+      {name:'초코우유',kcal:160,icon:'🥛',prot:5,carb:24,fat:5,sodium:100},
+      {name:'두유(200ml)',kcal:100,icon:'🥛',prot:5,carb:10,fat:4,sodium:80},
+    ]},
+    { group:'차·기타', icon:'🍵', items:[
+      {name:'녹차(200ml)',kcal:5,icon:'🍵',prot:0,carb:1,fat:0,sodium:2},
+      {name:'홍차(200ml)',kcal:5,icon:'🍵',prot:0,carb:1,fat:0,sodium:2},
+      {name:'코코아(200ml)',kcal:180,icon:'🍫',prot:5,carb:28,fat:6,sodium:120},
+      {name:'딸기라떼',kcal:250,icon:'🍓',prot:6,carb:40,fat:6,sodium:90},
+      {name:'이온음료',kcal:80,icon:'💧',prot:0,carb:20,fat:0,sodium:200},
+      {name:'아이스티',kcal:80,icon:'🍵',prot:0,carb:20,fat:0,sodium:10},
+      {name:'유자차(200ml)',kcal:90,icon:'🍵',prot:0,carb:22,fat:0,sodium:5},
+      {name:'식혜(200ml)',kcal:110,icon:'🥤',prot:1,carb:28,fat:0,sodium:20},
+      {name:'스무디(딸기)',kcal:200,icon:'🥤',prot:2,carb:45,fat:1,sodium:20},
+      {name:'스무디(망고)',kcal:210,icon:'🥭',prot:2,carb:48,fat:1,sodium:15},
+    ]},
+  ],
+};
     { name:'김치(100g)',      kcal:18,  icon:'🌶️', prot:1,  carb:3,  fat:0,  sodium:500  },
     { name:'깍두기(100g)',    kcal:22,  icon:'🌶️', prot:1,  carb:4,  fat:0,  sodium:550  },
     { name:'오이소박이',      kcal:25,  icon:'🥒', prot:1,  carb:4,  fat:0,  sodium:600  },
@@ -3847,7 +4444,7 @@ const MEALS = [
   { key:'snack',     label:'🍫 간식' },
 ];
 
-let _cuisine = '한식';
+let _cuisine = '밑반찬';
 let _serving = 1;
 let _pendingFood = null;
 let _selectedMeal = 'lunch';
@@ -3890,20 +4487,35 @@ function selectCuisine(name) {
   cancelFoodAdd();
 }
 
+let _foodSearchQuery = '';
+
+function onFoodSearch(val) {
+  _foodSearchQuery = val;
+  renderFoodGrid();
+}
+
 function renderFoodGrid() {
   const grid = document.getElementById('food-grid');
   if (!grid) return;
-  const foods = FOOD_DB[_cuisine] || [];
-  grid.innerHTML = foods.map(f => `
-    <button class="food-grid-item" onclick="selectFoodItem('${f.name.replace(/'/g,"\\'")}',${f.kcal},'${f.icon}')">
-      <span class="fgi-icon">${f.icon}</span>
-      <span class="fgi-name">${f.name}</span>
-      <span class="fgi-kcal">${f.kcal}kcal</span>
-    </button>`).join('');
+  const groups = FOOD_DB[_cuisine] || [];
+  const q = _foodSearchQuery.trim().toLowerCase();
+  let html = '';
+  for (const g of groups) {
+    const items = q ? g.items.filter(f => f.name.toLowerCase().includes(q)) : g.items;
+    if (!items.length) continue;
+    html += `<div class="food-group-label">${g.icon} ${g.group}</div>`;
+    html += `<div class="food-grid">`;
+    html += items.map(f => `<button class="food-grid-item" onclick="selectFoodItem('${f.name.replace(/'/g,"\\'")}',${f.kcal},'${f.icon}')"><span class="fgi-icon">${f.icon}</span><span class="fgi-name">${f.name}</span><span class="fgi-kcal">${f.kcal}kcal</span></button>`).join('');
+    html += `</div>`;
+  }
+  if (!html) html = '<div style="color:var(--muted);font-size:0.82rem;padding:8px 0;text-align:center">검색 결과가 없어요 🤔</div>';
+  grid.innerHTML = html;
 }
 
 function selectFoodItem(name, baseKcal, icon) {
-  const fd = (FOOD_DB[_cuisine] || []).find(f => f.name === name) || {};
+  const groups = FOOD_DB[_cuisine] || [];
+  const allItems = [].concat(...groups.map(g => g.items || []));
+  const fd = allItems.find(f => f.name === name) || {};
   _pendingFood = { name, baseKcal, icon, prot: fd.prot ?? null, carb: fd.carb ?? null, fat: fd.fat ?? null, sodium: fd.sodium ?? null };
   _serving = 1;
   const panel = document.getElementById('food-add-panel');
