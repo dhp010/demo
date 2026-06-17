@@ -1036,7 +1036,7 @@
       정확한 칼로리를 원하시면<br>
       <em>살짝 줄이고 싶은 그 마음</em> 꾹 참고<br>
       진짜 숫자로 써주세요 😇💪<br><br>
-      <small>🤐 이 숫자는 저와 하느님만 알고 있어요</small>
+      <small id="bw-popup-secret">🤐 이 숫자는 저와 하느님만 알고 있어요</small>
     </div>
     <button class="bw-popup-confirm" onclick="closeBwPopup()">ㅎㅎ 알겠어요 💪</button>
   </div>
@@ -2184,6 +2184,9 @@ function init() {
   bwInput.addEventListener('change', () => {
     bodyWeight = parseFloat(bwInput.value) || 70;
     saveProfileSettings({ body_weight_kg: bodyWeight });
+    const _bwp = _activeProfile();
+    const _bwName = (_bwp && _bwp.name) ? _bwp.name : '하느님';
+    document.getElementById('bw-popup-secret').textContent = `🤐 이 숫자는 저와 ${_bwName}만 알고 있어요`;
     document.getElementById('bw-popup-overlay').classList.remove('hidden');
     const badge = document.getElementById('bw-badge');
     badge.classList.add('show');
