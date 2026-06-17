@@ -762,6 +762,23 @@
     .fap-confirm { background: #FEE500; border: none; border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; font-weight: 800; color: #1A1200; cursor: pointer; margin-right: 8px; transition: all .15s; }
     .fap-confirm:hover { background: #FFD600; }
     .fap-cancel { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 0.82rem; color: var(--muted); cursor: pointer; }
+    /* 장바구니 */
+    .food-cart { border: 1.5px solid #C8A200; border-radius: 12px; padding: 10px 12px 12px; margin-bottom: 10px; background: rgba(254,229,0,.06); }
+    .food-cart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .food-cart-count { font-size:0.82rem; font-weight:800; color:#8B6000; }
+    .food-cart-clear { background:none; border:1px solid var(--border); border-radius:6px; padding:3px 9px; font-size:0.72rem; color:var(--muted); cursor:pointer; }
+    .food-cart-clear:hover { border-color:#ef4444; color:#ef4444; }
+    .food-cart-item { display:flex; align-items:center; gap:6px; padding:6px 0; border-bottom:1px solid rgba(0,0,0,.07); }
+    .food-cart-item:last-child { border-bottom:none; }
+    .food-cart-item-name { flex:1; font-size:0.82rem; font-weight:600; }
+    .food-cart-item-kcal { font-size:0.78rem; color:#B07800; font-weight:700; min-width:52px; text-align:right; }
+    .food-cart-del { background:none; border:none; color:var(--muted); cursor:pointer; font-size:0.9rem; padding:2px 4px; border-radius:4px; line-height:1; }
+    .food-cart-del:hover { color:#ef4444; }
+    .food-cart-footer { margin-top:8px; }
+    .food-cart-commit { width:100%; background:#FEE500; border:none; border-radius:8px; padding:10px; font-size:0.9rem; font-weight:800; color:#1A1200; cursor:pointer; margin-top:8px; transition:all .15s; }
+    .food-cart-commit:hover { background:#FFD600; }
+    .food-grid-item.in-cart { border-color:#C8A200; background:rgba(254,229,0,.28); }
+    .fgi-check { font-size:0.62rem; font-weight:800; color:#8B6000; display:block; margin-top:1px; }
     /* 한끼별 로그 */
     .meal-group { margin-bottom: 10px; }
     .meal-group-header { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 2px solid var(--border); margin-bottom: 4px; }
@@ -1479,20 +1496,16 @@
         <input class="food-search-input" id="food-search-input" type="text" placeholder="🔍 음식 검색..." oninput="onFoodSearch(this.value)">
       </div>
       <div id="food-grid"></div>
-      <div class="food-add-panel" id="food-add-panel" style="display:none">
-        <div class="food-add-panel-name" id="fap-name"></div>
-        <div class="food-add-panel-row">
-          <span style="font-size:.8rem;color:var(--muted);font-weight:700">인분</span>
-          <div class="serving-ctrl">
-            <button class="serving-btn" onclick="changeServing(-0.5)">−</button>
-            <span id="serving-display">1</span>
-            <button class="serving-btn" onclick="changeServing(0.5)">+</button>
-          </div>
-          <span class="fap-kcal" id="fap-kcal">0 kcal</span>
+      <div class="food-cart" id="food-cart" style="display:none">
+        <div class="food-cart-header">
+          <span class="food-cart-count" id="food-cart-count">🛒 0종</span>
+          <button class="food-cart-clear" onclick="clearCart()">전체 지우기</button>
         </div>
-        <div class="meal-btns" id="meal-btns"></div>
-        <button class="fap-confirm" id="fap-confirm">+ 추가</button>
-        <button class="fap-cancel" onclick="cancelFoodAdd()">취소</button>
+        <div id="food-cart-items"></div>
+        <div class="food-cart-footer">
+          <div class="meal-btns" id="meal-btns"></div>
+          <button class="food-cart-commit" onclick="commitCart()">추가하기</button>
+        </div>
       </div>
       <div class="diet-label" style="margin-top:4px">직접 입력</div>
       <div class="food-manual-row">
@@ -4104,8 +4117,7 @@ const MEALS = [
 ];
 
 let _cuisine = '밑반찬';
-let _serving = 1;
-let _pendingFood = null;
+let _cart = []; // [{name, baseKcal, icon, prot, carb, fat, sodium, serving}]
 let _selectedMeal = 'lunch';
 
 // ── 음식 로그 (서버 DB) ──────────────────────────────────
@@ -4164,39 +4176,77 @@ function renderFoodGrid() {
     if (!items.length) continue;
     html += `<div class="food-group-label">${g.icon} ${g.group}</div>`;
     html += `<div class="food-grid">`;
-    html += items.map(f => `<button class="food-grid-item" onclick="selectFoodItem('${f.name.replace(/'/g,"\\'")}',${f.kcal},'${f.icon}')"><span class="fgi-icon">${f.icon}</span><span class="fgi-name">${f.name}</span><span class="fgi-kcal">${f.kcal}kcal</span></button>`).join('');
+    html += items.map(f => {
+      const inCart = _cart.find(c => c.name === f.name);
+      const check = inCart ? `<span class="fgi-check">✓ ${inCart.serving > 1 ? inCart.serving+'인분' : '선택됨'}</span>` : '';
+      return `<button class="food-grid-item${inCart ? ' in-cart' : ''}" onclick="addToCart('${f.name.replace(/'/g,"\\'")}',${f.kcal},'${f.icon}')"><span class="fgi-icon">${f.icon}</span><span class="fgi-name">${f.name}</span><span class="fgi-kcal">${f.kcal}kcal</span>${check}</button>`;
+    }).join('');
     html += `</div>`;
   }
   if (!html) html = '<div style="color:var(--muted);font-size:0.82rem;padding:8px 0;text-align:center">검색 결과가 없어요 🤔</div>';
   grid.innerHTML = html;
 }
 
-function selectFoodItem(name, baseKcal, icon) {
-  const groups = FOOD_DB[_cuisine] || [];
-  const allItems = [].concat(...groups.map(g => g.items || []));
-  const fd = allItems.find(f => f.name === name) || {};
-  _pendingFood = { name, baseKcal, icon, prot: fd.prot ?? null, carb: fd.carb ?? null, fat: fd.fat ?? null, sodium: fd.sodium ?? null };
-  _serving = 1;
-  const panel = document.getElementById('food-add-panel');
-  if (!panel) return;
-  document.getElementById('fap-name').textContent = icon + ' ' + name + ' (1인분 ' + baseKcal + 'kcal)';
-  updateServingDisplay();
+// ── 장바구니(카트) 로직 ────────────────────────────────────
+function _allFoodItems() {
+  // 현재 카테고리에서 찾고 없으면 전체 검색
+  const all = Object.values(FOOD_DB).flatMap(groups => groups.flatMap(g => g.items || []));
+  return all;
+}
+
+function addToCart(name, baseKcal, icon) {
+  const idx = _cart.findIndex(c => c.name === name);
+  if (idx >= 0) {
+    _cart.splice(idx, 1); // 이미 있으면 제거 (토글)
+  } else {
+    const fd = _allFoodItems().find(f => f.name === name) || {};
+    _cart.push({ name, baseKcal, icon, prot: fd.prot ?? null, carb: fd.carb ?? null, fat: fd.fat ?? null, sodium: fd.sodium ?? null, serving: 1 });
+  }
+  renderFoodGrid();
+  renderCart();
+}
+
+function changeCartServing(idx, delta) {
+  _cart[idx].serving = Math.max(0.5, Math.round((_cart[idx].serving + delta) * 2) / 2);
+  renderCart();
+  renderFoodGrid();
+}
+
+function removeCartItem(idx) {
+  _cart.splice(idx, 1);
+  renderFoodGrid();
+  renderCart();
+}
+
+function clearCart() {
+  _cart = [];
+  renderFoodGrid();
+  renderCart();
+}
+
+function renderCart() {
+  const cartEl = document.getElementById('food-cart');
+  const itemsEl = document.getElementById('food-cart-items');
+  if (!cartEl || !itemsEl) return;
+  if (_cart.length === 0) { cartEl.style.display = 'none'; return; }
+  cartEl.style.display = '';
+  const totalKcal = _cart.reduce((s, c) => s + Math.round(c.baseKcal * c.serving), 0);
+  document.getElementById('food-cart-count').textContent = `🛒 ${_cart.length}종 · ${totalKcal.toLocaleString()}kcal`;
+  itemsEl.innerHTML = _cart.map((c, i) => {
+    const kcal = Math.round(c.baseKcal * c.serving);
+    const sv = c.serving % 1 === 0 ? c.serving : c.serving.toFixed(1);
+    return `<div class="food-cart-item">
+      <span class="food-cart-item-name">${c.icon} ${c.name}</span>
+      <div class="serving-ctrl">
+        <button class="serving-btn" onclick="changeCartServing(${i},-0.5)">−</button>
+        <span style="min-width:28px;text-align:center;font-size:0.85rem;font-weight:700">${sv}</span>
+        <button class="serving-btn" onclick="changeCartServing(${i},0.5)">+</button>
+      </div>
+      <span class="food-cart-item-kcal">${kcal}kcal</span>
+      <button class="food-cart-del" onclick="removeCartItem(${i})">✕</button>
+    </div>`;
+  }).join('');
   document.querySelectorAll('.meal-btn').forEach(b => b.classList.toggle('active', b.dataset.m === _selectedMeal));
-  panel.style.display = 'block';
-}
-
-function changeServing(delta) {
-  _serving = Math.max(0.5, Math.round((_serving + delta) * 2) / 2);
-  updateServingDisplay();
-}
-
-function updateServingDisplay() {
-  if (!_pendingFood) return;
-  const sd = document.getElementById('serving-display');
-  const fk = document.getElementById('fap-kcal');
-  const sv = _serving % 1 === 0 ? _serving.toString() : _serving.toFixed(1);
-  if (sd) sd.textContent = sv;
-  if (fk) fk.textContent = Math.round(_pendingFood.baseKcal * _serving).toLocaleString() + ' kcal';
 }
 
 function selectMeal(meal) {
@@ -4204,23 +4254,27 @@ function selectMeal(meal) {
   document.querySelectorAll('.meal-btn').forEach(b => b.classList.toggle('active', b.dataset.m === meal));
 }
 
-async function confirmFoodAdd() {
-  if (!_pendingFood) return;
-  const totalKcal = Math.round(_pendingFood.baseKcal * _serving);
-  const sv = _serving % 1 === 0 ? _serving.toString() : _serving.toFixed(1);
-  const round = v => v !== null ? Math.round(v * _serving * 10) / 10 : null;
-  const entry = {
-    name: _pendingFood.name, icon: _pendingFood.icon,
-    baseKcal: _pendingFood.baseKcal, serving: _serving, kcal: totalKcal, meal: _selectedMeal,
-    prot: round(_pendingFood.prot), carb: round(_pendingFood.carb), fat: round(_pendingFood.fat),
-    sodium: _pendingFood.sodium !== null ? Math.round(_pendingFood.sodium * _serving) : null,
-  };
-  const added = _pendingFood.name;
-  cancelFoodAdd();
-  await addFoodToServer(entry);
+async function commitCart() {
+  if (_cart.length === 0) return;
+  const count = _cart.length;
+  await Promise.all(_cart.map(c => {
+    const kcal = Math.round(c.baseKcal * c.serving);
+    const round = v => v !== null ? Math.round(v * c.serving * 10) / 10 : null;
+    return addFoodToServer({
+      name: c.name, icon: c.icon, baseKcal: c.baseKcal, serving: c.serving, kcal, meal: _selectedMeal,
+      prot: round(c.prot), carb: round(c.carb), fat: round(c.fat),
+      sodium: c.sodium !== null ? Math.round(c.sodium * c.serving) : null,
+    });
+  }));
+  _cart = [];
+  renderFoodGrid();
+  renderCart();
   renderFoodTab();
-  toast(added + ' ' + sv + '인분 추가됐어요!');
+  toast(`🍽️ ${count}개 메뉴가 추가됐어요!`);
 }
+
+// 하위호환 유지
+function cancelFoodAdd() { /* no-op: 카트 방식으로 전환됨 */ }
 
 function cancelFoodAdd() {
   _pendingFood = null;
@@ -4597,8 +4651,6 @@ function initFoodBrowser() {
       `<button class="meal-btn${m.key === _selectedMeal ? ' active' : ''}" data-m="${m.key}" onclick="selectMeal('${m.key}')">${m.label}</button>`
     ).join('');
   }
-  const confirmBtn = document.getElementById('fap-confirm');
-  if (confirmBtn) confirmBtn.onclick = confirmFoodAdd;
   renderFoodGrid();
 }
 
