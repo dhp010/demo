@@ -1743,8 +1743,40 @@ let charts = {};
 // ── 계산 함수 ─────────────────────────────────────────────
 function gf() { return GENDER_FACTOR[gender]; }
 
+// 속도(km/h) → MET 변환 (거리+시간 모두 입력된 경우 사용)
+function speedMET(activity, speedKmh) {
+  switch (activity) {
+    case 'running':
+      // ACSM 달리기: VO₂(mL/kg/min) = 0.2×speed(m/min)+3.5, MET=VO₂/3.5
+      // → MET = 0.952×v(km/h)+1
+      return Math.max(1, 0.952 * speedKmh + 1);
+    case 'walking':
+      // ACSM 걷기: VO₂ = 0.1×speed(m/min)+3.5
+      // → MET = 0.476×v(km/h)+1
+      return Math.max(1, 0.476 * speedKmh + 1);
+    case 'cycling':
+      // Compendium of Physical Activities 근거 속도별 MET 근사
+      // 15km/h≈7, 20km/h≈9.5, 25km/h≈12 → MET ≈ 0.5×v−0.5
+      return Math.max(3, 0.5 * speedKmh - 0.5);
+    case 'swimming':
+      // Compendium 수영: 1.5km/h≈6, 2km/h≈7.5, 2.5km/h≈9 → MET ≈ 3×v+1.5
+      return Math.max(4, 3 * speedKmh + 1.5);
+    case 'stairmaster':
+      // km 환산 불명확 → MET 고정
+      return ACTIVITIES['stairmaster'].met;
+    default:
+      return ACTIVITIES[activity]?.met || 8;
+  }
+}
+
 function calcCardio(activity, dist, dur) {
   const a = ACTIVITIES[activity];
+  if (dist > 0 && dur > 0) {
+    // 거리+시간 모두 입력: 속도 계산 후 속도 기반 MET 적용
+    const speedKmh = dist / (dur / 60);
+    const met = speedMET(activity, speedKmh);
+    return Math.round(met * bodyWeight * (dur / 60) * gf());
+  }
   if (dur > 0) return Math.round(a.met * bodyWeight * (dur / 60) * gf());
   if (dist > 0) return Math.round(a.distFactor * dist * bodyWeight * gf());
   return 0;
@@ -2032,9 +2064,16 @@ function liveCardio() {
   document.getElementById('c-cal').textContent = cal.toLocaleString();
   const a = ACTIVITIES[currentActivity];
   const gLabel = gender === 'male' ? '남성' : '여성';
-  const basis = dur > 0
-    ? `MET ${a.met} × 체중 ${bodyWeight}kg × ${dur}분 (${gLabel} 기준)`
-    : `${a.distFactor} × ${dist}km × 체중 ${bodyWeight}kg (${gLabel} 기준)`;
+  let basis;
+  if (dist > 0 && dur > 0) {
+    const speedKmh = dist / (dur / 60);
+    const met = speedMET(currentActivity, speedKmh);
+    basis = `${speedKmh.toFixed(1)}km/h → MET ${met.toFixed(1)} × 체중 ${bodyWeight}kg × ${dur}분 (${gLabel})`;
+  } else if (dur > 0) {
+    basis = `기본 MET ${a.met} × 체중 ${bodyWeight}kg × ${dur}분 (${gLabel})`;
+  } else {
+    basis = `${a.distFactor} kcal/km/kg × ${dist}km × 체중 ${bodyWeight}kg (${gLabel})`;
+  }
   document.getElementById('c-sub').textContent = basis;
   resultEl.style.display = '';
   saveBtn.disabled = !dist;
