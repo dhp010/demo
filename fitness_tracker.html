@@ -931,6 +931,13 @@
     .cardio-rec-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: 2px 6px; border-radius: 6px; }
     .cardio-rec-del:hover { background: var(--bg); color: #dc2626; }
 
+    /* ── 식단 서브탭 ── */
+    .diet-sub-nav { display:flex; gap:6px; margin-bottom:12px; }
+    .diet-sub-btn { flex:1; padding:10px 4px; border-radius:10px; border:1.5px solid var(--border); background:var(--bg); color:var(--muted); font-size:0.84rem; font-weight:700; cursor:pointer; transition:all .15s; }
+    .diet-sub-btn.active { background:rgba(254,229,0,.3); border-color:#C8A200; color:#8B6000; }
+    .diet-subtab { display:none; }
+    .diet-subtab.active { display:block; }
+
     /* ── 식단 추천 ── */
     .rec-goal-tabs { display:flex; gap:6px; margin-bottom:14px; }
     .rec-goal-btn { flex:1; padding:9px 4px; border-radius:10px; border:1.5px solid var(--border); background:var(--bg); color:var(--muted); font-size:0.8rem; font-weight:700; cursor:pointer; transition:all .15s; }
@@ -1488,30 +1495,39 @@
         <span id="food-total-kcal" class="food-total-val">0 kcal</span>
       </div>
     </div>
-    <!-- Balance -->
-    <div class="card" id="diet-balance-card">
-      <h2 style="font-size:1rem;font-weight:800;margin-bottom:14px">⚖️ 오늘의 칼로리 밸런스</h2>
-      <div id="diet-balance-content">
-        <div class="diet-hint">음식을 추가하면 밸런스가 계산됩니다</div>
+    <!-- 서브탭 내비 -->
+    <div class="diet-sub-nav">
+      <button class="diet-sub-btn active" data-subtab="balance"   onclick="switchDietSubtab('balance')">⚖️ 칼로리 밸런스</button>
+      <button class="diet-sub-btn"        data-subtab="recommend" onclick="switchDietSubtab('recommend')">🥗 식단 추천</button>
+    </div>
+
+    <!-- 서브탭 1: 칼로리 밸런스 -->
+    <div class="diet-subtab active" id="diet-subtab-balance">
+      <div class="card" id="diet-balance-card">
+        <div id="diet-balance-content">
+          <div class="diet-hint">음식을 추가하면 밸런스가 계산됩니다</div>
+        </div>
       </div>
     </div>
-    <!-- 식단 추천 -->
-    <div class="card" id="diet-recommend-card">
-      <h2 style="font-size:1rem;font-weight:800;margin-bottom:14px">🥗 맞춤 식단 추천</h2>
-      <div class="rec-goal-tabs" id="rec-goal-tabs">
-        <button class="rec-goal-btn active" data-goal="balance" onclick="setRecGoal('balance')">⚖️ 밸런스</button>
-        <button class="rec-goal-btn" data-goal="bulk"    onclick="setRecGoal('bulk')">💪 벌크업</button>
-        <button class="rec-goal-btn" data-goal="cut"     onclick="setRecGoal('cut')">🔥 체지방감소</button>
+
+    <!-- 서브탭 2: 식단 추천 -->
+    <div class="diet-subtab" id="diet-subtab-recommend">
+      <div class="card" id="diet-recommend-card">
+        <div class="rec-goal-tabs" id="rec-goal-tabs">
+          <button class="rec-goal-btn active" data-goal="balance" onclick="setRecGoal('balance')">⚖️ 밸런스</button>
+          <button class="rec-goal-btn" data-goal="bulk"    onclick="setRecGoal('bulk')">💪 벌크업</button>
+          <button class="rec-goal-btn" data-goal="cut"     onclick="setRecGoal('cut')">🔥 체지방감소</button>
+        </div>
+        <div class="rec-filter-section">
+          <div class="rec-filter-label">음식 문화</div>
+          <div class="rec-filter-row" id="rec-culture-row"></div>
+          <div class="rec-filter-label">음식 유형</div>
+          <div class="rec-filter-row" id="rec-type-row"></div>
+          <div class="rec-filter-label">식이 성향</div>
+          <div class="rec-filter-row" id="rec-diet-row"></div>
+        </div>
+        <div class="rec-grid" id="rec-list"></div>
       </div>
-      <div class="rec-filter-section">
-        <div class="rec-filter-label">음식 문화</div>
-        <div class="rec-filter-row" id="rec-culture-row"></div>
-        <div class="rec-filter-label">음식 유형</div>
-        <div class="rec-filter-row" id="rec-type-row"></div>
-        <div class="rec-filter-label">식이 성향</div>
-        <div class="rec-filter-row" id="rec-diet-row"></div>
-      </div>
-      <div class="rec-grid" id="rec-list"></div>
     </div>
   </section>
 
@@ -2138,7 +2154,7 @@ function init() {
       if (btn.dataset.tab === 'stats') renderStats();
       if (btn.dataset.tab === 'guide') renderGuideList();
       if (btn.dataset.tab === 'routine') initRoutineSelectors();
-      if (btn.dataset.tab === 'diet') { loadFoodLog().then(() => { initFoodBrowser(); renderFoodTab(); initRecFilters(); renderRecList(); }); }
+      if (btn.dataset.tab === 'diet') { loadFoodLog().then(() => { initFoodBrowser(); renderFoodTab(); if (_dietSubtab === 'recommend') { initRecFilters(); renderRecList(); } }); }
     });
   });
 
@@ -3799,9 +3815,66 @@ const DIET_RECS = [
   { goal:'cut', culture:'인도식', type:'일품요리', diet:'채식위주', name:'달(렌틸수프)',   icon:'🫘', kcal:220, prot:14, carb:35, fat:3,  sodium:400,  desc:'렌틸 저칼로리 고섬유질 인도 수프' },
   { goal:'cut', culture:'양식', type:'간편식',  diet:'채식위주', name:'채소 스무디볼',    icon:'🫐', kcal:250, prot:8,  carb:45, fat:5,  sodium:80,   desc:'항산화 베리+채소, 아침 다이어트식' },
   { goal:'cut', culture:'중식', type:'일품요리', diet:'채식위주', name:'두부 볶음+현미밥', icon:'🥢', kcal:380, prot:20, carb:55, fat:10, sodium:700,  desc:'저지방 두부+현미, 식이섬유 풍부' },
+
+  // ── 벌크업 추가 ──
+  { goal:'bulk', culture:'한식', type:'일품요리', diet:'육식위주', name:'돼지갈비+공기밥', icon:'🍖', kcal:780, prot:50, carb:88, fat:28, sodium:1000, desc:'갈비 고단백+탄수 조합, 웨이트 후 최적' },
+  { goal:'bulk', culture:'한식', type:'일품요리', diet:'균형',    name:'닭볶음탕+밥',     icon:'🍗', kcal:700, prot:48, carb:82, fat:18, sodium:1100, desc:'통닭 고단백+향신료 항염 효과' },
+  { goal:'bulk', culture:'한식', type:'국/탕',   diet:'균형',    name:'설렁탕+공기밥',   icon:'🍲', kcal:730, prot:44, carb:82, fat:20, sodium:1000, desc:'뼈국물 콜라겐+소고기 단백질 듬뿍' },
+  { goal:'bulk', culture:'중식', type:'일품요리', diet:'균형',    name:'새우볶음밥',      icon:'🦐', kcal:680, prot:35, carb:88, fat:20, sodium:1100, desc:'새우 고단백+탄수 효율 좋은 벌크식' },
+  { goal:'bulk', culture:'일식', type:'일품요리', diet:'균형',    name:'치킨카레라이스',  icon:'🍛', kcal:700, prot:38, carb:95, fat:18, sodium:800,  desc:'강황 항염+닭고기 벌크업 카레' },
+  { goal:'bulk', culture:'동남아식', type:'일품요리', diet:'균형', name:'팟타이(새우)',   icon:'🍜', kcal:660, prot:38, carb:82, fat:20, sodium:1200, desc:'쌀국수+새우+달걀, 동남아 고단백식' },
+  { goal:'bulk', culture:'동남아식', type:'일품요리', diet:'균형', name:'나시고렝',       icon:'🍳', kcal:630, prot:30, carb:85, fat:22, sodium:1100, desc:'인도네시아 볶음밥, 달걀+닭고기 풍부' },
+  { goal:'bulk', culture:'동남아식', type:'일품요리', diet:'육식위주', name:'분짜(숯불돼지)',icon:'🥩',kcal:680, prot:45, carb:75, fat:22, sodium:900, desc:'숯불 돼지+쌀국수, 베트남 고단백식' },
+  { goal:'bulk', culture:'멕시코식', type:'일품요리', diet:'육식위주', name:'치킨 부리또', icon:'🌯', kcal:780, prot:48, carb:85, fat:22, sodium:1100, desc:'닭고기+콩+쌀, 단백질 풍부한 부리또' },
+  { goal:'bulk', culture:'멕시코식', type:'일품요리', diet:'균형',  name:'타코(소고기3개)',icon:'🌮', kcal:720, prot:42, carb:72, fat:28, sodium:1000, desc:'소고기+아보카도, 균형 잡힌 멕시코식' },
+  { goal:'bulk', culture:'지중해식', type:'샐러드', diet:'채식위주', name:'팔라펠+타불레', icon:'🫘', kcal:580, prot:22, carb:78, fat:18, sodium:700, desc:'병아리콩 단백+허브, 채식 벌크식' },
+  { goal:'bulk', culture:'양식', type:'간편식',  diet:'균형',    name:'오트밀+바나나+단백질', icon:'🥣', kcal:520, prot:35, carb:70, fat:10, sodium:200, desc:'복합탄수+단백질, 아침 벌크업 최적' },
+  { goal:'bulk', culture:'양식', type:'일품요리', diet:'육식위주', name:'치킨버거+샐러드', icon:'🍔', kcal:750, prot:45, carb:72, fat:28, sodium:900,  desc:'닭가슴살버거 + 사이드샐러드 벌크 세트' },
+  { goal:'bulk', culture:'일식', type:'도시락',  diet:'균형',    name:'규동+달걀+된장국', icon:'🥩', kcal:760, prot:42, carb:90, fat:22, sodium:1000, desc:'소고기덮밥+달걀+된장국 완벽 벌크조합' },
+
+  // ── 밸런스 추가 ──
+  { goal:'balance', culture:'동남아식', type:'일품요리', diet:'균형', name:'쌀국수(포)', icon:'🍜', kcal:450, prot:25, carb:65, fat:10, sodium:1200, desc:'쌀국수+채소+고수, 저지방 균형식' },
+  { goal:'balance', culture:'동남아식', type:'간편식',  diet:'균형', name:'반미 샌드위치',icon:'🥖', kcal:520, prot:28, carb:65, fat:16, sodium:900,  desc:'베트남 바게트+돼지고기+채소' },
+  { goal:'balance', culture:'동남아식', type:'일품요리', diet:'채식위주', name:'팟카파오두부', icon:'🌿', kcal:420, prot:18, carb:55, fat:14, sodium:900, desc:'바질+두부, 채식 태국식 볶음' },
+  { goal:'balance', culture:'동남아식', type:'샐러드',  diet:'균형', name:'파파야 샐러드', icon:'🥗', kcal:220, prot:8,  carb:38, fat:5,  sodium:700,  desc:'덜익은 파파야+라임, 태국식 저칼로리 샐러드' },
+  { goal:'balance', culture:'멕시코식', type:'일품요리', diet:'균형', name:'부리또볼',    icon:'🥙', kcal:580, prot:30, carb:72, fat:16, sodium:900,  desc:'현미+콩+아보카도, 균형 멕시코 그레인볼' },
+  { goal:'balance', culture:'멕시코식', type:'샐러드',  diet:'채식위주', name:'과카몰리+야채', icon:'🥑', kcal:300, prot:5, carb:22, fat:20, sodium:400, desc:'아보카도 건강지방+채소, 균형 스낵' },
+  { goal:'balance', culture:'양식', type:'간편식',  diet:'균형',    name:'에그베네딕트',  icon:'🍳', kcal:580, prot:28, carb:45, fat:28, sodium:900,  desc:'달걀+잉글리쉬머핀, 브런치 균형식' },
+  { goal:'balance', culture:'양식', type:'샐러드',  diet:'균형',    name:'코브 샐러드',   icon:'🥗', kcal:480, prot:35, carb:18, fat:28, sodium:700,  desc:'닭가슴살+베이컨+달걀+아보카도' },
+  { goal:'balance', culture:'일식', type:'일품요리', diet:'채식위주', name:'낫토덮밥',    icon:'🍱', kcal:420, prot:20, carb:70, fat:8,  sodium:600,  desc:'낫토 발효식품 프로바이오틱스+식이섬유' },
+  { goal:'balance', culture:'일식', type:'일품요리', diet:'균형',    name:'야키소바',     icon:'🍜', kcal:530, prot:22, carb:80, fat:14, sodium:1100, desc:'소바면+채소+돼지고기, 균형 일식' },
+  { goal:'balance', culture:'한식', type:'국/탕',   diet:'균형',    name:'순두부찌개+밥', icon:'🥣', kcal:550, prot:25, carb:82, fat:12, sodium:1500, desc:'순두부 식물성 단백+칼슘 풍부' },
+  { goal:'balance', culture:'한식', type:'국/탕',   diet:'균형',    name:'육개장+밥',     icon:'🍲', kcal:580, prot:30, carb:80, fat:16, sodium:1800, desc:'고사리+소고기+채소, 영양 풍부한 전통탕' },
+  { goal:'balance', culture:'한식', type:'일품요리', diet:'채식위주', name:'쌈밥 정식',   icon:'🥬', kcal:480, prot:20, carb:72, fat:12, sodium:800,  desc:'각종 쌈채소+된장+밥, 채식 균형 한식' },
+  { goal:'balance', culture:'지중해식', type:'도시락', diet:'채식위주', name:'그레인볼+후무스', icon:'🫘', kcal:460, prot:18, carb:65, fat:15, sodium:500, desc:'퀴노아+렌틸+후무스, 채식 영양 도시락' },
+  { goal:'balance', culture:'중식', type:'일품요리', diet:'균형',    name:'새우볶음밥',   icon:'🦐', kcal:580, prot:25, carb:85, fat:16, sodium:1100, desc:'새우+달걀 단백+채소, 균형 중식' },
+
+  // ── 체지방감소 추가 ──
+  { goal:'cut', culture:'동남아식', type:'일품요리', diet:'균형', name:'쌀국수 소(포)',   icon:'🍜', kcal:320, prot:18, carb:52, fat:5,  sodium:1000, desc:'저지방 맑은 국물+고기, 다이어트 쌀국수' },
+  { goal:'cut', culture:'동남아식', type:'샐러드',  diet:'채식위주', name:'파파야 그린샐러드', icon:'🥗', kcal:180, prot:5, carb:35, fat:3,  sodium:600, desc:'최저칼로리 식이섬유 풍부 동남아 샐러드' },
+  { goal:'cut', culture:'멕시코식', type:'샐러드',  diet:'균형', name:'타코샐러드(저칼로리)', icon:'🥙', kcal:340, prot:28, carb:28, fat:12, sodium:700, desc:'토르티야 없는 타코샐러드, 고단백 다이어트' },
+  { goal:'cut', culture:'양식', type:'간편식',  diet:'채식위주', name:'아보카도 토스트',   icon:'🥑', kcal:280, prot:8,  carb:28, fat:16, sodium:300,  desc:'건강지방+복합탄수, 간편 채식 아침' },
+  { goal:'cut', culture:'양식', type:'간편식',  diet:'균형',    name:'수란+아보카도 토스트',icon:'🥚',kcal:320, prot:14, carb:28, fat:18, sodium:350, desc:'단백질+건강지방, 포만감 높은 다이어트' },
+  { goal:'cut', culture:'양식', type:'간편식',  diet:'육식위주', name:'에그화이트 오믈렛', icon:'🍳', kcal:180, prot:24, carb:4,  fat:5,  sodium:300,  desc:'흰자만 사용 초고단백 극저지방' },
+  { goal:'cut', culture:'양식', type:'샐러드',  diet:'채식위주', name:'케일 슈퍼푸드 샐러드',icon:'🥗',kcal:200, prot:6, carb:28, fat:6,  sodium:250,  desc:'케일+베리+견과류, 항산화 최강 샐러드' },
+  { goal:'cut', culture:'일식', type:'일품요리', diet:'균형',    name:'낫토덮밥(소)',     icon:'🍱', kcal:310, prot:16, carb:55, fat:5,  sodium:500,  desc:'낫토 발효식품+반공기밥, 저칼로리 건강식' },
+  { goal:'cut', culture:'한식', type:'국/탕',   diet:'균형',    name:'황태해장국+밥',    icon:'🍲', kcal:300, prot:22, carb:40, fat:5,  sodium:1500, desc:'황태 고단백 저칼로리, 속 편한 해장식' },
+  { goal:'cut', culture:'한식', type:'국/탕',   diet:'채식위주', name:'청국장+반공기밥', icon:'🫘', kcal:320, prot:18, carb:48, fat:6,  sodium:900,  desc:'청국장 발효 단백질+식이섬유 가득' },
+  { goal:'cut', culture:'한식', type:'도시락',  diet:'채식위주', name:'채소 비빔밥(소)', icon:'🍚', kcal:350, prot:12, carb:65, fat:5,  sodium:700,  desc:'나물+반공기밥, 저지방 채식 다이어트' },
+  { goal:'cut', culture:'지중해식', type:'간편식', diet:'채식위주', name:'후무스+채소스틱', icon:'🫘', kcal:200, prot:8, carb:22, fat:10, sodium:350, desc:'병아리콩 단백질+채소 식이섬유 스낵' },
+  { goal:'cut', culture:'인도식', type:'샐러드', diet:'채식위주', name:'카춤버 샐러드',   icon:'🍅', kcal:150, prot:4,  carb:22, fat:4,  sodium:300,  desc:'토마토+양파+오이, 인도식 최저칼로리' },
+  { goal:'cut', culture:'중식', type:'일품요리', diet:'채식위주', name:'채소볶음+두부+현미', icon:'🥦', kcal:360, prot:18, carb:50, fat:8, sodium:700, desc:'저기름 채소+두부 볶음, 중식 다이어트식' },
 ];
 
 let _recGoal = 'balance', _recCulture = '', _recType = '', _recDiet = '';
+let _dietSubtab = 'balance';
+
+function switchDietSubtab(tab) {
+  _dietSubtab = tab;
+  document.querySelectorAll('.diet-sub-btn').forEach(b => b.classList.toggle('active', b.dataset.subtab === tab));
+  document.querySelectorAll('.diet-subtab').forEach(el => el.classList.toggle('active', el.id === 'diet-subtab-' + tab));
+  if (tab === 'recommend') { initRecFilters(); renderRecList(); }
+}
 
 function setRecGoal(goal) {
   _recGoal = goal;
