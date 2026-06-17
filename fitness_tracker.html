@@ -735,8 +735,8 @@
     /* ── 다이어트 탭 ── */
     .diet-label { font-size: 0.68rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
     /* 음식 종류 탭 */
-    .cuisine-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; margin-bottom: 10px; scrollbar-width: none; }
-    .cuisine-tabs::-webkit-scrollbar { display: none; }
+    .cuisine-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+
     .cuisine-tab { flex-shrink: 0; background: var(--bg); border: 1.5px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 0.78rem; font-weight: 700; cursor: pointer; color: var(--muted); transition: all .18s; }
     .cuisine-tab.active { background: #FEE500; border-color: #C8A200; color: #1A1200; }
     /* 음식 그리드 */
