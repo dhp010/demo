@@ -4434,6 +4434,18 @@ function renderFoodGrid() {
   const q = _foodSearchQuery.trim().toLowerCase();
   const favs = (typeof getFavFoods === 'function') ? getFavFoods() : [];
 
+  function itemHtml(f) {
+    const inCart = _cart.find(c => c.name === f.name);
+    const check = inCart ? `<span class="fgi-check">✓ ${inCart.serving > 1 ? inCart.serving+'인분' : '선택됨'}</span>` : '';
+    const isFav = favs.includes(f.name);
+    const safeName = f.name.replace(/'/g,"\\'");
+    // span으로 즐겨찾기 — button 중첩 금지
+    return `<button class="food-grid-item${inCart ? ' in-cart' : ''}" onclick="addToCart('${safeName}',${f.kcal},'${f.icon}')">
+      <span class="fgi-fav${isFav ? ' active' : ''}" onclick="event.stopPropagation();toggleFavFood('${safeName}')">⭐</span>
+      <span class="fgi-icon">${f.icon}</span><span class="fgi-name">${f.name}</span><span class="fgi-kcal">${f.kcal}kcal</span>${check}
+    </button>`;
+  }
+
   // 즐겨찾기 탭
   if (_cuisine === '⭐ 즐겨찾기') {
     if (favs.length === 0) {
@@ -4442,18 +4454,11 @@ function renderFoodGrid() {
     }
     const allItems = Object.values(FOOD_DB).flatMap(g => g.flatMap(x => x.items || []));
     const favItems = allItems.filter(f => favs.includes(f.name) && (!q || f.name.toLowerCase().includes(q)));
-    let html = `<div class="food-group-label">⭐ 즐겨찾기 (${favItems.length}개)</div><div class="food-grid">`;
-    html += favItems.map(f => {
-      const inCart = _cart.find(c => c.name === f.name);
-      const check = inCart ? `<span class="fgi-check">✓ ${inCart.serving > 1 ? inCart.serving+'인분' : '선택됨'}</span>` : '';
-      return `<button class="food-grid-item${inCart ? ' in-cart' : ''}" onclick="addToCart('${f.name.replace(/'/g,"\\'")}',${f.kcal},'${f.icon}')">
-        <button class="fgi-fav active" onclick="event.stopPropagation();toggleFavFood('${f.name.replace(/'/g,"\\'")}')">⭐</button>
-        <span class="fgi-icon">${f.icon}</span><span class="fgi-name">${f.name}</span><span class="fgi-kcal">${f.kcal}kcal</span>${check}
-      </button>`;
-    }).join('');
-    html += '</div>';
-    if (!favItems.length) html = '<div style="color:var(--muted);font-size:0.82rem;padding:8px 0;text-align:center">검색 결과가 없어요 🤔</div>';
-    grid.innerHTML = html;
+    if (!favItems.length) {
+      grid.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;padding:8px 0;text-align:center">검색 결과가 없어요 🤔</div>';
+      return;
+    }
+    grid.innerHTML = `<div class="food-group-label">⭐ 즐겨찾기 (${favItems.length}개)</div><div class="food-grid">${favItems.map(itemHtml).join('')}</div>`;
     return;
   }
 
@@ -4462,18 +4467,7 @@ function renderFoodGrid() {
   for (const g of groups) {
     const items = q ? g.items.filter(f => f.name.toLowerCase().includes(q)) : g.items;
     if (!items.length) continue;
-    html += `<div class="food-group-label">${g.icon} ${g.group}</div>`;
-    html += `<div class="food-grid">`;
-    html += items.map(f => {
-      const inCart = _cart.find(c => c.name === f.name);
-      const check = inCart ? `<span class="fgi-check">✓ ${inCart.serving > 1 ? inCart.serving+'인분' : '선택됨'}</span>` : '';
-      const isFav = favs.includes(f.name);
-      return `<button class="food-grid-item${inCart ? ' in-cart' : ''}" onclick="addToCart('${f.name.replace(/'/g,"\\'")}',${f.kcal},'${f.icon}')">
-        <button class="fgi-fav${isFav ? ' active' : ''}" onclick="event.stopPropagation();toggleFavFood('${f.name.replace(/'/g,"\\'")}')">⭐</button>
-        <span class="fgi-icon">${f.icon}</span><span class="fgi-name">${f.name}</span><span class="fgi-kcal">${f.kcal}kcal</span>${check}
-      </button>`;
-    }).join('');
-    html += `</div>`;
+    html += `<div class="food-group-label">${g.icon} ${g.group}</div><div class="food-grid">${items.map(itemHtml).join('')}</div>`;
   }
   if (!html) html = '<div style="color:var(--muted);font-size:0.82rem;padding:8px 0;text-align:center">검색 결과가 없어요 🤔</div>';
   grid.innerHTML = html;
