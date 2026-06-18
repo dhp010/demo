@@ -220,12 +220,35 @@
     .card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; color: var(--text); }
     .card h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: var(--text); }
 
+    /* ── 유산소 카테고리 탭 ── */
+    .cardio-cat-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .cardio-cat-btn {
+      flex: 1 1 auto;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      color: var(--text-sub);
+    }
+    .cardio-cat-btn:hover { border-color: var(--cardio); color: var(--cardio); }
+    .cardio-cat-btn.active { background: var(--cardio-bg); border-color: var(--cardio); color: var(--cardio); font-weight: 600; }
+
     /* ── 유산소 활동 버튼 ── */
     .activity-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
       gap: 8px;
       margin-bottom: 16px;
+      min-height: 44px;
     }
 
     .activity-btn {
@@ -895,7 +918,8 @@
 
     @media (max-width: 400px) {
       .form-row.three { grid-template-columns: 1fr 1fr; }
-      .activity-grid { grid-template-columns: repeat(3, 1fr); }
+      .activity-grid { grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); }
+      .cardio-cat-btn { font-size: 0.7rem; padding: 5px 6px; }
       .ex-type-toggle { grid-template-columns: 1fr 1fr; }
       .ex-type-toggle .type-btn:last-child { grid-column: span 2; }
     }
@@ -1261,23 +1285,8 @@
     <div class="card">
       <h2>유산소 운동 기록</h2>
 
-      <div class="activity-grid">
-        <button class="activity-btn active" data-activity="running">
-          <span class="icon">🏃</span>달리기
-        </button>
-        <button class="activity-btn" data-activity="walking">
-          <span class="icon">🚶</span>걷기
-        </button>
-        <button class="activity-btn" data-activity="cycling">
-          <span class="icon">🚴</span>자전거
-        </button>
-        <button class="activity-btn" data-activity="swimming">
-          <span class="icon">🏊</span>수영
-        </button>
-        <button class="activity-btn" data-activity="stairmaster">
-          <span class="icon">🪜</span>천국의계단
-        </button>
-      </div>
+      <div class="cardio-cat-row" id="cardio-cat-row"></div>
+      <div class="activity-grid" id="activity-grid"></div>
 
       <div class="form-row">
         <div class="form-group" style="margin-bottom:0">
@@ -1755,12 +1764,41 @@
 
 // ── 상수 ──────────────────────────────────────────────────
 const ACTIVITIES = {
-  running:  { name: '달리기', icon: '🏃', distFactor: 1.036, met: 9 },
-  walking:  { name: '걷기',   icon: '🚶', distFactor: 0.55,  met: 3.5 },
-  cycling:  { name: '자전거', icon: '🚴', distFactor: 0.45,  met: 8 },
-  swimming:     { name: '수영',       icon: '🏊', distFactor: 8.5,  met: 6 },
-  stairmaster:  { name: '천국의 계단', icon: '🪜', distFactor: 0.9,  met: 9 },
+  // ── 러닝/걷기 ──
+  running:     { name:'달리기',     icon:'🏃', distFactor:1.036, met:9,    cat:'run' },
+  walking:     { name:'걷기',       icon:'🚶', distFactor:0.55,  met:3.5,  cat:'run' },
+  sprint:      { name:'스프린트',   icon:'💨', distFactor:1.5,   met:15,   cat:'run' },
+  intervalrun: { name:'인터벌달리기',icon:'⚡', distFactor:1.2,   met:12,   cat:'run' },
+  hiking:      { name:'등산',       icon:'🏔️', distFactor:0.8,   met:6,    cat:'run' },
+  // ── 실내기구 ──
+  cycling:     { name:'사이클',     icon:'🚴', distFactor:0.45,  met:8,    cat:'machine' },
+  rowing:      { name:'로잉머신',   icon:'🚣', distFactor:0.9,   met:7,    cat:'machine' },
+  stepper:     { name:'스텝퍼',     icon:'🦶', distFactor:0.85,  met:8,    cat:'machine' },
+  elliptical:  { name:'일립티컬',   icon:'🔄', distFactor:0.6,   met:5,    cat:'machine' },
+  airbike:     { name:'에어바이크', icon:'💪', distFactor:0.8,   met:9,    cat:'machine' },
+  skierg:      { name:'스키어그',   icon:'⛷️', distFactor:0.95,  met:9.5,  cat:'machine' },
+  stairmaster: { name:'천국의 계단',icon:'🪜', distFactor:0.9,   met:9,    cat:'machine' },
+  // ── 수중/기타 ──
+  swimming:    { name:'수영',       icon:'🏊', distFactor:8.5,   met:6,    cat:'water' },
+  jumprope:    { name:'줄넘기',     icon:'🪢', distFactor:0.5,   met:10,   cat:'water' },
+  climbing:    { name:'클라이밍',   icon:'🧗', distFactor:1.2,   met:8,    cat:'water' },
+  // ── 스포츠 ──
+  badminton:   { name:'배드민턴',   icon:'🏸', distFactor:0.5,   met:5.5,  cat:'sports' },
+  tennis:      { name:'테니스',     icon:'🎾', distFactor:0.6,   met:7.3,  cat:'sports' },
+  basketball:  { name:'농구',       icon:'🏀', distFactor:0.6,   met:6.5,  cat:'sports' },
+  soccer:      { name:'축구',       icon:'⚽', distFactor:0.7,   met:7,    cat:'sports' },
+  // ── 댄스/격투 ──
+  zumba:       { name:'줌바',       icon:'💃', distFactor:0.5,   met:6,    cat:'other' },
+  kickboxing:  { name:'킥복싱',     icon:'🥊', distFactor:0.6,   met:8,    cat:'other' },
 };
+
+const CARDIO_CATS = [
+  { key:'run',     label:'🏃 러닝/걷기' },
+  { key:'machine', label:'🚴 실내기구' },
+  { key:'water',   label:'🏊 수중/기타' },
+  { key:'sports',  label:'🏸 스포츠' },
+  { key:'other',   label:'💃 댄스·격투' },
+];
 
 const EXERCISES = {
   compound: [
@@ -2275,6 +2313,45 @@ function renderRMChart() {
   });
 }
 
+// ── 유산소 UI (카테고리 탭 + 활동 버튼 동적 생성) ─────────
+function renderActivityGrid(cat) {
+  const grid = document.getElementById('activity-grid');
+  grid.innerHTML = '';
+  Object.entries(ACTIVITIES)
+    .filter(([, v]) => v.cat === cat)
+    .forEach(([key, act]) => {
+      const btn = document.createElement('button');
+      btn.className = 'activity-btn' + (key === currentActivity ? ' active' : '');
+      btn.dataset.activity = key;
+      btn.innerHTML = `<span class="icon">${act.icon}</span>${act.name}`;
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentActivity = key;
+        liveCardio();
+      });
+      grid.appendChild(btn);
+    });
+}
+
+function buildCardioUI() {
+  const catRow = document.getElementById('cardio-cat-row');
+  const defaultCat = ACTIVITIES[currentActivity]?.cat || 'run';
+  CARDIO_CATS.forEach((cat, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'cardio-cat-btn' + (cat.key === defaultCat ? ' active' : '');
+    btn.dataset.cat = cat.key;
+    btn.textContent = cat.label;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cardio-cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderActivityGrid(cat.key);
+    });
+    catRow.appendChild(btn);
+  });
+  renderActivityGrid(defaultCat);
+}
+
 // ── 유산소 라이브 계산 ────────────────────────────────────
 function liveCardio() {
   const dist = parseFloat(document.getElementById('c-dist').value) || 0;
@@ -2300,7 +2377,7 @@ function liveCardio() {
   }
   document.getElementById('c-sub').textContent = basis;
   resultEl.style.display = '';
-  saveBtn.disabled = !dist;
+  saveBtn.disabled = !dist && !dur;
 }
 
 // ── 웨이트 라이브 계산 ────────────────────────────────────
@@ -2437,15 +2514,8 @@ function init() {
     });
   });
 
-  // ── 활동 선택 (유산소) ──
-  document.querySelectorAll('.activity-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentActivity = btn.dataset.activity;
-      liveCardio();
-    });
-  });
+  // ── 유산소 카테고리 UI 초기화 ──
+  buildCardioUI();
 
   document.getElementById('c-dist').addEventListener('input', liveCardio);
   document.getElementById('c-dur').addEventListener('input', liveCardio);
@@ -2454,7 +2524,7 @@ function init() {
   document.getElementById('btn-c-save').addEventListener('click', () => {
     const dist = parseFloat(document.getElementById('c-dist').value) || 0;
     const dur  = parseFloat(document.getElementById('c-dur').value) || 0;
-    if (!dist) return;
+    if (!dist && !dur) return;
     saveCardioRec({
       date: document.getElementById('c-date').value || todayStr(),
       activity: currentActivity,
@@ -2905,6 +2975,191 @@ const GUIDE_DATA = [
     steps:['네발 기기 자세를 취한다. 손목은 어깨 아래, 무릎은 엉덩이 아래.','척추를 중립으로 유지하고 코어를 수축한다.','오른팔을 앞으로 뻗는 동시에 왼발을 뒤로 뻗는다.','몸통이 흔들리지 않도록 코어로 안정화한다.','3~5초 정지 후 원 위치로 돌아와 반대쪽을 반복한다.'],
     sets:[['근력 강화','s','3세트','10회(각)','60초',''],['근비대','h','3세트','12~15회(각)','45초',''],['근지구력','e','3세트','15~20회(각)','30초','']],
     tip:'팔다리를 뻗을 때 몸통이 회전하거나 허리가 처지면 코어 힘이 부족한 것입니다. 천천히, 정확하게 수행하는 것이 핵심입니다.'},
+
+  /* ── 복합운동 추가 ── */
+  { name:'트랩바데드리프트', cat:'compound', icon:'🔷', diff:3,
+    primary:['대퇴사두근','둔근','햄스트링'], secondary:['척추기립근','승모근','코어'],
+    effects:[['💪','하체 전체 근비대'],['⚡','허리 부담 감소'],['🔒','무릎·허리 친화적 패턴']],
+    steps:['트랩바 중앙에 서서 핸들을 잡는다','발은 어깨너비, 발끝 약 15° 외측','엉덩이를 낮추고 가슴을 들어 등을 편다','복압을 잡고 다리로 바닥을 밀며 일어선다','엉덩이를 완전히 잠근다','허리를 먼저 숙이지 않고 엉덩이·무릎을 동시에 접어 내린다'],
+    sets:[['근비대','hypertrophy',4,'6~10회','90초',''],['근력','strength',5,'3~5회','4분',''],['지구력','endurance',3,'12~15회','60초','']],
+    tip:'일반 데드리프트 입문자나 허리가 약한 분에게 추천. 핸들을 중립 또는 오버그립 중 편한 방향으로 잡으세요.' },
+
+  { name:'시티드케이블로우', cat:'compound', icon:'🔗', diff:2,
+    primary:['광배근','대원근'], secondary:['이두근','후면삼각근','능형근'],
+    effects:[['💪','등 두께·너비 동시 자극'],['🧘','척추 안정성'],['⚖️','좌우 균형 훈련']],
+    steps:['양발을 발판에 올리고 무릎을 약간 구부린다','상체를 90° 수직으로 세운다','팔꿈치를 뒤로 당기며 복부 옆으로 붙인다','어깨뼈를 완전히 모아 1초 수축한다','천천히 팔을 뻗어 초기 자세로 돌아간다'],
+    sets:[['근비대','hypertrophy',4,'10~12회','75초',''],['근력','strength',4,'6~8회','2분',''],['지구력','endurance',3,'15~20회','45초','']],
+    tip:'"팔꿈치로 옆구리에 꽂는다"는 느낌으로 당기세요. 팔이 아니라 등이 수축하는 느낌을 찾아야 합니다.' },
+
+  { name:'케이블풀오버', cat:'compound', icon:'🌊', diff:2,
+    primary:['광배근','대원근'], secondary:['흉근하부','복근'],
+    effects:[['💪','광배근 스트레칭·수축 풀 레인지'],['🔒','어깨 안정화'],['💡','가슴·등 경계 자극']],
+    steps:['풀리를 높이 걸고 로프/스트레이트바를 연결한다','케이블 앞에 서서 팔을 머리 위로 올려 광배근을 스트레칭한다','팔꿈치를 약간 구부린 채 아래·뒤로 당겨 허벅지 앞까지 내린다','광배근 수축을 2초 유지 후 천천히 되돌아간다'],
+    sets:[['근비대','hypertrophy',3,'12~15회','60초',''],['지구력','endurance',3,'15~20회','45초',''],['체지방감소','fatloss',3,'15회','45초','']],
+    tip:'팔꿈치를 완전히 잠그지 않고 살짝 구부린 상태 유지. 어깨 부담을 줄이고 광배근에 집중됩니다.' },
+
+  { name:'바벨힙쓰러스트', cat:'compound', icon:'🍑', diff:2,
+    primary:['둔근(대둔근)'], secondary:['햄스트링','코어'],
+    effects:[['🍑','둔근 직접 최대 자극'],['💪','힙힌지 패턴 강화'],['⚡','스쿼트·데드 보조 향상']],
+    steps:['벤치에 등 상부를 기대고 바벨을 고관절에 올린다','발은 어깨너비, 무릎 90° 각도','복압을 잡고 엉덩이를 위로 밀어 올린다','무릎·엉덩이·어깨가 일직선이 될 때까지 올린다','둔근을 2초 수축 후 천천히 내린다'],
+    sets:[['근비대','hypertrophy',4,'10~15회','75초',''],['근력','strength',4,'6~8회','2분',''],['지구력','endurance',3,'20회','45초','']],
+    tip:'바벨패드를 고관절에 필수로 사용하세요. 최상점에서 2초 수축을 유지하면 둔근 자극이 극대화됩니다.' },
+
+  { name:'저처치스쿼트', cat:'compound', icon:'💪', diff:4,
+    primary:['대퇴사두근','둔근','코어'], secondary:['이두근','상배근'],
+    effects:[['💪','코어+하체 동시 강화'],['🧘','직립 토르소 스쿼트'],['⚡','상체 지지력 향상']],
+    steps:['바벨을 팔꿈치 안쪽 접힘부에 걸친다','발은 어깨너비 이상, 발끝 외측','팔꿈치를 위로 들고 가슴을 편다','엉덩이를 두 다리 사이로 깊게 내린다','코어와 팔로 바벨을 단단히 고정하며 일어선다'],
+    sets:[['근비대','hypertrophy',4,'6~10회','90초',''],['근력','strength',4,'3~5회','3분',''],['지구력','endurance',3,'12회','60초','']],
+    tip:'처음에는 빈 바 또는 덤벨로 자세를 익히세요. 팔꿈치 통증 시 폼롤러로 패딩하세요.' },
+
+  /* ── 고립운동 추가 ── */
+  { name:'인클라인바이셉컬', cat:'isolation', icon:'💪', diff:2,
+    primary:['이두근(장두)'], secondary:['상완근','전완근'],
+    effects:[['💪','이두 장두 최대 스트레칭'],['🎯','이두 피크 집중'],['📐','완전 신전에서 시작']],
+    steps:['인클라인 벤치를 45~60°로 설정하고 눕는다','덤벨을 양손에 들고 팔을 완전히 내린다','팔꿈치를 고정한 채 위로 컬한다','최상점에서 이두근을 수축 후 천천히 내린다','완전히 펴 장두를 충분히 늘린다'],
+    sets:[['근비대','hypertrophy',3,'10~12회','60초',''],['지구력','endurance',3,'15회','45초',''],['체지방감소','fatloss',3,'15회','45초','']],
+    tip:'팔꿈치가 앞으로 나오면 자극이 분산됩니다. 벤치에 등을 완전히 기대고 팔꿈치를 몸통 뒤에 유지하세요.' },
+
+  { name:'바벨컬', cat:'isolation', icon:'💪', diff:2,
+    primary:['이두근'], secondary:['상완근','전완근'],
+    effects:[['💪','이두 전체 볼륨 자극'],['⚡','무거운 중량으로 근력 증가'],['🔗','좌우 동시 이두 자극']],
+    steps:['바벨을 언더그립으로 어깨너비로 잡는다','팔꿈치를 몸통 옆에 고정하고 선다','팔꿈치를 축으로 바벨을 어깨 높이까지 올린다','이두근 최대 수축 후 천천히 내린다','완전히 펴서 이두를 스트레칭한다'],
+    sets:[['근비대','hypertrophy',3,'8~12회','60초',''],['근력','strength',4,'5~8회','2분',''],['지구력','endurance',3,'15회','45초','']],
+    tip:'반동 금지. 벽에 등을 기대거나 프리처컬 패드를 활용하면 반동을 차단할 수 있어요.' },
+
+  { name:'리버스컬', cat:'isolation', icon:'🔄', diff:2,
+    primary:['상완근','전완근'], secondary:['이두근(단두)'],
+    effects:[['💪','전완근·상완근 강화'],['🧘','손목 신근 강화'],['⚖️','이두 균형 발달']],
+    steps:['바벨 또는 EZ바를 오버그립(손등 위)으로 잡는다','팔꿈치를 고정하고 천천히 위로 올린다','손목을 굽히지 않고 중립을 유지한다','천천히 내리며 전완근을 늘린다'],
+    sets:[['근비대','hypertrophy',3,'10~15회','60초',''],['지구력','endurance',3,'15~20회','45초',''],['체지방감소','fatloss',3,'15회','45초','']],
+    tip:'EZ바를 사용하면 손목 부담이 줄어듭니다. 일반 컬보다 중량이 20~30% 낮은 것이 정상이에요.' },
+
+  { name:'케이블바이셉컬', cat:'isolation', icon:'🔗', diff:1,
+    primary:['이두근'], secondary:['상완근','전완근'],
+    effects:[['💪','지속적 장력으로 이두 펌핑'],['🎯','운동 전 범위 일정한 저항'],['💡','마무리 펌핑에 최적']],
+    steps:['낮은 풀리에 스트레이트바나 EZ바를 연결한다','바를 언더그립으로 잡고 팔꿈치를 고정한다','천천히 컬하여 최상점에서 1~2초 수축한다','장력을 유지하며 천천히 내린다'],
+    sets:[['근비대','hypertrophy',3,'12~15회','60초',''],['지구력','endurance',3,'15~20회','45초',''],['체지방감소','fatloss',3,'15~20회','30초','']],
+    tip:'바닥에서도 장력이 유지됩니다. 마지막 2~3회를 파셜 레인지로 수행하면 강도를 높일 수 있어요.' },
+
+  { name:'케이블레터럴레이즈', cat:'isolation', icon:'🔗', diff:2,
+    primary:['삼각근(중부)'], secondary:['삼각근(전부·후부)','승모근'],
+    effects:[['💪','삼각근 중부 지속 장력'],['🎯','어깨 너비 증가'],['⚖️','전 범위 일정한 저항']],
+    steps:['낮은 풀리를 몸 반대쪽에 걸고 한 손으로 잡는다','팔꿈치를 약간 구부리고 옆으로 올린다','어깨 높이까지 올리고 1초 수축한다','천천히 내리며 장력 유지'],
+    sets:[['근비대','hypertrophy',3,'12~15회','60초',''],['지구력','endurance',4,'15~20회','45초',''],['체지방감소','fatloss',3,'15회','30초','']],
+    tip:'덤벨 레터럴레이즈보다 최하점에서 장력이 높아 삼각근 스트레칭이 잘 됩니다. 반대쪽도 반드시 동일하게 수행하세요.' },
+
+  { name:'인클라인레터럴레이즈', cat:'isolation', icon:'📐', diff:2,
+    primary:['삼각근(중부)'], secondary:['삼각근(후부)','극상근'],
+    effects:[['💪','삼각근 중부 최대 스트레칭'],['🎯','어깨 너비 발달'],['🔒','극상근 강화']],
+    steps:['인클라인 벤치(30~45°)에 옆으로 누운다','아래쪽 팔로 벤치를 잡고 위쪽 덤벨을 든다','팔꿈치를 약간 굽힌 채 위로 올린다','최상점에서 1초 수축 후 천천히 내린다'],
+    sets:[['근비대','hypertrophy',3,'12~15회','60초',''],['지구력','endurance',3,'15~20회','45초',''],['체지방감소','fatloss',3,'15회','30초','']],
+    tip:'인클라인 각도가 클수록 삼각근 스트레칭이 깊어집니다. 30~45° 각도에서 시작해 강도를 조절하세요.' },
+
+  { name:'힙어덕션', cat:'isolation', icon:'🦵', diff:1,
+    primary:['고관절내전근군'], secondary:['박근','치골근'],
+    effects:[['💪','내전근군 발달'],['⚖️','무릎 안정성 향상'],['🔒','고관절 내전 패턴 강화']],
+    steps:['어덕션 머신에 앉아 무릎 안쪽을 패드에 댄다','등을 등받이에 기대고 허리를 편다','무릎을 안쪽으로 모으며 내전근을 수축한다','최상점에서 1초 수축 후 천천히 벌린다'],
+    sets:[['근비대','hypertrophy',3,'15~20회','60초',''],['지구력','endurance',3,'20~25회','45초',''],['체지방감소','fatloss',3,'20회','30초','']],
+    tip:'마지막 10° 구간에서 내전근이 최대 수축됩니다. 천천히 모으고 천천히 벌리며 근육을 의식하세요.' },
+
+  { name:'시티드레그컬', cat:'isolation', icon:'🦵', diff:1,
+    primary:['햄스트링'], secondary:['비복근','오금근'],
+    effects:[['💪','햄스트링 완전 수축 자극'],['🧘','고관절 신전 자세 개선'],['⚖️','무릎 안정성 강화']],
+    steps:['시티드 레그컬 머신에 앉아 발뒤꿈치를 패드 아래에 넣는다','등받이에 완전히 기대고 허리를 편다','무릎을 구부리며 패드를 아래로 당긴다','최대 굴곡에서 1~2초 수축 후 천천히 올린다'],
+    sets:[['근비대','hypertrophy',3,'12~15회','75초',''],['지구력','endurance',3,'15~20회','45초',''],['체지방감소','fatloss',3,'15회','30초','']],
+    tip:'앉은 자세에서 햄스트링이 이미 스트레칭된 상태라 라잉 레그컬보다 수축 범위가 넓어요.' },
+
+  { name:'케이블체스트플라이', cat:'isolation', icon:'🔗', diff:2,
+    primary:['대흉근'], secondary:['전면삼각근','소흉근'],
+    effects:[['💪','가슴 전 범위 지속 장력'],['🎯','가슴 중앙 선 발달'],['💡','덤벨 플라이보다 마무리 수축 강화']],
+    steps:['케이블을 어깨 높이에 설정하고 센터에 선다','양쪽 핸들을 잡고 한 발 앞으로 내딛는다','팔꿈치를 약간 구부린 채 앞으로 모은다','손이 몸 중앙에서 교차할 때까지 모아 수축한다','천천히 벌려 가슴을 스트레칭한다'],
+    sets:[['근비대','hypertrophy',3,'12~15회','60초',''],['지구력','endurance',3,'15~20회','45초',''],['체지방감소','fatloss',3,'15회','30초','']],
+    tip:'높이 조절로 상·중·하부 가슴을 선택적으로 자극할 수 있어요. 위쪽 각도=하부가슴, 아래쪽 각도=상부가슴.' },
+
+  { name:'시티드카프레이즈(머신)', cat:'isolation', icon:'🦵', diff:1,
+    primary:['가자미근'], secondary:['비복근'],
+    effects:[['💪','가자미근 집중 자극'],['🧘','발목 안정성 강화'],['⚖️','종아리 두께 발달']],
+    steps:['머신에 앉아 무릎 위에 패드를 올린다','발끝을 발판 끝에 올리고 뒤꿈치를 완전히 내린다','뒤꿈치를 최대한 올리며 가자미근을 수축한다','최상점에서 2초 유지 후 천천히 내린다','완전히 내려 스트레칭을 충분히 한다'],
+    sets:[['근비대','hypertrophy',4,'15~20회','60초',''],['지구력','endurance',4,'20~25회','45초',''],['체지방감소','fatloss',3,'20회','30초','']],
+    tip:'서서 하는 카프레이즈는 비복근 위주, 앉아서 하는 머신은 가자미근 위주입니다. 두 운동을 병행해야 종아리 전체를 발달시킬 수 있어요.' },
+
+  { name:'타이비레이즈', cat:'isolation', icon:'🦵', diff:1,
+    primary:['전경골근'], secondary:['장지신근','장무지신근'],
+    effects:[['💪','전면 종아리 강화'],['🧘','발목 배측 굴곡 강화'],['🔒','정강이 통증 예방']],
+    steps:['벽에 등을 기대고 발뒤꿈치를 바닥에 붙인다','발끝을 최대한 위로 들어 올린다','전경골근을 수축하고 2초 유지한다','천천히 내리며 반복한다'],
+    sets:[['근비대','hypertrophy',3,'20~25회','45초',''],['지구력','endurance',3,'25~30회','30초',''],['체지방감소','fatloss',3,'25회','30초','']],
+    tip:'달리기 후 정강이 통증(shin splints) 예방에 매우 효과적입니다. 자체 중량으로 고반복 수행을 추천해요.' },
+
+  /* ── 맨몸운동 추가 ── */
+  { name:'수퍼맨', cat:'bodyweight', icon:'🦸', diff:1,
+    primary:['척추기립근','둔근'], secondary:['햄스트링','견갑골안정근'],
+    effects:[['💪','척추 신전 근육 강화'],['🧘','자세 교정·허리 안정화'],['🔒','허리 부상 예방']],
+    steps:['매트에 엎드려 팔을 앞으로 쭉 뻗는다','팔·가슴·다리를 동시에 들어 올린다','척추기립근과 둔근을 수축하며 2~3초 유지한다','천천히 내리며 반복한다','목은 중립 유지, 너무 뒤로 젖히지 않는다'],
+    sets:[['근비대','hypertrophy',3,'15회','60초',''],['지구력','endurance',3,'15~20회','45초',''],['체지방감소','fatloss',3,'20회','30초','']],
+    tip:'허리가 약하거나 데드리프트 전 워밍업으로 활용하세요. 반대쪽 팔·다리 교차 형태로 난이도를 낮출 수도 있어요.' },
+
+  { name:'바이시클크런치', cat:'bodyweight', icon:'🚴', diff:2,
+    primary:['복사근(내·외)','복직근'], secondary:['고관절굴곡근'],
+    effects:[['💪','복사근 집중 자극'],['🏃','회전력과 코어 안정성'],['💡','복근 전체 활성화 효율 높음']],
+    steps:['등을 매트에 붙이고 무릎을 90° 구부린다','손을 머리 뒤에 가볍게 올린다','한쪽 무릎을 당기며 반대쪽 팔꿈치를 가져간다','교차하며 페달 밟듯 반복한다'],
+    sets:[['근비대','hypertrophy',3,'20회(각)','60초',''],['지구력','endurance',3,'25~30회(각)','45초',''],['체지방감소','fatloss',3,'25회(각)','30초','']],
+    tip:'빠른 반동 대신 천천히 제어하며 복사근을 비틀어주세요. 손을 가볍게만 올리고 목에 힘을 주지 마세요.' },
+
+  { name:'데드버그', cat:'bodyweight', icon:'🐛', diff:2,
+    primary:['코어(심부)','복횡근'], secondary:['척추기립근','고관절굴곡근'],
+    effects:[['💪','코어 심층 안정성 강화'],['🧘','척추 중립 유지 능력'],['🔒','허리 부상 예방·재활']],
+    steps:['천장을 보고 누운 뒤 팔을 수직으로 올리고 무릎을 90° 구부린다','허리가 바닥에 붙도록 복압을 잡는다','반대쪽 팔·다리를 동시에 천천히 뻗는다','허리가 뜨지 않을 만큼만 뻗고 멈춘다','원위치 후 반대쪽을 반복한다'],
+    sets:[['근비대','hypertrophy',3,'10회(각)','60초',''],['지구력','endurance',3,'12~15회(각)','45초',''],['체지방감소','fatloss',3,'12회(각)','30초','']],
+    tip:'허리가 바닥에서 뜨는 순간 동작을 멈추세요. 팔다리를 낮추는 각도가 아니라 허리 안정성이 핵심입니다.' },
+
+  { name:'스텝업', cat:'bodyweight', icon:'⬆️', diff:2,
+    primary:['대퇴사두근','둔근'], secondary:['햄스트링','균형감각'],
+    effects:[['💪','단측 하체 근력 강화'],['⚖️','좌우 불균형 교정'],['🏃','기능적 하체 움직임']],
+    steps:['박스나 벤치 앞에 서서 한 발을 올린다','올린 발로 바닥을 밀며 몸을 올린다','양발을 박스 위에 올리고 잠깐 선다','같은 발로 천천히 내려온다','발을 바꿔 반복한다'],
+    sets:[['근비대','hypertrophy',3,'10~12회(각)','75초',''],['근력','strength',4,'8회(각)','90초','덤벨 추가 가능'],['지구력','endurance',3,'15회(각)','45초','']],
+    tip:'박스 높이는 처음에 무릎 높이 이하로 시작하세요. 올릴 때 무릎이 안쪽으로 무너지지 않도록 발끝 방향을 유지하세요.' },
+
+  { name:'박스점프', cat:'bodyweight', icon:'📦', diff:3,
+    primary:['대퇴사두근','둔근'], secondary:['햄스트링','종아리','코어'],
+    effects:[['⚡','폭발적 하체 파워 발달'],['🏃','점프 높이 향상'],['💡','신경근 활성화']],
+    steps:['박스 앞에 어깨너비로 선다','팔을 뒤로 당기며 무릎을 구부린다','팔을 앞으로 크게 스윙하며 최대한 높이 점프한다','양발로 동시에 박스 위에 착지한다','무릎을 살짝 구부려 충격을 흡수한다','뒤로 또는 앞으로 내려온다'],
+    sets:[['근비대','hypertrophy',4,'5~8회','90초',''],['근력','strength',5,'3~5회','2분','최대 높이'],['지구력','endurance',3,'10회','60초','']],
+    tip:'착지 시 발 전체로 착지하고 무릎이 발끝보다 앞으로 나가지 않게 하세요. 처음에는 낮은 박스(20~30cm)에서 시작하세요.' },
+
+  { name:'케틀벨고블릿스쿼트', cat:'bodyweight', icon:'🏋️', diff:2,
+    primary:['대퇴사두근','둔근'], secondary:['코어','상배근','고관절내전근'],
+    effects:[['💪','하체 전체 자극'],['🧘','직립 토르소 스쿼트 패턴'],['💡','스쿼트 자세 교정에 효과적']],
+    steps:['케틀벨(또는 덤벨)을 두 손으로 가슴 앞에 든다','발은 어깨너비 이상, 발끝 외측 30~45°','가슴을 들고 엉덩이를 두 다리 사이로 깊게 내린다','무릎은 발끝 방향으로 유지한다','바닥과 평행 이하로 내려간 후 일어선다'],
+    sets:[['근비대','hypertrophy',4,'10~15회','75초',''],['지구력','endurance',3,'15~20회','45초',''],['체지방감소','fatloss',3,'15회','45초','']],
+    tip:'앞으로 무게를 들면 자연스럽게 상체가 직립됩니다. 힙 모빌리티 향상과 스쿼트 자세 교정에 탁월합니다.' },
+
+  { name:'L싯', cat:'bodyweight', icon:'⬛', diff:4,
+    primary:['복직근','코어(심층)','고관절굴곡근'], secondary:['삼두근','광배근','어깨안정근'],
+    effects:[['💪','코어 압축력 극강'],['🧘','상체 지지력 발달'],['⚡','체조 기초 스킬']],
+    steps:['병렬 바 또는 의자 두 개에 손을 짚는다','팔꿈치를 완전히 편다','다리를 지면과 평행이 될 때까지 올린다','코어와 고관절굴곡근으로 유지한다','처음에는 한쪽씩 올리거나 무릎을 구부려 시작한다'],
+    sets:[['근비대','hypertrophy',3,'10~20초','90초',''],['근력','strength',4,'10~15초','2분',''],['지구력','endurance',3,'20초','60초','']],
+    tip:'먼저 "턱드L싯(무릎 구부림)"에서 시작해 점진적으로 다리를 펴세요. 전완·삼두 근력과 고관절 굴곡 유연성이 모두 필요합니다.' },
+
+  { name:'투크', cat:'bodyweight', icon:'🤸', diff:4,
+    primary:['코어','삼두근','어깨안정근'], secondary:['광배근','전거근','복직근'],
+    effects:[['💪','L싯·플란체 기초 스킬'],['🧘','어깨 및 코어 압축력'],['⚡','체조 스트렝스 기초']],
+    steps:['바닥이나 패럴렛에 손을 어깨너비로 짚는다','팔꿈치를 완전히 펴고 어깨를 아래로 눌러 내린다','무릎을 가슴 쪽으로 당기며 발을 바닥에서 든다','균형을 잡으며 유지한다','점차 무릎을 펴 L싯·플란체로 발전시킨다'],
+    sets:[['근력','strength',4,'5~15초','2분',''],['지구력','endurance',3,'10초','90초',''],['근비대','hypertrophy',3,'10초','90초','']],
+    tip:'손목 강화가 선행되어야 합니다. 처음에는 패럴렛으로 손목 각도를 중립에 가깝게 유지하세요.' },
+
+  { name:'트리셉딥스(의자)', cat:'bodyweight', icon:'🪑', diff:2,
+    primary:['삼두근'], secondary:['전면삼각근','흉근하부'],
+    effects:[['💪','삼두근 집중 자극'],['🎯','장비 없이 어디서나 가능'],['💡','딥스 입문 동작']],
+    steps:['의자나 벤치 끝에 손을 짚고 앉는다','발을 앞으로 뻗거나 다른 의자 위에 올린다','팔꿈치를 구부리며 엉덩이를 내린다','팔꿈치가 90°가 될 때까지 내린다','삼두근으로 밀어 올린다'],
+    sets:[['근비대','hypertrophy',3,'10~15회','75초',''],['지구력','endurance',3,'15~20회','45초',''],['체지방감소','fatloss',3,'15회','45초','']],
+    tip:'팔꿈치가 너무 벌어지면 어깨 관절에 부담이 됩니다. 팔꿈치를 몸통 옆에 붙이는 느낌으로 수행하세요.' },
+
+  { name:'힌두푸쉬업', cat:'bodyweight', icon:'🕉️', diff:3,
+    primary:['삼두근','어깨','흉근'], secondary:['코어','척추기립근'],
+    effects:[['💪','상체 전체 동적 자극'],['🧘','척추 유연성 향상'],['🏃','기능적 상체 동작']],
+    steps:['엉덩이를 높이 들어 역V자 자세(다운독)를 취한다','머리를 앞으로 내밀며 가슴이 바닥에 스치듯 내려간다','코브라 자세로 몸을 앞으로 밀고 위를 본다','엉덩이를 다시 위로 들어 다운독으로 돌아간다'],
+    sets:[['근비대','hypertrophy',3,'8~12회','75초',''],['지구력','endurance',3,'12~15회','45초',''],['체지방감소','fatloss',3,'15회','45초','']],
+    tip:'척추 유연성이 좋아야 하며, 허리 통증이 있다면 범위를 줄여 수행하세요. 어깨·가슴·코어를 연속 동작으로 자극하는 기능적 운동입니다.' },
 ];
 
 const CAT_LABEL = { compound:'복합운동', isolation:'고립운동', bodyweight:'맨몸운동' };
@@ -3025,6 +3280,35 @@ const EXERCISE_GIFS = {
   '케틀벨스윙':         'Kettlebell_One_Arm_Swing',
   '점프스쿼트':         'Squat_Jump',
   '버드독':             'Bird_Dog',
+  // ── 복합운동 추가 ──
+  '트랩바데드리프트':   'Trap_Bar_Deadlift',
+  '시티드케이블로우':   'Seated_Cable_Row',
+  '케이블풀오버':       'Kneeling_Cable_Pullover',
+  '바벨힙쓰러스트':    'Barbell_Hip_Thrust',
+  '저처치스쿼트':       'Zercher_Squat',
+  // ── 고립운동 추가 ──
+  '인클라인바이셉컬':   'Incline_Dumbbell_Curl',
+  '바벨컬':             'Barbell_Curl',
+  '리버스컬':           'Reverse_Barbell_Curl',
+  '케이블바이셉컬':     'Cable_Curl',
+  '케이블레터럴레이즈': 'Cable_Lateral_Raise',
+  '인클라인레터럴레이즈':'Seated_Side_Lateral_Raise',
+  '힙어덕션':           'Thigh_Adductor',
+  '시티드레그컬':       'Seated_Leg_Curl',
+  '케이블체스트플라이': 'Cable_Fly-Rope_Pushdown',
+  '시티드카프레이즈(머신)':'Seated_Calf_Raise',
+  '타이비레이즈':       'Tibialis_Anterior_Stretch',
+  // ── 맨몸운동 추가 ──
+  '수퍼맨':             'Superman',
+  '바이시클크런치':     'Bicycle_Crunch',
+  '데드버그':           'Dead_Bug',
+  '스텝업':             'Dumbbell_Step_Up',
+  '박스점프':           'Box_Jump',
+  '케틀벨고블릿스쿼트': 'Dumbbell_Goblet_Squat',
+  'L싯':                'L_Sit',
+  '투크':               'Tuck_Planche',
+  '트리셉딥스(의자)':   'Bench_Dips',
+  '힌두푸쉬업':         'Hindu_Push-Up',
 };
 const _S = '#5a3a28', _E = '#9e7a5e', _BG = '#f0ede8', _BN = '#c8a96e';
 const _SVG = (body) => `<svg viewBox="0 0 240 180" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block"><rect width="240" height="180" fill="${_BG}"/>${body}</svg>`;
