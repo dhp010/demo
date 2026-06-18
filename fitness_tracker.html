@@ -1773,13 +1773,13 @@ const ACTIVITIES = {
   // ── 실내기구 ──
   cycling:     { name:'사이클',      icon:'🚴', distFactor:0.45,  met:8,    cat:'machine', metric:'dist' },
   rowing:      { name:'로잉머신',    icon:'🚣', distFactor:0.9,   met:7,    cat:'machine', metric:'dist' },
-  swimming:    { name:'수영',        icon:'🏊', distFactor:8.5,   met:6,    cat:'machine', metric:'dist' },
   stepper:     { name:'스텝퍼',      icon:'🦶', distFactor:0,     met:8,    cat:'machine', metric:'time' },
   elliptical:  { name:'일립티컬',    icon:'🔄', distFactor:0,     met:5,    cat:'machine', metric:'time' },
   airbike:     { name:'에어바이크',  icon:'💪', distFactor:0,     met:9,    cat:'machine', metric:'time' },
   skierg:      { name:'스키어그',    icon:'⛷️', distFactor:0,     met:9.5,  cat:'machine', metric:'time' },
   stairmaster: { name:'천국의 계단', icon:'🪜', distFactor:0,     met:9,    cat:'machine', metric:'time' },
-  // ── 수중/기타 ──
+  // ── 수중·줄넘기 ──
+  swimming:    { name:'수영',        icon:'🏊', distFactor:8.5,   met:6,    cat:'water',   metric:'dist' },
   jumprope:    { name:'줄넘기',      icon:'🪢', distFactor:0,     met:10,   cat:'water',   metric:'time' },
   climbing:    { name:'클라이밍',    icon:'🧗', distFactor:0,     met:8,    cat:'water',   metric:'time' },
   // ── 스포츠 (시간 기반) ──
@@ -1795,7 +1795,7 @@ const ACTIVITIES = {
 const CARDIO_CATS = [
   { key:'run',     label:'🏃 러닝/걷기' },
   { key:'machine', label:'🚴 실내기구' },
-  { key:'water',   label:'🏊 수중/기타' },
+  { key:'water',   label:'🏊 수중·줄넘기' },
   { key:'sports',  label:'🏸 스포츠' },
   { key:'other',   label:'💃 댄스·격투' },
 ];
