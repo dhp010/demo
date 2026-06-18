@@ -1749,7 +1749,7 @@ const ACTIVITIES = {
   running:     { name:'달리기',      icon:'🏃', distFactor:1.036, met:9,    cat:'run',     metric:'dist' },
   walking:     { name:'걷기',        icon:'🚶', distFactor:0.55,  met:3.5,  cat:'run',     metric:'dist' },
   sprint:      { name:'스프린트',    icon:'💨', distFactor:1.5,   met:15,   cat:'run',     metric:'dist' },
-  intervalrun: { name:'인터벌달리기', icon:'⚡', distFactor:1.2,   met:12,   cat:'run',     metric:'dist' },
+  intervalrun: { name:'인터벌달리기', icon:'⚡', distFactor:1.2,   met:10.5, cat:'run',     metric:'dist' },
   hiking:      { name:'등산',        icon:'🏔️', distFactor:0.8,   met:6,    cat:'run',     metric:'dist' },
   // ── 실내기구 ──
   cycling:     { name:'사이클',      icon:'🚴', distFactor:0.45,  met:8,    cat:'machine', metric:'dist' },
@@ -1831,16 +1831,18 @@ const EXERCISES = {
 // metric:'time'  → 세트 × 초 기준 (플랭크 등 유지 동작)
 // metric:'reps'  → 세트 × 횟수 × spr(초/회) 기준
 const BODYWEIGHT_CALS = {
+  // ── 시간 유지형 (초/세트 입력) ──────────────────────────
   '플랭크':                   { metric:'time', met:3.5 },
   '사이드플랭크':             { metric:'time', met:3.0 },
-  '버드독':                   { metric:'time', met:2.8 },
-  '데드버그':                 { metric:'time', met:2.8 },
   'L싯':                      { metric:'time', met:4.0 },
+  // ── 당기기 계열 ─────────────────────────────────────────
   '풀업':                     { metric:'reps', met:8.0, spr:4.0 },
   '친업':                     { metric:'reps', met:8.0, spr:4.0 },
   '딥스':                     { metric:'reps', met:6.0, spr:3.0 },
   '링딥스':                   { metric:'reps', met:7.0, spr:3.5 },
   '머슬업':                   { metric:'reps', met:9.0, spr:6.0 },
+  '바디로우(인버티드로우)':   { metric:'reps', met:5.0, spr:3.5 },
+  // ── 밀기 계열 ───────────────────────────────────────────
   '푸쉬업':                   { metric:'reps', met:3.8, spr:3.0 },
   '파이크푸쉬업':             { metric:'reps', met:4.0, spr:3.0 },
   '와이드푸쉬업':             { metric:'reps', met:3.8, spr:3.0 },
@@ -1848,18 +1850,30 @@ const BODYWEIGHT_CALS = {
   '아처푸쉬업':               { metric:'reps', met:4.5, spr:4.0 },
   '힌두푸쉬업':               { metric:'reps', met:4.5, spr:4.0 },
   '트리셉딥스(의자)':         { metric:'reps', met:3.5, spr:3.0 },
-  '바디로우(인버티드로우)':   { metric:'reps', met:5.0, spr:3.5 },
-  '레그레이즈':               { metric:'reps', met:3.5, spr:2.5 },
-  '행잉니레이즈':             { metric:'reps', met:3.5, spr:2.5 },
+  // ── 복근 계열 ───────────────────────────────────────────
+  // 레그레이즈/행잉니레이즈: 제어된 동작, 올리고 내리는 데 4초
+  '레그레이즈':               { metric:'reps', met:3.5, spr:4.0 },
+  '행잉니레이즈':             { metric:'reps', met:3.5, spr:3.5 },
   '크런치':                   { metric:'reps', met:2.8, spr:1.5 },
   '리버스크런치':             { metric:'reps', met:3.0, spr:2.0 },
-  '바이시클크런치':           { metric:'reps', met:3.5, spr:1.0 },
+  // 바이시클크런치: 양쪽 1사이클 = 1회 기준, 실제 2~2.5초
+  '바이시클크런치':           { metric:'reps', met:3.5, spr:2.0 },
   '싯업':                     { metric:'reps', met:3.5, spr:2.0 },
-  'AB슬라이드':               { metric:'reps', met:4.5, spr:5.0 },
+  // AB슬라이드: 뻗기 4~5초 + 당기기 3~4초 = 회당 약 7초
+  'AB슬라이드':               { metric:'reps', met:4.5, spr:7.0 },
   '투크':                     { metric:'reps', met:4.0, spr:3.0 },
-  '수퍼맨':                   { metric:'reps', met:2.5, spr:3.0 },
+  // ── 코어 안정화 (rep 기반) ──────────────────────────────
+  // 버드독: 뻗기+3초홀드+복귀 = 5초/회
+  '버드독':                   { metric:'reps', met:2.8, spr:5.0 },
+  // 데드버그: 뻗기+복귀 = 4초/회
+  '데드버그':                 { metric:'reps', met:2.8, spr:4.0 },
+  // 수퍼맨: 등척 수축 포함 MET 3.0
+  '수퍼맨':                   { metric:'reps', met:3.0, spr:3.0 },
+  // ── 전신/유산소형 ───────────────────────────────────────
   '버피':                     { metric:'reps', met:8.0, spr:4.0 },
-  '마운틴클라이머':           { metric:'reps', met:8.0, spr:0.8 },
+  // 마운틴클라이머: 한쪽 무릎 킥 = 1rep, 빠른 동작 1.2초
+  '마운틴클라이머':           { metric:'reps', met:8.0, spr:1.2 },
+  // ── 하체 계열 ───────────────────────────────────────────
   '스쿼트(맨몸)':             { metric:'reps', met:5.0, spr:2.5 },
   '런지':                     { metric:'reps', met:4.0, spr:2.5 },
   '점프스쿼트':               { metric:'reps', met:7.0, spr:2.5 },
@@ -1869,6 +1883,7 @@ const BODYWEIGHT_CALS = {
   '박스점프':                 { metric:'reps', met:7.0, spr:3.0 },
   '글루트브릿지':             { metric:'reps', met:3.5, spr:2.5 },
   '싱글레그글루트브릿지':     { metric:'reps', met:3.5, spr:3.0 },
+  // ── 케틀벨 ─────────────────────────────────────────────
   '케틀벨스윙':               { metric:'reps', met:8.0, spr:2.0 },
   '케틀벨고블릿스쿼트':       { metric:'reps', met:5.5, spr:2.5 },
 };
@@ -2057,7 +2072,9 @@ function calcWeight(exType, wkg, sets, reps, exName = '') {
     // reps = 횟수, spr = 초/회
     return Math.round(bwCal.met * totalW * (sets * reps * bwCal.spr / 3600) * gf());
   }
-  const f = exType === 'compound' ? 0.05 : 0.03;
+  // 물리적 일량(J) 기반: wkg × 9.8 × 0.5m이동 / 0.25효율 / 4186 ≈ wkg×reps×0.0046
+  // 여기에 대근육(복합) vs 소근육(고립) 보정 적용
+  const f = exType === 'compound' ? 0.008 : 0.005;
   return Math.round(wkg * sets * reps * f * gf());
 }
 

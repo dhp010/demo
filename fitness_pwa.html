@@ -1196,8 +1196,6 @@ const EXERCISES = {
 const BODYWEIGHT_CALS = {
   '플랭크':                   { metric:'time', met:3.5 },
   '사이드플랭크':             { metric:'time', met:3.0 },
-  '버드독':                   { metric:'time', met:2.8 },
-  '데드버그':                 { metric:'time', met:2.8 },
   'L싯':                      { metric:'time', met:4.0 },
   '풀업':                     { metric:'reps', met:8.0, spr:4.0 },
   '친업':                     { metric:'reps', met:8.0, spr:4.0 },
@@ -1206,16 +1204,18 @@ const BODYWEIGHT_CALS = {
   '머슬업':                   { metric:'reps', met:9.0, spr:6.0 },
   '푸쉬업':                   { metric:'reps', met:3.8, spr:3.0 },
   '파이크푸쉬업':             { metric:'reps', met:4.0, spr:3.0 },
-  '레그레이즈':               { metric:'reps', met:3.5, spr:2.5 },
-  '행잉니레이즈':             { metric:'reps', met:3.5, spr:2.5 },
+  '레그레이즈':               { metric:'reps', met:3.5, spr:4.0 },
+  '행잉니레이즈':             { metric:'reps', met:3.5, spr:3.5 },
   '크런치':                   { metric:'reps', met:2.8, spr:1.5 },
   '리버스크런치':             { metric:'reps', met:3.0, spr:2.0 },
-  '바이시클크런치':           { metric:'reps', met:3.5, spr:1.0 },
+  '바이시클크런치':           { metric:'reps', met:3.5, spr:2.0 },
   '싯업':                     { metric:'reps', met:3.5, spr:2.0 },
-  'AB슬라이드':               { metric:'reps', met:4.5, spr:5.0 },
-  '수퍼맨':                   { metric:'reps', met:2.5, spr:3.0 },
+  'AB슬라이드':               { metric:'reps', met:4.5, spr:7.0 },
+  '버드독':                   { metric:'reps', met:2.8, spr:5.0 },
+  '데드버그':                 { metric:'reps', met:2.8, spr:4.0 },
+  '수퍼맨':                   { metric:'reps', met:3.0, spr:3.0 },
   '버피':                     { metric:'reps', met:8.0, spr:4.0 },
-  '마운틴클라이머':           { metric:'reps', met:8.0, spr:0.8 },
+  '마운틴클라이머':           { metric:'reps', met:8.0, spr:1.2 },
   '스쿼트(맨몸)':             { metric:'reps', met:5.0, spr:2.5 },
   '런지':                     { metric:'reps', met:4.0, spr:2.5 },
   '점프스쿼트':               { metric:'reps', met:7.0, spr:2.5 },
@@ -1265,7 +1265,7 @@ function calcWeight(exType, wkg, sets, reps, exName = '') {
     }
     return Math.round(bwCal.met * totalW * (sets * reps * bwCal.spr / 3600) * gf());
   }
-  const f = exType === 'compound' ? 0.05 : 0.03;
+  const f = exType === 'compound' ? 0.008 : 0.005;
   return Math.round(wkg * sets * reps * f * gf());
 }
 
