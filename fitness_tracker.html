@@ -41,10 +41,21 @@
       padding-bottom: 40px;
     }
 
+    /* ── 히어로 존 (헤더 + 프로필 배너 공통 파란 배경) ── */
+    .hero-zone {
+      background: var(--primary);
+      padding-bottom: 20px;
+    }
+    .hero-profile {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
     header {
-      background: #FFFFFF;
-      padding: 16px 16px 14px;
-      border-bottom: 1px solid var(--border);
+      background: transparent;
+      padding: 18px 16px 14px;
+      border-bottom: none;
     }
 
     .header-inner {
@@ -62,15 +73,15 @@
     .header-logo h1 {
       font-size: 1.45rem;
       font-weight: 800;
-      color: var(--text);
+      color: #fff;
       letter-spacing: -0.03em;
     }
 
-    .header-logo p { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .header-logo p { font-size: 0.72rem; color: rgba(255,255,255,0.6); margin-top: 2px; }
 
     .header-stats { text-align: right; }
-    .header-stats .today-cal { font-size: 1.6rem; font-weight: 800; color: var(--primary); letter-spacing: -0.02em; }
-    .header-stats .today-label { font-size: 0.68rem; color: var(--muted); }
+    .header-stats .today-cal { font-size: 1.6rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+    .header-stats .today-label { font-size: 0.68rem; color: rgba(255,255,255,0.6); }
 
     .header-tagline { display: none; }
     .pig-character { font-size: 1.4rem; }
@@ -78,14 +89,14 @@
 
     .container { max-width: 640px; margin: 0 auto; padding: 16px; }
 
-    /* ── 프로필 배너 ── */
+    /* ── 프로필 배너 (히어로 존 내부) ── */
     .profile-banner {
-      background: var(--card);
-      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.13);
+      border: 1px solid rgba(255,255,255,0.22);
       border-radius: var(--radius);
       padding: 14px 16px;
-      margin-bottom: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 0;
+      box-shadow: none;
     }
 
     .profile-row {
@@ -96,15 +107,15 @@
     }
 
     .gender-group { display: flex; flex-direction: column; gap: 4px; }
-    .gender-group label { font-size: 0.7rem; color: var(--muted); }
+    .gender-group label { font-size: 0.7rem; color: rgba(255,255,255,0.65); }
 
     .gender-toggle { display: flex; gap: 6px; }
 
     .gender-btn {
-      background: var(--bg);
-      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.35);
       border-radius: 20px;
-      color: var(--muted);
+      color: rgba(255,255,255,0.85);
       cursor: pointer;
       padding: 6px 14px;
       font-size: 0.82rem;
@@ -112,34 +123,36 @@
       transition: all 0.2s;
     }
 
-    .gender-btn[data-gender="male"]:hover  { border-color: var(--male); color: var(--male); }
-    .gender-btn[data-gender="female"]:hover { border-color: var(--female); color: var(--female); }
-    .gender-btn[data-gender="male"].active  { background: var(--male-bg); border-color: var(--male); color: var(--male); }
-    .gender-btn[data-gender="female"].active { background: var(--female-bg); border-color: var(--female); color: var(--female); }
+    .gender-btn:hover { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); color: #fff; }
+    .gender-btn[data-gender="male"]:hover  { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); color: #fff; }
+    .gender-btn[data-gender="female"]:hover { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); color: #fff; }
+    .gender-btn[data-gender="male"].active  { background: #fff; border-color: transparent; color: var(--primary-light); }
+    .gender-btn[data-gender="female"].active { background: #fff; border-color: transparent; color: var(--primary-light); }
 
-    .divider-v { width: 1px; height: 36px; background: var(--border); }
+    .divider-v { width: 1px; height: 36px; background: rgba(255,255,255,0.22); }
 
     .bw-group { display: flex; flex-direction: column; gap: 4px; }
-    .bw-group label { font-size: 0.7rem; color: var(--muted); }
+    .bw-group label { font-size: 0.7rem; color: rgba(255,255,255,0.65); }
 
     .bw-input-row { display: flex; align-items: center; gap: 6px; }
 
     .bw-input-row input {
       width: 80px;
-      background: var(--bg);
-      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.35);
       border-radius: 6px;
-      color: var(--text);
+      color: #fff;
       font-size: 1rem;
       font-weight: 700;
       padding: 5px 8px;
       text-align: center;
       outline: none;
     }
+    .bw-input-row input::placeholder { color: rgba(255,255,255,0.4); }
 
-    .bw-input-row span { font-size: 0.85rem; color: var(--muted); }
+    .bw-input-row span { font-size: 0.85rem; color: rgba(255,255,255,0.65); }
 
-    .bw-saved-badge { font-size: 0.7rem; color: var(--success); opacity: 0; transition: opacity 0.3s; }
+    .bw-saved-badge { font-size: 0.7rem; color: rgba(255,255,255,0.85); opacity: 0; transition: opacity 0.3s; }
     .bw-saved-badge.show { opacity: 1; }
 
     /* ── 탭 ── */
@@ -1154,6 +1167,7 @@
   </div>
 </div>
 
+<div class="hero-zone">
 <header>
   <div class="header-inner">
     <div class="header-top">
@@ -1169,29 +1183,32 @@
   </div>
 </header>
 
-<div class="container">
-
   <!-- ── 성별 & 체중 프로필 배너 ── -->
-  <div class="profile-banner">
-    <div class="profile-row">
-      <div class="gender-group">
-        <label>성별</label>
-        <div class="gender-toggle">
-          <button class="gender-btn active" data-gender="male">♂ 남성</button>
-          <button class="gender-btn" data-gender="female">♀ 여성</button>
+  <div class="hero-profile">
+    <div class="profile-banner">
+      <div class="profile-row">
+        <div class="gender-group">
+          <label>성별</label>
+          <div class="gender-toggle">
+            <button class="gender-btn active" data-gender="male">♂ 남성</button>
+            <button class="gender-btn" data-gender="female">♀ 여성</button>
+          </div>
         </div>
-      </div>
-      <div class="divider-v"></div>
-      <div class="bw-group">
-        <label>내 체중</label>
-        <div class="bw-input-row">
-          <input type="number" id="bw-input" value="70" step="0.5" min="30" max="300">
-          <span>kg</span>
-          <span class="bw-saved-badge" id="bw-badge">✓ 저장됨</span>
+        <div class="divider-v"></div>
+        <div class="bw-group">
+          <label>내 체중</label>
+          <div class="bw-input-row">
+            <input type="number" id="bw-input" value="70" step="0.5" min="30" max="300">
+            <span>kg</span>
+            <span class="bw-saved-badge" id="bw-badge">✓ 저장됨</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
+</div>
+
+<div class="container">
 
   <!-- ── 탭 네비게이션 ── -->
   <nav class="tab-nav">
