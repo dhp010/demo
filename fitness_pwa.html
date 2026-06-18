@@ -956,7 +956,7 @@
           <input type="number" id="w-sets" min="1" value="3">
         </div>
         <div class="form-group" style="margin-bottom:0">
-          <label>반복 횟수</label>
+          <label id="w-reps-label">반복 횟수</label>
           <input type="number" id="w-reps" min="1" placeholder="0">
         </div>
       </div>
@@ -1186,8 +1186,45 @@ const EXERCISES = {
     '풀업', '친업', '딥스', '푸쉬업', '파이크푸쉬업',
     '링딥스', '머슬업', '레그레이즈', '행잉니레이즈',
     '버피', '플랭크', '마운틴클라이머', '스쿼트(맨몸)', '런지', 'AB슬라이드',
+    '크런치', '싯업', '리버스크런치', '바이시클크런치',
+    '사이드플랭크', '버드독', '데드버그', '수퍼맨',
+    '글루트브릿지', '점프스쿼트', '피스톨스쿼트',
   ],
 };
+
+// 맨몸운동별 칼로리 데이터 (MET 기반)
+const BODYWEIGHT_CALS = {
+  '플랭크':                   { metric:'time', met:3.5 },
+  '사이드플랭크':             { metric:'time', met:3.0 },
+  '버드독':                   { metric:'time', met:2.8 },
+  '데드버그':                 { metric:'time', met:2.8 },
+  'L싯':                      { metric:'time', met:4.0 },
+  '풀업':                     { metric:'reps', met:8.0, spr:4.0 },
+  '친업':                     { metric:'reps', met:8.0, spr:4.0 },
+  '딥스':                     { metric:'reps', met:6.0, spr:3.0 },
+  '링딥스':                   { metric:'reps', met:7.0, spr:3.5 },
+  '머슬업':                   { metric:'reps', met:9.0, spr:6.0 },
+  '푸쉬업':                   { metric:'reps', met:3.8, spr:3.0 },
+  '파이크푸쉬업':             { metric:'reps', met:4.0, spr:3.0 },
+  '레그레이즈':               { metric:'reps', met:3.5, spr:2.5 },
+  '행잉니레이즈':             { metric:'reps', met:3.5, spr:2.5 },
+  '크런치':                   { metric:'reps', met:2.8, spr:1.5 },
+  '리버스크런치':             { metric:'reps', met:3.0, spr:2.0 },
+  '바이시클크런치':           { metric:'reps', met:3.5, spr:1.0 },
+  '싯업':                     { metric:'reps', met:3.5, spr:2.0 },
+  'AB슬라이드':               { metric:'reps', met:4.5, spr:5.0 },
+  '수퍼맨':                   { metric:'reps', met:2.5, spr:3.0 },
+  '버피':                     { metric:'reps', met:8.0, spr:4.0 },
+  '마운틴클라이머':           { metric:'reps', met:8.0, spr:0.8 },
+  '스쿼트(맨몸)':             { metric:'reps', met:5.0, spr:2.5 },
+  '런지':                     { metric:'reps', met:4.0, spr:2.5 },
+  '점프스쿼트':               { metric:'reps', met:7.0, spr:2.5 },
+  '피스톨스쿼트':             { metric:'reps', met:6.0, spr:4.0 },
+  '글루트브릿지':             { metric:'reps', met:3.5, spr:2.5 },
+};
+function getBwCal(exName) {
+  return BODYWEIGHT_CALS[exName] || { metric:'reps', met:3.5, spr:2.5 };
+}
 
 // 성별 칼로리 계수 (여성은 동일 체중 대비 약 10% 적게 소모)
 const GENDER_FACTOR = { male: 1.0, female: 0.9 };
@@ -1219,10 +1256,14 @@ function calcCardio(activity, dist, dur) {
   return 0;
 }
 
-function calcWeight(exType, wkg, sets, reps) {
+function calcWeight(exType, wkg, sets, reps, exName = '') {
   if (exType === 'bodyweight') {
-    const total = bodyWeight + (wkg || 0);
-    return Math.round(total * sets * reps * 0.045 * gf());
+    const bwCal = getBwCal(exName);
+    const totalW = bodyWeight + (wkg || 0);
+    if (bwCal.metric === 'time') {
+      return Math.round(bwCal.met * totalW * (sets * reps / 3600) * gf());
+    }
+    return Math.round(bwCal.met * totalW * (sets * reps * bwCal.spr / 3600) * gf());
   }
   const f = exType === 'compound' ? 0.05 : 0.03;
   return Math.round(wkg * sets * reps * f * gf());
@@ -1452,11 +1493,12 @@ function renderRecords() {
         ? `맨몸${Number(r.weight_kg) > 0 ? `+${r.weight_kg}kg` : ''}`
         : `${r.weight_kg}kg`;
       const oneRM = r.one_rm ? ` · 1RM ${Number(r.one_rm).toFixed(1)}kg` : '';
+      const repUnit = (isBW && getBwCal(r.exercise).metric === 'time') ? '초' : '회';
       return `<div class="record-item">
         <div class="record-icon">${icon}</div>
         <div class="record-body">
           <div class="record-title ${colorClass}">${r.exercise}</div>
-          <div class="record-meta">${weightInfo} × ${r.sets}세트 × ${r.reps}회${oneRM}</div>
+          <div class="record-meta">${weightInfo} × ${r.sets}세트 × ${r.reps}${repUnit}${oneRM}</div>
         </div>
         <div class="record-right">
           <div class="record-cal">${Math.round(r.calories)} kcal</div>
@@ -1585,22 +1627,24 @@ function liveWeight() {
   const wkg  = parseFloat(document.getElementById('w-kg').value) || 0;
   const sets = parseInt(document.getElementById('w-sets').value) || 1;
   const reps = parseInt(document.getElementById('w-reps').value) || 0;
+  const ex   = document.getElementById('w-exercise').value;
   const resultEl = document.getElementById('w-result');
   const saveBtn  = document.getElementById('btn-w-save');
 
-  // 맨몸운동은 reps만 있어도 계산 가능
   const canCalc = currentExType === 'bodyweight' ? reps > 0 : (wkg > 0 && reps > 0);
 
   if (!canCalc) { resultEl.style.display = 'none'; saveBtn.disabled = true; return; }
 
-  const cal  = calcWeight(currentExType, wkg, sets, reps);
-  const oneRM = calc1RM(wkg, reps, currentExType);
+  const cal   = calcWeight(currentExType, wkg, sets, reps, ex);
+  const isBWTime = currentExType === 'bodyweight' && getBwCal(ex).metric === 'time';
+  const oneRM = (!isBWTime) ? calc1RM(wkg, reps, currentExType) : 0;
 
   document.getElementById('w-cal').textContent = cal.toLocaleString();
   document.getElementById('w-1rm').textContent = oneRM;
   resultEl.style.display = '';
   saveBtn.disabled = false;
-  render1RMTable(wkg, reps, oneRM);
+  if (!isBWTime) render1RMTable(wkg, reps, oneRM);
+  else document.getElementById('rm-table').innerHTML = '';
 }
 
 function render1RMTable(wkg, reps, oneRM) {
@@ -1630,15 +1674,23 @@ function updateBodyweightUI() {
   const note = document.getElementById('bw-note');
   const label = document.getElementById('w-kg-label');
   const input = document.getElementById('w-kg');
+  const repsLabel = document.getElementById('w-reps-label');
+  const repsInput = document.getElementById('w-reps');
 
   note.classList.toggle('show', isBW);
   if (isBW) {
     label.textContent = '추가 무게 (선택, kg)';
     input.placeholder = '0 = 맨몸만';
     document.getElementById('bw-note-val').textContent = `${bodyWeight}kg`;
+    const ex = document.getElementById('w-exercise').value;
+    const isTime = getBwCal(ex).metric === 'time';
+    repsLabel.textContent = isTime ? '유지 시간 (초/세트)' : '반복 횟수';
+    repsInput.placeholder  = isTime ? '60' : '0';
   } else {
     label.textContent = '무게 (kg)';
     input.placeholder = '0';
+    repsLabel.textContent = '반복 횟수';
+    repsInput.placeholder  = '0';
   }
 }
 
@@ -1767,6 +1819,14 @@ async function init() {
   populateExercises();
   updateBodyweightUI();
 
+  // 맨몸운동 종목 변경 시 UI 갱신
+  document.getElementById('w-exercise').addEventListener('change', () => {
+    if (currentExType === 'bodyweight') {
+      updateBodyweightUI();
+      liveWeight();
+    }
+  });
+
   // ── 웨이트 저장 ──
   document.getElementById('btn-w-save').addEventListener('click', () => {
     const wkg  = parseFloat(document.getElementById('w-kg').value) || 0;
@@ -1777,7 +1837,8 @@ async function init() {
     if (!ex || !reps) return;
     if (currentExType !== 'bodyweight' && !wkg) return;
 
-    const oneRM = calc1RM(wkg, reps, currentExType);
+    const isBWTime = currentExType === 'bodyweight' && getBwCal(ex).metric === 'time';
+    const oneRM = isBWTime ? null : (calc1RM(wkg, reps, currentExType) || null);
     saveWeightRec({
       date: document.getElementById('w-date').value || todayStr(),
       exercise: ex,
@@ -1785,8 +1846,8 @@ async function init() {
       weight_kg: wkg,
       sets,
       reps,
-      one_rm: oneRM || null,
-      calories: calcWeight(currentExType, wkg, sets, reps),
+      one_rm: oneRM,
+      calories: calcWeight(currentExType, wkg, sets, reps, ex),
     });
     document.getElementById('w-kg').value = '';
     document.getElementById('w-reps').value = '';
