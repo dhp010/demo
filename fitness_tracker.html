@@ -3333,6 +3333,14 @@ const EXERCISE_SVG = {
     _SVG(`<line x1="20" y1="162" x2="220" y2="162" stroke="${_E}" stroke-width="2"/><circle cx="42" cy="118" r="12" fill="none" stroke="${_S}" stroke-width="2.5"/><line x1="53" y1="124" x2="195" y2="124" stroke="${_S}" stroke-width="3" ${_lc}/><line x1="75" y1="124" x2="73" y2="162" stroke="${_S}" stroke-width="2.5" ${_lc}/><line x1="93" y1="124" x2="91" y2="162" stroke="${_S}" stroke-width="2.5" ${_lc}/><line x1="182" y1="124" x2="180" y2="162" stroke="${_S}" stroke-width="2.5" ${_lc}/><line x1="195" y1="124" x2="197" y2="162" stroke="${_S}" stroke-width="2.5" ${_lc}/>`)
   ]
 };
+const EXERCISE_STATIC = {
+  '플랭크':     'https://upload.wikimedia.org/wikipedia/commons/f/fc/Fitness_enthusiast_performs_plank_exercise_at_home_on_yoga_mat.jpg',
+  '사이드플랭크':'https://upload.wikimedia.org/wikipedia/commons/f/f0/Side-plank-1.png',
+  '버드독':     'https://upload.wikimedia.org/wikipedia/commons/0/0a/Birddog_exercise.svg',
+  '리버스컬':   'https://upload.wikimedia.org/wikipedia/commons/7/7a/Biceps-curl-reverse-1.png',
+  '투크':       'https://upload.wikimedia.org/wikipedia/commons/b/ba/Planche.jpg',
+  '힌두푸쉬업': 'https://upload.wikimedia.org/wikipedia/commons/c/c4/Dand%2C_Dund%2C_Hindu_push-up%2C_Figure_3.jpg',
+};
 let _exDemoTimer = null;
 
 function guideSelectEx(idx) {
@@ -3347,6 +3355,7 @@ function guideSelectEx(idx) {
   const savedRm = parseFloat(localStorage.getItem(pk('1rm_') + ex.name) || '') || '';
   const _gifFolder = EXERCISE_GIFS[ex.name];
   const _svgFrames = EXERCISE_SVG[ex.name];
+  const _staticImg = EXERCISE_STATIC[ex.name];
   const _BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
   const _img0 = _gifFolder ? _BASE + _gifFolder + '/0.jpg' : '';
   const _img1 = _gifFolder ? _BASE + _gifFolder + '/1.jpg' : '';
@@ -3358,6 +3367,10 @@ function guideSelectEx(idx) {
       <div class="ex-demo-label">▶ 동작 미리보기</div>
     </div>` : _svgFrames ? `<div class="ex-demo-box">
       <div id="exDemoSvg" style="line-height:0">${_svgFrames[0]}</div>
+      <div class="ex-demo-label">▶ 동작 미리보기</div>
+    </div>` : _staticImg ? `<div class="ex-demo-box">
+      <img src="${_staticImg}" alt="${ex.name} 동작" style="width:100%;border-radius:8px;display:block"
+        onerror="this.parentElement.innerHTML='<div class=ex-demo-err><span style=font-size:2rem>🏋️</span><span>이미지를 불러올 수 없습니다</span></div>'">
       <div class="ex-demo-label">▶ 동작 미리보기</div>
     </div>` : ''}
     <div class="guide-detail-header">
