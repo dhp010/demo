@@ -1289,13 +1289,13 @@
       <div class="activity-grid" id="activity-grid"></div>
 
       <div class="form-row">
-        <div class="form-group" style="margin-bottom:0">
-          <label>거리 (km)</label>
+        <div class="form-group" style="margin-bottom:0" id="c-dist-group">
+          <label id="c-dist-label">거리 (km)</label>
           <input type="number" id="c-dist" step="0.1" min="0" placeholder="0.0">
         </div>
         <div class="form-group" style="margin-bottom:0">
-          <label>시간 (분, 선택)</label>
-          <input type="number" id="c-dur" step="1" min="0" placeholder="입력 시 정확↑">
+          <label id="c-dur-label">시간 (분, 선택)</label>
+          <input type="number" id="c-dur" step="1" min="0" placeholder="분">
         </div>
       </div>
 
@@ -1764,32 +1764,32 @@
 
 // ── 상수 ──────────────────────────────────────────────────
 const ACTIVITIES = {
-  // ── 러닝/걷기 ──
-  running:     { name:'달리기',     icon:'🏃', distFactor:1.036, met:9,    cat:'run' },
-  walking:     { name:'걷기',       icon:'🚶', distFactor:0.55,  met:3.5,  cat:'run' },
-  sprint:      { name:'스프린트',   icon:'💨', distFactor:1.5,   met:15,   cat:'run' },
-  intervalrun: { name:'인터벌달리기',icon:'⚡', distFactor:1.2,   met:12,   cat:'run' },
-  hiking:      { name:'등산',       icon:'🏔️', distFactor:0.8,   met:6,    cat:'run' },
+  // ── 러닝/걷기 (거리 기반) ──
+  running:     { name:'달리기',      icon:'🏃', distFactor:1.036, met:9,    cat:'run',     metric:'dist' },
+  walking:     { name:'걷기',        icon:'🚶', distFactor:0.55,  met:3.5,  cat:'run',     metric:'dist' },
+  sprint:      { name:'스프린트',    icon:'💨', distFactor:1.5,   met:15,   cat:'run',     metric:'dist' },
+  intervalrun: { name:'인터벌달리기', icon:'⚡', distFactor:1.2,   met:12,   cat:'run',     metric:'dist' },
+  hiking:      { name:'등산',        icon:'🏔️', distFactor:0.8,   met:6,    cat:'run',     metric:'dist' },
   // ── 실내기구 ──
-  cycling:     { name:'사이클',     icon:'🚴', distFactor:0.45,  met:8,    cat:'machine' },
-  rowing:      { name:'로잉머신',   icon:'🚣', distFactor:0.9,   met:7,    cat:'machine' },
-  stepper:     { name:'스텝퍼',     icon:'🦶', distFactor:0.85,  met:8,    cat:'machine' },
-  elliptical:  { name:'일립티컬',   icon:'🔄', distFactor:0.6,   met:5,    cat:'machine' },
-  airbike:     { name:'에어바이크', icon:'💪', distFactor:0.8,   met:9,    cat:'machine' },
-  skierg:      { name:'스키어그',   icon:'⛷️', distFactor:0.95,  met:9.5,  cat:'machine' },
-  stairmaster: { name:'천국의 계단',icon:'🪜', distFactor:0.9,   met:9,    cat:'machine' },
+  cycling:     { name:'사이클',      icon:'🚴', distFactor:0.45,  met:8,    cat:'machine', metric:'dist' },
+  rowing:      { name:'로잉머신',    icon:'🚣', distFactor:0.9,   met:7,    cat:'machine', metric:'dist' },
+  swimming:    { name:'수영',        icon:'🏊', distFactor:8.5,   met:6,    cat:'machine', metric:'dist' },
+  stepper:     { name:'스텝퍼',      icon:'🦶', distFactor:0,     met:8,    cat:'machine', metric:'time' },
+  elliptical:  { name:'일립티컬',    icon:'🔄', distFactor:0,     met:5,    cat:'machine', metric:'time' },
+  airbike:     { name:'에어바이크',  icon:'💪', distFactor:0,     met:9,    cat:'machine', metric:'time' },
+  skierg:      { name:'스키어그',    icon:'⛷️', distFactor:0,     met:9.5,  cat:'machine', metric:'time' },
+  stairmaster: { name:'천국의 계단', icon:'🪜', distFactor:0,     met:9,    cat:'machine', metric:'time' },
   // ── 수중/기타 ──
-  swimming:    { name:'수영',       icon:'🏊', distFactor:8.5,   met:6,    cat:'water' },
-  jumprope:    { name:'줄넘기',     icon:'🪢', distFactor:0.5,   met:10,   cat:'water' },
-  climbing:    { name:'클라이밍',   icon:'🧗', distFactor:1.2,   met:8,    cat:'water' },
-  // ── 스포츠 ──
-  badminton:   { name:'배드민턴',   icon:'🏸', distFactor:0.5,   met:5.5,  cat:'sports' },
-  tennis:      { name:'테니스',     icon:'🎾', distFactor:0.6,   met:7.3,  cat:'sports' },
-  basketball:  { name:'농구',       icon:'🏀', distFactor:0.6,   met:6.5,  cat:'sports' },
-  soccer:      { name:'축구',       icon:'⚽', distFactor:0.7,   met:7,    cat:'sports' },
-  // ── 댄스/격투 ──
-  zumba:       { name:'줌바',       icon:'💃', distFactor:0.5,   met:6,    cat:'other' },
-  kickboxing:  { name:'킥복싱',     icon:'🥊', distFactor:0.6,   met:8,    cat:'other' },
+  jumprope:    { name:'줄넘기',      icon:'🪢', distFactor:0,     met:10,   cat:'water',   metric:'time' },
+  climbing:    { name:'클라이밍',    icon:'🧗', distFactor:0,     met:8,    cat:'water',   metric:'time' },
+  // ── 스포츠 (시간 기반) ──
+  badminton:   { name:'배드민턴',    icon:'🏸', distFactor:0,     met:5.5,  cat:'sports',  metric:'time' },
+  tennis:      { name:'테니스',      icon:'🎾', distFactor:0,     met:7.3,  cat:'sports',  metric:'time' },
+  basketball:  { name:'농구',        icon:'🏀', distFactor:0,     met:6.5,  cat:'sports',  metric:'time' },
+  soccer:      { name:'축구',        icon:'⚽', distFactor:0,     met:7,    cat:'sports',  metric:'time' },
+  // ── 댄스/격투 (시간 기반) ──
+  zumba:       { name:'줌바',        icon:'💃', distFactor:0,     met:6,    cat:'other',   metric:'time' },
+  kickboxing:  { name:'킥복싱',      icon:'🥊', distFactor:0,     met:8,    cat:'other',   metric:'time' },
 };
 
 const CARDIO_CATS = [
@@ -2003,10 +2003,15 @@ function gf() { return GENDER_FACTOR[gender]; }
 
 function calcCardio(activity, dist, dur) {
   const a = ACTIVITIES[activity];
-  // 거리가 있으면 항상 거리 기반 계산 — 이동 운동 칼로리는 거리에 비례하며 속도와 무관
-  if (dist > 0) return Math.round(a.distFactor * dist * bodyWeight * gf());
-  // 시간만 입력된 경우: MET 기반 계산
-  if (dur > 0) return Math.round(a.met * bodyWeight * (dur / 60) * gf());
+  if (a.metric === 'dist') {
+    // 거리 기반 종목: 이동 칼로리는 거리에 비례, 속도(시간) 무관
+    if (dist > 0) return Math.round(a.distFactor * dist * bodyWeight * gf());
+    // 거리 미입력 시 시간으로 대체
+    if (dur > 0) return Math.round(a.met * bodyWeight * (dur / 60) * gf());
+  } else {
+    // 시간 기반 종목: MET × 시간
+    if (dur > 0) return Math.round(a.met * bodyWeight * (dur / 60) * gf());
+  }
   return 0;
 }
 
@@ -2284,6 +2289,22 @@ function renderRMChart() {
 }
 
 // ── 유산소 UI (카테고리 탭 + 활동 버튼 동적 생성) ─────────
+function updateCardioForm() {
+  const a = ACTIVITIES[currentActivity];
+  const distGroup = document.getElementById('c-dist-group');
+  const distLabel = document.getElementById('c-dist-label');
+  const durLabel  = document.getElementById('c-dur-label');
+  if (a.metric === 'time') {
+    distGroup.style.display = 'none';
+    document.getElementById('c-dist').value = '';
+    durLabel.textContent = '시간 (분)';
+  } else {
+    distGroup.style.display = '';
+    distLabel.textContent = '거리 (km)';
+    durLabel.textContent = '시간 (분, 선택)';
+  }
+}
+
 function renderActivityGrid(cat) {
   const grid = document.getElementById('activity-grid');
   grid.innerHTML = '';
@@ -2298,6 +2319,7 @@ function renderActivityGrid(cat) {
         document.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentActivity = key;
+        updateCardioForm();
         liveCardio();
       });
       grid.appendChild(btn);
@@ -2320,6 +2342,7 @@ function buildCardioUI() {
     catRow.appendChild(btn);
   });
   renderActivityGrid(defaultCat);
+  updateCardioForm();
 }
 
 // ── 유산소 라이브 계산 ────────────────────────────────────
@@ -2336,19 +2359,27 @@ function liveCardio() {
   const a = ACTIVITIES[currentActivity];
   const gLabel = gender === 'male' ? '남성' : '여성';
   let basis;
-  if (dist > 0) {
-    let pace = '';
-    if (dur > 0) {
-      const speedKmh = dist / (dur / 60);
-      pace = ` · 페이스 ${speedKmh.toFixed(1)}km/h`;
+  if (a.metric === 'dist') {
+    if (dist > 0) {
+      let pace = dur > 0 ? ` · 페이스 ${(dist / (dur / 60)).toFixed(1)}km/h` : '';
+      basis = `${a.distFactor} kcal/km/kg × ${dist}km × ${bodyWeight}kg${pace} (${gLabel})`;
+      saveBtn.disabled = false;
+    } else if (dur > 0) {
+      basis = `거리 미입력 — MET ${a.met} × ${bodyWeight}kg × ${dur}분 (${gLabel})`;
+      saveBtn.disabled = false;
+    } else {
+      resultEl.style.display = 'none'; saveBtn.disabled = true; return;
     }
-    basis = `${a.distFactor} kcal/km/kg × ${dist}km × ${bodyWeight}kg${pace} (${gLabel})`;
   } else {
-    basis = `MET ${a.met} × ${bodyWeight}kg × ${dur}분 (${gLabel})`;
+    if (dur > 0) {
+      basis = `MET ${a.met} × ${bodyWeight}kg × ${dur}분 (${gLabel})`;
+      saveBtn.disabled = false;
+    } else {
+      resultEl.style.display = 'none'; saveBtn.disabled = true; return;
+    }
   }
   document.getElementById('c-sub').textContent = basis;
   resultEl.style.display = '';
-  saveBtn.disabled = !dist && !dur;
 }
 
 // ── 웨이트 라이브 계산 ────────────────────────────────────
