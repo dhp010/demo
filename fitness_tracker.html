@@ -3356,7 +3356,7 @@ const EXERCISE_GIFS = {
   '머슬업':             'Muscle_Up',
   '레그레이즈':         'Hanging_Leg_Raise',
   '행잉니레이즈':       'Knee_Hip_Raise_On_Parallel_Bars',
-  '플랭크':             '',
+  '플랭크':             'Plank',
   '마운틴클라이머':     'Mountain_Climbers',
   '스쿼트(맨몸)':       'Bodyweight_Squat',
   '런지':               'Bodyweight_Walking_Lunge',
@@ -3390,11 +3390,11 @@ const EXERCISE_GIFS = {
   '크런치':             'Crunches',
   '싯업':               'Sit-Up',
   '리버스크런치':       'Decline_Reverse_Crunch',
-  '사이드플랭크':       '',
+  '사이드플랭크':       'Side_Plank',
   '피스톨스쿼트':       'Kettlebell_Pistol_Squat',
   '케틀벨스윙':         'One-Arm_Kettlebell_Swings',
   '점프스쿼트':         'Freehand_Jump_Squat',
-  '버드독':             '',
+  '버드독':             'Bird_Dog',
   // ── 복합운동 추가 ──
   '트랩바데드리프트':   'Barbell_Deadlift',
   '시티드케이블로우':   'Elevated_Cable_Rows',
@@ -3404,7 +3404,7 @@ const EXERCISE_GIFS = {
   // ── 고립운동 추가 ──
   '인클라인바이셉컬':   'Incline_Dumbbell_Curl',
   '바벨컬':             'Barbell_Curl',
-  '리버스컬':           '',
+  '리버스컬':           'Reverse_Barbell_Curl',
   '케이블바이셉컬':     'Cable_Preacher_Curl',
   '케이블레터럴레이즈': 'Cable_Seated_Lateral_Raise',
   '인클라인레터럴레이즈':'One-Arm_Incline_Lateral_Raise',
@@ -3423,7 +3423,8 @@ const EXERCISE_GIFS = {
   'L싯':                'Knee_Hip_Raise_On_Parallel_Bars',
   '투크':               '',
   '트리셉딥스(의자)':   'Bench_Dips',
-  '힌두푸쉬업':         '',
+  '힌두푸쉬업':         'Hindu_Push_Up',
+  '아처푸쉬업':         'Archer_Push_Up',
   '바디로우(인버티드로우)': 'Inverted_Row',
   '싱글레그글루트브릿지':  'Single_Leg_Glute_Bridge',
   '점프런지':              'Freehand_Jump_Squat',
@@ -3457,8 +3458,14 @@ const EXERCISE_STATIC = {
   '투크':       'https://upload.wikimedia.org/wikipedia/commons/b/ba/Planche.jpg',
   '힌두푸쉬업': 'https://upload.wikimedia.org/wikipedia/commons/c/c4/Dand%2C_Dund%2C_Hindu_push-up%2C_Figure_3.jpg',
   '힙어브덕션': 'https://media.giphy.com/media/TMJzrcyYTGmORCps3B/giphy.gif',
-  '아처푸쉬업': 'https://upload.wikimedia.org/wikipedia/commons/4/41/Archer_push-up.jpg',
+  '아처푸쉬업': 'https://upload.wikimedia.org/wikipedia/commons/6/6a/Push-up-2.png',
 };
+// GIF 로드 실패 시 STATIC 이미지로 폴백, 그것도 없으면 에러 표시
+function _gImgErr(el, fallback) {
+  const err = '<div class=ex-demo-err><span style=font-size:2rem>🏋️</span><span>이미지를 불러올 수 없습니다</span></div>';
+  if (fallback) { el.onerror = function() { el.parentElement.innerHTML = err; }; el.src = fallback; }
+  else { el.parentElement.innerHTML = err; }
+}
 let _exDemoTimer = null;
 
 function guideSelectEx(idx) {
@@ -3483,7 +3490,7 @@ function guideSelectEx(idx) {
   document.getElementById('guide-detail-content').innerHTML = `
     ${_img0 ? `<div class="ex-demo-box">
       <img id="exDemoImg" src="${_img0}" alt="${ex.name} 동작"
-        onerror="this.parentElement.innerHTML='<div class=ex-demo-err><span style=font-size:2rem>🏋️</span><span>이미지를 불러올 수 없습니다</span></div>'">
+        onerror="_gImgErr(this,'${_staticImg||''}')">
       <div class="ex-demo-label">▶ 동작 미리보기</div>
     </div>` : _svgFrames ? `<div class="ex-demo-box">
       <div id="exDemoSvg" style="line-height:0">${_svgFrames[0]}</div>
