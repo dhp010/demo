@@ -266,7 +266,7 @@
     /* ── 유산소 활동 버튼 ── */
     .activity-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
       gap: 8px;
       margin-bottom: 16px;
       min-height: 44px;
@@ -278,16 +278,16 @@
       border-radius: 10px;
       color: var(--muted);
       cursor: pointer;
-      padding: 10px 4px;
+      padding: 12px 4px;
       font-size: 0.72rem;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
       transition: all 0.2s;
     }
 
-    .activity-btn .icon { font-size: 1.4rem; }
+    .activity-btn .icon { font-size: 1.6rem; }
     .activity-btn:hover { border-color: var(--cardio); color: var(--cardio); background: var(--cardio-bg); }
     .activity-btn.active { background: var(--cardio-bg); border-color: var(--cardio); color: var(--cardio); }
 
@@ -1798,26 +1798,34 @@ const ACTIVITIES = {
   airbike:     { name:'에어바이크',  icon:'💪', distFactor:0,     met:9,    cat:'machine', metric:'time' },
   skierg:      { name:'스키어그',    icon:'⛷️', distFactor:0,     met:10.5, cat:'machine', metric:'time' },
   stairmaster: { name:'천국의 계단', icon:'🪜', distFactor:0,     met:9,    cat:'machine', metric:'time' },
-  // ── 수중·줄넘기 ──
+  // ── 수중·줄넘기·클라이밍 ──
   swimming:    { name:'수영',        icon:'🏊', distFactor:3.5,   met:6,    cat:'water',   metric:'dist' },
   jumprope:    { name:'줄넘기',      icon:'🪢', distFactor:0,     met:11.8, cat:'water',   metric:'time' },
   climbing:    { name:'클라이밍',    icon:'🧗', distFactor:0,     met:8,    cat:'water',   metric:'time' },
+  surfing:     { name:'서핑',        icon:'🏄', distFactor:0,     met:3.0,  cat:'water',   metric:'time' },
+  kayaking:    { name:'카약',        icon:'🛶', distFactor:0,     met:5.0,  cat:'water',   metric:'time' },
+  diving:      { name:'스노클링',    icon:'🤿', distFactor:0,     met:5.0,  cat:'water',   metric:'time' },
   // ── 스포츠 (시간 기반) ──
   badminton:   { name:'배드민턴',    icon:'🏸', distFactor:0,     met:7,    cat:'sports',  metric:'time' },
   tennis:      { name:'테니스',      icon:'🎾', distFactor:0,     met:7.3,  cat:'sports',  metric:'time' },
   basketball:  { name:'농구',        icon:'🏀', distFactor:0,     met:8,    cat:'sports',  metric:'time' },
   soccer:      { name:'축구',        icon:'⚽', distFactor:0,     met:10,   cat:'sports',  metric:'time' },
-  // ── 댄스/격투 (시간 기반) ──
+  golf:        { name:'골프',        icon:'⛳', distFactor:0,     met:4.5,  cat:'sports',  metric:'time' },
+  tabletennis: { name:'탁구',        icon:'🏓', distFactor:0,     met:4.0,  cat:'sports',  metric:'time' },
+  // ── 댄스/격투/이너케어 (시간 기반) ──
   zumba:       { name:'줌바',        icon:'💃', distFactor:0,     met:6.5,  cat:'other',   metric:'time' },
   kickboxing:  { name:'킥복싱',      icon:'🥊', distFactor:0,     met:8,    cat:'other',   metric:'time' },
+  yoga:        { name:'요가',        icon:'🧘', distFactor:0,     met:2.8,  cat:'other',   metric:'time' },
+  pilates:     { name:'필라테스',    icon:'🤸', distFactor:0,     met:3.0,  cat:'other',   metric:'time' },
+  aerobics:    { name:'에어로빅',    icon:'🎵', distFactor:0,     met:7.3,  cat:'other',   metric:'time' },
 };
 
 const CARDIO_CATS = [
   { key:'run',     label:'🏃 러닝/걷기' },
   { key:'machine', label:'🚴 실내기구' },
-  { key:'water',   label:'🏊 수중·줄넘기' },
+  { key:'water',   label:'🏊 수중/레저' },
   { key:'sports',  label:'🏸 스포츠' },
-  { key:'other',   label:'💃 댄스·격투' },
+  { key:'other',   label:'🧘 댄스/이너케어' },
 ];
 
 const EXERCISES = {
