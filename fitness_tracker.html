@@ -38,7 +38,7 @@
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
       min-height: 100vh;
-      padding-bottom: 40px;
+      padding-bottom: 72px;
     }
 
     /* ── 히어로 존 (헤더 + 프로필 배너 공통 파란 배경) ── */
@@ -155,22 +155,54 @@
     .bw-saved-badge { font-size: 0.7rem; color: rgba(255,255,255,0.85); opacity: 0; transition: opacity 0.3s; }
     .bw-saved-badge.show { opacity: 1; }
 
-    /* ── 탭 ── */
-    .tab-nav {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
+    /* ── 페이지 뷰 (하단 탭으로 전환) ── */
+    .page-view { display: none; }
+    .page-view.active { display: block; }
+
+    /* ── 서브탭 네비 ── */
+    .sub-tab-nav {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
       background: var(--card);
-      border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 10px 10px 8px;
-      margin-bottom: 16px;
+      padding: 10px;
+      margin-bottom: 14px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
-    .tab-group { display: flex; flex-direction: column; gap: 4px; }
-    .tab-group + .tab-group { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 8px; }
-    .tab-group-label { font-size: 0.6rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; padding: 0 4px 5px; }
-    .tab-group-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }
+    .sub-tab-nav.three { grid-template-columns: repeat(3, 1fr); }
+
+    /* ── 하단 탭바 ── */
+    #bottom-tabs {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 60px;
+      background: #fff;
+      border-top: 1.5px solid var(--border);
+      display: flex;
+      align-items: stretch;
+      z-index: 200;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.07);
+    }
+    .btab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.62rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color 0.15s;
+      padding: 4px 0 6px;
+    }
+    .btab-icon { font-size: 1.35rem; line-height: 1; transition: transform 0.15s; }
+    .btab.active { color: var(--primary); }
+    .btab.active .btab-icon { transform: scale(1.12); }
 
     .tab-btn {
       background: none;
@@ -1210,55 +1242,11 @@
 
 <div class="container">
 
-  <!-- ── 탭 네비게이션 ── -->
-  <nav class="tab-nav">
-    <div class="tab-group">
-      <div class="tab-group-label">운동 입력</div>
-      <div class="tab-group-row">
-        <button class="tab-btn active" data-tab="cardio">
-          <span class="tab-icon">🏃</span>유산소
-        </button>
-        <button class="tab-btn" data-tab="weight">
-          <span class="tab-icon">💪</span>웨이트
-        </button>
-      </div>
-    </div>
-    <div class="tab-group">
-      <div class="tab-group-label">운동 가이드</div>
-      <div class="tab-group-row" style="grid-template-columns: repeat(3, 1fr)">
-        <button class="tab-btn" data-tab="guide">
-          <span class="tab-icon">📚</span>가이드
-        </button>
-        <button class="tab-btn" data-tab="timer">
-          <span class="tab-icon">⏱</span>타이머
-        </button>
-        <button class="tab-btn" data-tab="routine">
-          <span class="tab-icon">📅</span>루틴
-        </button>
-      </div>
-    </div>
-    <div class="tab-group">
-      <div class="tab-group-label">기록 &amp; 분석</div>
-      <div class="tab-group-row">
-        <button class="tab-btn" data-tab="records">
-          <span class="tab-icon">📋</span>기록
-        </button>
-        <button class="tab-btn" data-tab="stats">
-          <span class="tab-icon">📊</span>통계
-        </button>
-      </div>
-    </div>
-    <div class="tab-group">
-      <div class="tab-group-label">다이어트 관리</div>
-      <div class="tab-group-row">
-        <button class="tab-btn" data-tab="diet">
-          <span class="tab-icon">🍽️</span>오늘의 칼로리
-        </button>
-        <button class="tab-btn" data-tab="recommend">
-          <span class="tab-icon">🥗</span>식단 추천
-        </button>
-      </div>
-    </div>
+  <!-- ── PAGE 1: 운동기록 ── -->
+  <div class="page-view active" id="page-workout">
+  <nav class="sub-tab-nav">
+    <button class="tab-btn active" data-tab="cardio"><span class="tab-icon">🏃</span>유산소</button>
+    <button class="tab-btn" data-tab="weight"><span class="tab-icon">💪</span>웨이트</button>
   </nav>
 
   <!-- ── 유산소 탭 ── -->
@@ -1370,6 +1358,15 @@
     </div>
   </section>
 
+  </div><!-- /page-workout -->
+
+  <!-- ── PAGE 3: 기록&평가 ── -->
+  <div class="page-view" id="page-records">
+  <nav class="sub-tab-nav">
+    <button class="tab-btn" data-tab="records"><span class="tab-icon">📋</span>기록</button>
+    <button class="tab-btn" data-tab="stats"><span class="tab-icon">📊</span>통계</button>
+  </nav>
+
   <!-- ── 기록 탭 ── -->
   <section class="tab-content" id="tab-records">
     <div class="share-btn-row">
@@ -1444,6 +1441,16 @@
       </div>
     </div>
   </section>
+
+  </div><!-- /page-records -->
+
+  <!-- ── PAGE 2: 운동 가이드 ── -->
+  <div class="page-view" id="page-guide">
+  <nav class="sub-tab-nav three">
+    <button class="tab-btn" data-tab="guide"><span class="tab-icon">📚</span>가이드</button>
+    <button class="tab-btn" data-tab="timer"><span class="tab-icon">⏱</span>타이머</button>
+    <button class="tab-btn" data-tab="routine"><span class="tab-icon">📅</span>루틴</button>
+  </nav>
 
   <!-- ── 운동 가이드 탭 ── -->
   <section class="tab-content" id="tab-guide">
@@ -1606,6 +1613,15 @@
     <div class="rt-result" id="rt-result"></div>
   </section>
 
+  </div><!-- /page-guide -->
+
+  <!-- ── PAGE 4: 다이어트 관리 ── -->
+  <div class="page-view" id="page-diet-mgmt">
+  <nav class="sub-tab-nav">
+    <button class="tab-btn" data-tab="diet"><span class="tab-icon">🍽️</span>오늘의 칼로리</button>
+    <button class="tab-btn" data-tab="recommend"><span class="tab-icon">🥗</span>식단 추천</button>
+  </nav>
+
   <!-- ── 오늘의 칼로리 탭 ── -->
   <section class="tab-content" id="tab-diet">
     <!-- 음식 입력 -->
@@ -1720,7 +1736,29 @@
     </div>
   </section>
 
-</div>
+  </div><!-- /page-diet-mgmt -->
+
+</div><!-- /container -->
+
+<!-- ── 하단 탭바 ── -->
+<nav id="bottom-tabs">
+  <button class="btab active" data-page="workout" onclick="switchPage('workout')">
+    <span class="btab-icon">🏋️</span>
+    <span>운동기록</span>
+  </button>
+  <button class="btab" data-page="guide" onclick="switchPage('guide')">
+    <span class="btab-icon">📚</span>
+    <span>운동 가이드</span>
+  </button>
+  <button class="btab" data-page="records" onclick="switchPage('records')">
+    <span class="btab-icon">📊</span>
+    <span>기록&amp;평가</span>
+  </button>
+  <button class="btab" data-page="diet-mgmt" onclick="switchPage('diet-mgmt')">
+    <span class="btab-icon">🥗</span>
+    <span>다이어트 관리</span>
+  </button>
+</nav>
 
 <!-- ── 500kcal 달성 팝업 ── -->
 <div id="achievement-popup" class="popup-overlay">
@@ -2148,11 +2186,33 @@ async function deleteRec(type, id) {
   } catch { toast('삭제 실패', true); }
 }
 
+// ── 하단 탭 페이지 전환 ────────────────────────────────────
+const PAGE_DEFAULT_TAB = {
+  workout: 'cardio',
+  guide: 'guide',
+  records: 'records',
+  'diet-mgmt': 'diet',
+};
+function switchPage(pageName) {
+  document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.btab').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + pageName).classList.add('active');
+  document.querySelector(`.btab[data-page="${pageName}"]`).classList.add('active');
+  // 해당 페이지에 활성 서브탭이 없으면 첫 번째 탭 활성화
+  const pageEl = document.getElementById('page-' + pageName);
+  if (!pageEl.querySelector('.tab-btn.active')) {
+    const firstBtn = pageEl.querySelector('.tab-btn');
+    if (firstBtn) firstBtn.click();
+  }
+  if (pageName === 'records') renderStats();
+  if (pageName === 'diet-mgmt') { loadFoodLog().then(() => { initFoodBrowser(); renderFoodTab(); }); }
+}
+
 // ── UI ────────────────────────────────────────────────────
 function refreshAll() {
   updateHeaderStats();
   renderRecords();
-  const activeTab = document.querySelector('.tab-btn.active')?.dataset?.tab;
+  const activeTab = document.querySelector('.page-view.active .tab-btn.active')?.dataset?.tab;
   if (!activeTab || activeTab === 'stats') renderStats();
 }
 
@@ -2577,10 +2637,11 @@ function init() {
     liveWeight();
   });
 
-  // ── 탭 전환 ──
+  // ── 서브탭 전환 (페이지 내 탭) ──
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      const page = btn.closest('.page-view') || document;
+      page.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
@@ -2594,6 +2655,9 @@ function init() {
 
   // ── 유산소 카테고리 UI 초기화 ──
   buildCardioUI();
+
+  // ── 초기 페이지/서브탭 활성화 ──
+  switchPage('workout');
 
   document.getElementById('c-dist').addEventListener('input', liveCardio);
   document.getElementById('c-dur').addEventListener('input', liveCardio);
