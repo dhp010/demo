@@ -533,6 +533,21 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  // 로컬 다운로드 엔드포인트
+  if (urlPath === '/download') {
+    const filePath = path.join(BASE, 'fitness_tracker.html');
+    fs.readFile(filePath, (err, data) => {
+      if (err) { res.writeHead(404); return res.end('Not found'); }
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Disposition': 'attachment; filename="FitTrack_로컬.html"',
+        'Content-Length': data.length,
+      });
+      res.end(data);
+    });
+    return;
+  }
+
   // Static files — 기본 페이지는 fitness_tracker.html
   const PAGE_MAP = {
     '/': 'fitness_tracker.html',
