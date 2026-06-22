@@ -1974,7 +1974,7 @@ const RM_TABLE = [
 
 // ── 로컬 파일 모드: fetch /api/* → localStorage 처리 ──────
 (function() {
-  if (location.protocol !== 'file:') return; // 서버 모드에선 그대로
+  if (location.hostname) return; // 실제 서버가 있으면 그대로 (hostname이 비면 로컬/파일 모드)
 
   function _lsGet(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } }
   function _lsSet(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
