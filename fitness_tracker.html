@@ -900,6 +900,7 @@
     .profile-name-text { font-size:0.92rem; font-weight:800; }
     .profile-bar-btns { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
     .data-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:9000; display:flex; align-items:center; justify-content:center; }
+    .data-modal-overlay.hidden { display:none; }
     .data-modal { background:var(--card); border-radius:18px; width:min(340px,92vw); padding:22px 20px; box-shadow:0 12px 40px rgba(0,0,0,.35); }
     .data-modal-title { font-size:1rem; font-weight:900; margin-bottom:6px; }
     .data-modal-desc { font-size:0.76rem; color:var(--muted); margin-bottom:18px; line-height:1.5; }
@@ -1170,7 +1171,7 @@
     <span class="profile-name-text" id="profile-name-text">로딩 중...</span>
   </div>
   <div class="profile-bar-btns">
-    <button class="profile-switch-btn" onclick="openDataModal()">💾 데이터</button>
+    <button class="profile-switch-btn" onclick="openDataModal()" id="data-modal-btn" style="display:none">💾 데이터</button>
     <a class="profile-switch-btn" href="/download" download="FitTrack_로컬.html" id="local-dl-btn" title="인터넷 없이 사용 가능한 파일 다운로드" style="text-decoration:none">📥 로컬저장</a>
     <button class="profile-switch-btn" onclick="openProfileModal()">👤 전환</button>
   </div>
@@ -2007,6 +2008,11 @@ const RM_TABLE = [
 // ── 로컬 파일 모드: fetch /api/* → localStorage 처리 ──────
 (function() {
   if (location.protocol === 'http:' || location.protocol === 'https:') return; // 실제 서버면 그대로
+  // 로컬 모드: 데이터 버튼 노출
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('data-modal-btn');
+    if (btn) btn.style.display = '';
+  });
 
   function _lsGet(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } }
   function _lsSet(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
@@ -6906,46 +6912,19 @@ document.addEventListener('click', e => {
 function openDataModal()  { document.getElementById('data-modal-overlay').classList.remove('hidden'); }
 function closeDataModal() { document.getElementById('data-modal-overlay').classList.add('hidden'); }
 
-async function exportData() {
-  // 웹 서버 모드: API에서 전체 데이터 가져오기
-  const isLocal = location.protocol !== 'http:' && location.protocol !== 'https:';
-  let profiles, cardio, weight, food;
-
-  if (isLocal) {
-    // 로컬 모드: localStorage에서 직접
-    const get = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } };
-    profiles = get('loc_profiles');
-    cardio   = get('loc_cardio');
-    weight   = get('loc_weight');
-    food     = get('loc_food');
-  } else {
-    // 웹 모드: 모든 프로필의 데이터를 모아서 내보내기
-    try {
-      profiles = await fetch('/api/profiles').then(r => r.json());
-      const allRecords = await Promise.all(
-        profiles.map(p => fetch('/api/fitness/records?user=' + p.id).then(r => r.json()))
-      );
-      cardio = allRecords.flatMap(r => r.cardio || []);
-      weight = allRecords.flatMap(r => r.weight || []);
-      // 오늘 식단만 포함 (전체 식단은 날짜별 API가 없어 오늘 것만)
-      food = await Promise.all(
-        profiles.map(p => fetch(`/api/fitness/food?user=${p.id}&date=${todayStr()}`).then(r => r.json()))
-      ).then(arr => arr.flat());
-    } catch { toast('내보내기 실패', true); return; }
-  }
-
+function exportData() {
+  const get = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } };
   const data = {
     version: 1,
     exportedAt: new Date().toISOString(),
-    profiles, cardio, weight, food,
-    // 기타 localStorage 설정값 (목표 칼로리, 즐겨찾기 등)
+    profiles: get('loc_profiles'),
+    cardio:   get('loc_cardio'),
+    weight:   get('loc_weight'),
+    food:     get('loc_food'),
     settings: Object.fromEntries(
-      Object.keys(localStorage)
-        .filter(k => k.startsWith('p_'))
-        .map(k => [k, localStorage.getItem(k)])
+      Object.keys(localStorage).filter(k => k.startsWith('p_')).map(k => [k, localStorage.getItem(k)])
     ),
   };
-
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -6962,54 +6941,24 @@ async function importData(e) {
   let data;
   try { data = JSON.parse(await file.text()); } catch { toast('파일을 읽을 수 없어요', true); return; }
   if (!data.version || !Array.isArray(data.profiles)) { toast('올바른 백업 파일이 아니에요', true); return; }
-  if (!confirm(`백업 파일을 가져오면 현재 데이터에 추가됩니다.\n계속하시겠습니까?`)) return;
+  if (!confirm('백업 파일을 가져오면 현재 데이터에 추가됩니다.\n계속하시겠습니까?')) return;
 
-  const isLocal = location.protocol !== 'http:' && location.protocol !== 'https:';
+  const get = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } };
+  const set = (k, v) => localStorage.setItem(k, JSON.stringify(v));
 
-  if (isLocal) {
-    // 로컬 모드: localStorage에 병합
-    const get = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } };
-    const set = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+  const existP = get('loc_profiles');
+  set('loc_profiles', [...existP, ...(data.profiles||[]).filter(p => !existP.find(x => x.id === p.id))]);
 
-    // 프로필 병합 (id 기준 중복 제거)
-    const existP = get('loc_profiles');
-    const newP = (data.profiles || []).filter(p => !existP.find(e => e.id === p.id));
-    set('loc_profiles', [...existP, ...newP]);
+  const existC = get('loc_cardio');
+  set('loc_cardio', [...existC, ...(data.cardio||[]).filter(r => !existC.find(x => x.id === r.id))]);
 
-    // 운동기록 병합
-    const existC = get('loc_cardio');
-    const newC = (data.cardio || []).filter(r => !existC.find(e => e.id === r.id));
-    set('loc_cardio', [...existC, ...newC]);
+  const existW = get('loc_weight');
+  set('loc_weight', [...existW, ...(data.weight||[]).filter(r => !existW.find(x => x.id === r.id))]);
 
-    const existW = get('loc_weight');
-    const newW = (data.weight || []).filter(r => !existW.find(e => e.id === r.id));
-    set('loc_weight', [...existW, ...newW]);
+  const existF = get('loc_food');
+  set('loc_food', [...existF, ...(data.food||[]).filter(r => !existF.find(x => x.id === r.id))]);
 
-    // 식단기록 병합
-    const existF = get('loc_food');
-    const newF = (data.food || []).filter(r => !existF.find(e => e.id === r.id));
-    set('loc_food', [...existF, ...newF]);
-
-    // 설정값 복원
-    if (data.settings) Object.entries(data.settings).forEach(([k, v]) => localStorage.setItem(k, v));
-  } else {
-    // 웹 모드: API로 업로드
-    try {
-      const existProfiles = await fetch('/api/profiles').then(r => r.json());
-      for (const p of (data.profiles || [])) {
-        if (!existProfiles.find(e => e.id === p.id)) {
-          await fetch('/api/profiles', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) });
-        }
-      }
-      for (const r of (data.cardio || [])) {
-        await fetch('/api/fitness/cardio', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(r) }).catch(() => {});
-      }
-      for (const r of (data.weight || [])) {
-        await fetch('/api/fitness/weight', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(r) }).catch(() => {});
-      }
-      if (data.settings) Object.entries(data.settings).forEach(([k, v]) => localStorage.setItem(k, v));
-    } catch { toast('가져오기 실패', true); return; }
-  }
+  if (data.settings) Object.entries(data.settings).forEach(([k, v]) => localStorage.setItem(k, v));
 
   toast('📥 데이터를 가져왔어요! 새로고침합니다...');
   closeDataModal();
