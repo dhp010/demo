@@ -2010,8 +2010,10 @@ const RM_TABLE = [
   if (location.protocol === 'http:' || location.protocol === 'https:') return; // 실제 서버면 그대로
   // 로컬 모드: 데이터 버튼 노출
   document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('data-modal-btn');
-    if (btn) btn.style.display = '';
+    const dataBtn = document.getElementById('data-modal-btn');
+    if (dataBtn) dataBtn.style.display = '';
+    const dlBtn = document.getElementById('local-dl-btn');
+    if (dlBtn) dlBtn.style.display = 'none';
   });
 
   function _lsGet(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } }
