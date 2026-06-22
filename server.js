@@ -543,8 +543,8 @@ const server = http.createServer(async (req, res) => {
     fs.readFile(filePath, (err, data) => {
       if (err) { res.writeHead(404); return res.end('Not found'); }
       res.writeHead(200, {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Content-Disposition': 'attachment; filename="FitTrack_로컬.html"',
+        'Content-Type': 'application/octet-stream',
+        'Content-Disposition': "attachment; filename*=UTF-8''FitTrack_%EB%A1%9C%EC%BB%AC.html",
         'Content-Length': data.length,
       });
       res.end(data);
