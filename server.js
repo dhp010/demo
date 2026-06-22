@@ -390,6 +390,10 @@ if (process.env.TURSO_DATABASE_URL) {
   storage = buildMemoryStorage();
 }
 
+// 처리되지 않은 예외로 서버가 죽지 않도록
+process.on('uncaughtException', err => console.error('uncaughtException:', err.message));
+process.on('unhandledRejection', err => console.error('unhandledRejection:', err?.message || err));
+
 // ── HTTP ─────────────────────────────────────────────────
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -566,5 +570,10 @@ const server = http.createServer(async (req, res) => {
 });
 
 storage.init()
+  .catch(err => {
+    console.error('DB 초기화 실패, 인메모리로 전환:', err.message);
+    storage = buildMemoryStorage();
+    return storage.init();
+  })
   .then(() => server.listen(PORT, '0.0.0.0', () => console.log(`서버 실행 중: http://localhost:${PORT}`)))
-  .catch(err => { console.error('초기화 실패:', err); process.exit(1); });
+  .catch(err => { console.error('서버 시작 실패:', err); process.exit(1); });
