@@ -898,7 +898,18 @@
     .profile-current { display:flex; align-items:center; gap:9px; }
     .profile-avatar { width:34px; height:34px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:900; flex-shrink:0; }
     .profile-name-text { font-size:0.92rem; font-weight:800; }
-    .profile-bar-btns { display:flex; align-items:center; gap:6px; }
+    .profile-bar-btns { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    .data-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:9000; display:flex; align-items:center; justify-content:center; }
+    .data-modal { background:var(--card); border-radius:18px; width:min(340px,92vw); padding:22px 20px; box-shadow:0 12px 40px rgba(0,0,0,.35); }
+    .data-modal-title { font-size:1rem; font-weight:900; margin-bottom:6px; }
+    .data-modal-desc { font-size:0.76rem; color:var(--muted); margin-bottom:18px; line-height:1.5; }
+    .data-modal-btns { display:flex; flex-direction:column; gap:10px; }
+    .data-btn { border:none; border-radius:12px; padding:13px 16px; font-size:0.88rem; font-weight:700; cursor:pointer; text-align:left; display:flex; align-items:center; gap:10px; transition:opacity .15s; }
+    .data-btn:hover { opacity:.85; }
+    .data-btn-export { background:var(--primary); color:#fff; }
+    .data-btn-import { background:var(--bg); border:1.5px solid var(--border); color:var(--text); }
+    .data-btn-close  { background:none; border:none; color:var(--muted); font-size:0.8rem; text-align:center; cursor:pointer; padding:6px; }
+    .data-btn-close:hover { color:var(--text); }
     .profile-switch-btn { background:var(--bg); border:1.5px solid var(--border); border-radius:20px; padding:5px 13px; font-size:0.76rem; font-weight:700; cursor:pointer; color:var(--muted); transition:all .15s; white-space:nowrap; }
     .profile-switch-btn:hover { border-color:var(--primary); color:var(--text); }
     /* 프로필 모달 */
@@ -1159,8 +1170,29 @@
     <span class="profile-name-text" id="profile-name-text">로딩 중...</span>
   </div>
   <div class="profile-bar-btns">
+    <button class="profile-switch-btn" onclick="openDataModal()">💾 데이터</button>
     <a class="profile-switch-btn" href="/download" download="FitTrack_로컬.html" id="local-dl-btn" title="인터넷 없이 사용 가능한 파일 다운로드" style="text-decoration:none">📥 로컬저장</a>
     <button class="profile-switch-btn" onclick="openProfileModal()">👤 전환</button>
+  </div>
+</div>
+
+<!-- 데이터 내보내기/가져오기 모달 -->
+<div class="data-modal-overlay hidden" id="data-modal-overlay" onclick="if(event.target===this)closeDataModal()">
+  <div class="data-modal">
+    <div class="data-modal-title">💾 데이터 백업 / 복원</div>
+    <div class="data-modal-desc">JSON 파일로 내보내고 다른 기기에서 가져오면<br>기기 간 데이터를 옮길 수 있어요.</div>
+    <div class="data-modal-btns">
+      <button class="data-btn data-btn-export" onclick="exportData()">
+        <span style="font-size:1.2rem">📤</span>
+        <div><div>내보내기</div><div style="font-size:0.72rem;font-weight:400;opacity:.85">현재 데이터를 JSON 파일로 저장</div></div>
+      </button>
+      <button class="data-btn data-btn-import" onclick="document.getElementById('import-file-input').click()">
+        <span style="font-size:1.2rem">📥</span>
+        <div><div>가져오기</div><div style="font-size:0.72rem;font-weight:400;opacity:.6">JSON 파일을 불러와 데이터 복원</div></div>
+      </button>
+      <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="data-btn-close" onclick="closeDataModal()">닫기</button>
+    </div>
   </div>
 </div>
 
@@ -6870,6 +6902,119 @@ document.addEventListener('click', e => {
   }
 });
 
+// ── 데이터 내보내기 / 가져오기 ──────────────────────────────
+function openDataModal()  { document.getElementById('data-modal-overlay').classList.remove('hidden'); }
+function closeDataModal() { document.getElementById('data-modal-overlay').classList.add('hidden'); }
+
+async function exportData() {
+  // 웹 서버 모드: API에서 전체 데이터 가져오기
+  const isLocal = location.protocol !== 'http:' && location.protocol !== 'https:';
+  let profiles, cardio, weight, food;
+
+  if (isLocal) {
+    // 로컬 모드: localStorage에서 직접
+    const get = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } };
+    profiles = get('loc_profiles');
+    cardio   = get('loc_cardio');
+    weight   = get('loc_weight');
+    food     = get('loc_food');
+  } else {
+    // 웹 모드: 모든 프로필의 데이터를 모아서 내보내기
+    try {
+      profiles = await fetch('/api/profiles').then(r => r.json());
+      const allRecords = await Promise.all(
+        profiles.map(p => fetch('/api/fitness/records?user=' + p.id).then(r => r.json()))
+      );
+      cardio = allRecords.flatMap(r => r.cardio || []);
+      weight = allRecords.flatMap(r => r.weight || []);
+      // 오늘 식단만 포함 (전체 식단은 날짜별 API가 없어 오늘 것만)
+      food = await Promise.all(
+        profiles.map(p => fetch(`/api/fitness/food?user=${p.id}&date=${todayStr()}`).then(r => r.json()))
+      ).then(arr => arr.flat());
+    } catch { toast('내보내기 실패', true); return; }
+  }
+
+  const data = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    profiles, cardio, weight, food,
+    // 기타 localStorage 설정값 (목표 칼로리, 즐겨찾기 등)
+    settings: Object.fromEntries(
+      Object.keys(localStorage)
+        .filter(k => k.startsWith('p_'))
+        .map(k => [k, localStorage.getItem(k)])
+    ),
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `FitTrack_백업_${todayStr()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+  toast('📤 데이터를 내보냈어요!');
+  closeDataModal();
+}
+
+async function importData(e) {
+  const file = e.target.files[0]; if (!file) return;
+  e.target.value = '';
+  let data;
+  try { data = JSON.parse(await file.text()); } catch { toast('파일을 읽을 수 없어요', true); return; }
+  if (!data.version || !Array.isArray(data.profiles)) { toast('올바른 백업 파일이 아니에요', true); return; }
+  if (!confirm(`백업 파일을 가져오면 현재 데이터에 추가됩니다.\n계속하시겠습니까?`)) return;
+
+  const isLocal = location.protocol !== 'http:' && location.protocol !== 'https:';
+
+  if (isLocal) {
+    // 로컬 모드: localStorage에 병합
+    const get = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } };
+    const set = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+    // 프로필 병합 (id 기준 중복 제거)
+    const existP = get('loc_profiles');
+    const newP = (data.profiles || []).filter(p => !existP.find(e => e.id === p.id));
+    set('loc_profiles', [...existP, ...newP]);
+
+    // 운동기록 병합
+    const existC = get('loc_cardio');
+    const newC = (data.cardio || []).filter(r => !existC.find(e => e.id === r.id));
+    set('loc_cardio', [...existC, ...newC]);
+
+    const existW = get('loc_weight');
+    const newW = (data.weight || []).filter(r => !existW.find(e => e.id === r.id));
+    set('loc_weight', [...existW, ...newW]);
+
+    // 식단기록 병합
+    const existF = get('loc_food');
+    const newF = (data.food || []).filter(r => !existF.find(e => e.id === r.id));
+    set('loc_food', [...existF, ...newF]);
+
+    // 설정값 복원
+    if (data.settings) Object.entries(data.settings).forEach(([k, v]) => localStorage.setItem(k, v));
+  } else {
+    // 웹 모드: API로 업로드
+    try {
+      const existProfiles = await fetch('/api/profiles').then(r => r.json());
+      for (const p of (data.profiles || [])) {
+        if (!existProfiles.find(e => e.id === p.id)) {
+          await fetch('/api/profiles', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) });
+        }
+      }
+      for (const r of (data.cardio || [])) {
+        await fetch('/api/fitness/cardio', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(r) }).catch(() => {});
+      }
+      for (const r of (data.weight || [])) {
+        await fetch('/api/fitness/weight', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(r) }).catch(() => {});
+      }
+      if (data.settings) Object.entries(data.settings).forEach(([k, v]) => localStorage.setItem(k, v));
+    } catch { toast('가져오기 실패', true); return; }
+  }
+
+  toast('📥 데이터를 가져왔어요! 새로고침합니다...');
+  closeDataModal();
+  setTimeout(() => location.reload(), 1200);
+}
 </script>
 </body>
 </html>
