@@ -1,9 +1,64 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
 
 const PORT = process.env.PORT || 3000;
 const BASE = __dirname;
+
+// PNG icon generator (no external deps)
+function makePNG(size) {
+  const crcTable = (() => {
+    const t = new Uint32Array(256);
+    for (let i = 0; i < 256; i++) {
+      let c = i;
+      for (let k = 0; k < 8; k++) c = (c & 1) ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+      t[i] = c;
+    }
+    return t;
+  })();
+  function crc32(buf) {
+    let c = 0xFFFFFFFF;
+    for (let i = 0; i < buf.length; i++) c = crcTable[(c ^ buf[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function chunk(type, data) {
+    const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
+    const tb = Buffer.from(type, 'ascii');
+    const crcBuf = Buffer.alloc(4); crcBuf.writeUInt32BE(crc32(Buffer.concat([tb, data])));
+    return Buffer.concat([len, tb, data, crcBuf]);
+  }
+  const sig = Buffer.from([137,80,78,71,13,10,26,10]);
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(size, 0); ihdr.writeUInt32BE(size, 4);
+  ihdr[8] = 8; ihdr[9] = 2; // 8-bit RGB, no alpha
+
+  // Draw: dark bg (#0f3460) + green dumbbell (#4CAF50)
+  const bg = [15, 52, 96];
+  const green = [76, 175, 80];
+  const light = [129, 199, 132];
+  const rows = [];
+  for (let y = 0; y < size; y++) {
+    const row = Buffer.alloc(1 + size * 3);
+    for (let x = 0; x < size; x++) {
+      const nx = x / size, ny = y / size;
+      let col = bg;
+      // Left weight (0.08..0.32, 0.33..0.67)
+      if (nx >= 0.08 && nx <= 0.32 && ny >= 0.33 && ny <= 0.67) col = (nx < 0.14 || nx > 0.26) ? green : light;
+      // Right weight (0.68..0.92, 0.33..0.67)
+      else if (nx >= 0.68 && nx <= 0.92 && ny >= 0.33 && ny <= 0.67) col = (nx < 0.74 || nx > 0.86) ? green : light;
+      // Bar (0.32..0.68, 0.44..0.56)
+      else if (nx >= 0.32 && nx <= 0.68 && ny >= 0.44 && ny <= 0.56) col = light;
+      row[1 + x*3] = col[0]; row[1 + x*3 + 1] = col[1]; row[1 + x*3 + 2] = col[2];
+    }
+    rows.push(row);
+  }
+  const raw = Buffer.concat(rows);
+  const idat = zlib.deflateSync(raw, { level: 6 });
+  return Buffer.concat([sig, chunk('IHDR', ihdr), chunk('IDAT', idat), chunk('IEND', Buffer.alloc(0))]);
+}
+const ICON_192 = makePNG(192);
+const ICON_512 = makePNG(512);
 
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -537,6 +592,16 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  // PWA icons
+  if (urlPath === '/icon-192.png') {
+    res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' });
+    return res.end(ICON_192);
+  }
+  if (urlPath === '/icon-512.png') {
+    res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' });
+    return res.end(ICON_512);
+  }
+
   // 로컬 다운로드 엔드포인트
   if (urlPath === '/download') {
     const filePath = path.join(BASE, 'fitness_tracker.html');
@@ -570,11 +635,6 @@ const server = http.createServer(async (req, res) => {
 });
 
 storage.init()
-  .catch(err => {
-    console.error('DB 초기화 실패, 인메모리로 전환:', err.message);
-    storage = buildMemoryStorage();
-    return storage.init();
-  })
   .then(async () => {
     try {
       const profiles = await storage.getProfiles();
