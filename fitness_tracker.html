@@ -2297,10 +2297,13 @@ function calcWeight(exType, wkg, sets, reps, exName = '') {
     // reps = 횟수, spr = 초/회
     return Math.round(bwCal.met * totalW * (sets * reps * bwCal.spr / 3600) * gf());
   }
-  // 물리적 일량(J) 기반: wkg × 9.8 × 0.5m이동 / 0.25효율 / 4186 ≈ wkg×reps×0.0046
-  // 여기에 대근육(복합) vs 소근육(고립) 보정 적용
-  const f = exType === 'compound' ? 0.008 : 0.005;
-  return Math.round(wkg * sets * reps * f * gf());
+  // MET 기반 (ACSM): 운동시간(세트×횟수×3초) + 세트간 휴식(90초)으로 총 시간 추정
+  // compound MET 5.0 / isolation MET 3.5 (2024 Adult Compendium of Physical Activities)
+  const met = exType === 'compound' ? 5.0 : 3.5;
+  const activeSec = sets * reps * 3;
+  const restSec = Math.max(sets - 1, 0) * 90;
+  const hours = (activeSec + restSec) / 3600;
+  return Math.round(met * bodyWeight * hours * gf());
 }
 
 function calc1RM(wkg, reps, exType) {
