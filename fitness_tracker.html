@@ -2297,13 +2297,17 @@ function calcWeight(exType, wkg, sets, reps, exName = '') {
     // reps = 횟수, spr = 초/회
     return Math.round(bwCal.met * totalW * (sets * reps * bwCal.spr / 3600) * gf());
   }
-  // MET 기반 (ACSM): 운동시간(세트×횟수×3초) + 세트간 휴식(90초)으로 총 시간 추정
-  // compound MET 5.0 / isolation MET 3.5 (2024 Adult Compendium of Physical Activities)
-  const met = exType === 'compound' ? 5.0 : 3.5;
+  // 하이브리드: 기초 대사비용(체중×시간) + 기계적 일량(들어올린 무게×볼륨)
+  // 기초 대사: 세트간 휴식 포함 총 운동시간 × MET × 체중
+  // 기계적 일량: wkg × sets × reps × 효율계수 (compound 0.008 / isolation 0.005)
+  const baseMET = exType === 'compound' ? 3.5 : 2.5;
   const activeSec = sets * reps * 3;
   const restSec = Math.max(sets - 1, 0) * 90;
   const hours = (activeSec + restSec) / 3600;
-  return Math.round(met * bodyWeight * hours * gf());
+  const baseCal = baseMET * bodyWeight * hours;
+  const liftFactor = exType === 'compound' ? 0.008 : 0.005;
+  const liftCal = wkg * sets * reps * liftFactor;
+  return Math.round((baseCal + liftCal) * gf());
 }
 
 function calc1RM(wkg, reps, exType) {
