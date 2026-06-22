@@ -575,5 +575,20 @@ storage.init()
     storage = buildMemoryStorage();
     return storage.init();
   })
-  .then(() => server.listen(PORT, '0.0.0.0', () => console.log(`서버 실행 중: http://localhost:${PORT}`)))
+  .then(async () => {
+    try {
+      const profiles = await storage.getProfiles();
+      const profileIds = profiles.map(p => p.id);
+      let totalCardio = 0, totalWeight = 0;
+      for (const pid of profileIds) {
+        const r = await storage.getFitnessRecords(pid);
+        totalCardio += r.cardio?.length ?? 0;
+        totalWeight += r.weight?.length ?? 0;
+      }
+      console.log(`[DB 상태] 프로필 ${profiles.length}개 (${profileIds.join(',')}), 유산소 ${totalCardio}건, 웨이트 ${totalWeight}건`);
+    } catch (e) {
+      console.error('[DB 상태 확인 실패]', e.message);
+    }
+    server.listen(PORT, '0.0.0.0', () => console.log(`서버 실행 중: http://localhost:${PORT}`));
+  })
   .catch(err => { console.error('서버 시작 실패:', err); process.exit(1); });
