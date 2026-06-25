@@ -7232,12 +7232,14 @@ const HOME_BADGES = [
 
 // ── 오늘의 미션 ───────────────────────────────────────────
 function homeGetMission() {
+  const _ex = (typeof EXERCISES !== "undefined") ? EXERCISES : {};
   const allEx = [
-    ...(EXERCISES.compound || []),
-    ...(EXERCISES.isolation || []),
-    ...(EXERCISES.bodyweight || []),
-    ...(EXERCISES.cardio || []),
+    ...(_ex.compound || []),
+    ...(_ex.isolation || []),
+    ...(_ex.bodyweight || []),
+    ...(_ex.cardio || []),
   ];
+  if (!allEx.length) allEx.push("스쿼트","푸쉬업","런지","버피","플랭크","풀업","달리기","줄넘기");
   const today = new Date().toISOString().slice(0,10);
   let seed = 0;
   for (let i = 0; i < today.length; i++) seed += today.charCodeAt(i);
