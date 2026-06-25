@@ -7127,6 +7127,9 @@ async function importData(e) {
 <!-- ── HOME PAGE GAMIFICATION SCRIPT ── -->
 <script>
 // ── 레벨 테이블 ────────────────────────────────────────────
+function _homeLsGet(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch { return null; } }
+function _homeLsSet(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+
 const HOME_LEVELS = [
   { lv:1,  xp:0,     emoji:'🥚', title:'운동 초보' },
   { lv:2,  xp:500,   emoji:'🐣', title:'새싹 트레이니' },
@@ -7158,7 +7161,7 @@ function homeCalcXP() {
   ]);
   xp += days.size * 50;
   // 미션 완료 보너스
-  const motiv = _lsGet(pk('motivation_v2')) || {};
+  const motiv = _homeLsGet(pk('motivation_v2')) || {};
   if (motiv.missionCompleted) xp += 100;
   return Math.floor(xp);
 }
@@ -7253,22 +7256,22 @@ function homeGetMission() {
 // ── 미션 완료 ─────────────────────────────────────────────
 function homeMissionComplete() {
   const today = new Date().toISOString().slice(0,10);
-  const motiv = _lsGet(pk('motivation_v2')) || {};
+  const motiv = _homeLsGet(pk('motivation_v2')) || {};
   if (motiv.missionDate === today && motiv.missionCompleted) return;
   motiv.missionDate = today;
   motiv.missionCompleted = true;
   motiv.missionSkipped = false;
-  _lsSet(pk('motivation_v2'), motiv);
+  _homeLsSet(pk('motivation_v2'), motiv);
   toast('🎉 미션 완료! +100 XP 획득!');
   homeRefresh();
 }
 
 function homeMissionSkip() {
   const today = new Date().toISOString().slice(0,10);
-  const motiv = _lsGet(pk('motivation_v2')) || {};
+  const motiv = _homeLsGet(pk('motivation_v2')) || {};
   motiv.missionDate = today;
   motiv.missionSkipped = true;
-  _lsSet(pk('motivation_v2'), motiv);
+  _homeLsSet(pk('motivation_v2'), motiv);
   document.getElementById('home-mission-done-btn').disabled = true;
   document.getElementById('home-mission-skip-btn').disabled = true;
   document.getElementById('home-mission-ex').style.opacity = '0.4';
@@ -7337,7 +7340,7 @@ function homeRefresh() { try {
   const stats = homeCalcStats();
   const streak = homeCalcStreak();
   const today = new Date().toISOString().slice(0,10);
-  const motiv = _lsGet(pk('motivation_v2')) || {};
+  const motiv = _homeLsGet(pk('motivation_v2')) || {};
 
   // 캐릭터
   document.getElementById('home-char-emoji').textContent = lvData.emoji;
