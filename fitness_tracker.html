@@ -2530,6 +2530,7 @@ function switchPage(pageName) {
   const pageEl = document.getElementById('page-' + pageName);
   const btn = pageEl.querySelector('.tab-btn.active') || pageEl.querySelector('.tab-btn');
   if (btn) btn.click();
+  if (pageName === 'home' && typeof homeRefresh === 'function') homeRefresh();
 }
 
 // ── UI ────────────────────────────────────────────────────
@@ -7399,12 +7400,7 @@ function homeRefresh() {
   }).join('');
 }
 
-// switchPage 확장: home 탭 전환 시 갱신
-const _origSwitchPage = switchPage;
-function switchPage(pageName) {
-  _origSwitchPage(pageName);
-  if (pageName === 'home') homeRefresh();
-}
+
 </script>
 
 <div style="text-align:center;padding:16px 0 24px;color:#666;font-size:12px;opacity:0.6;">v2.0</div>
