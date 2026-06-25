@@ -1167,6 +1167,55 @@
     .rec-empty { text-align:center; color:var(--muted); font-size:0.85rem; padding:24px 0; }
     @media(max-width:400px) { .rec-grid { grid-template-columns:1fr; } }
 
+    /* ── HOME PAGE (gamification) ── */
+    #page-home { padding-bottom: 12px; }
+    .home-char-box { text-align:center; padding:20px 0 12px; }
+    .home-char-emoji { font-size:4rem; line-height:1; display:block; margin-bottom:8px; animation:home-float 3s ease-in-out infinite; }
+    @keyframes home-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    .home-level-badge { display:inline-block; background:var(--primary); color:#1a1a1a; font-weight:800; font-size:0.78rem; border-radius:20px; padding:3px 14px; margin-bottom:4px; }
+    .home-title { font-size:1.05rem; font-weight:700; color:var(--text); }
+    .home-xp-bar-wrap { margin:10px 0 0; }
+    .home-xp-label { display:flex; justify-content:space-between; font-size:0.75rem; color:var(--muted); margin-bottom:4px; }
+    .home-xp-track { height:10px; background:var(--border); border-radius:6px; overflow:hidden; }
+    .home-xp-fill { height:100%; background:linear-gradient(90deg,var(--primary),#ffb300); border-radius:6px; transition:width 0.6s cubic-bezier(.4,0,.2,1); }
+    .home-stats-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; padding:0 0 4px; }
+    .home-stat-item { text-align:center; }
+    .home-stat-name { font-size:0.72rem; color:var(--muted); margin-bottom:4px; }
+    .home-stat-track { height:8px; background:var(--border); border-radius:5px; overflow:hidden; margin-bottom:3px; }
+    .home-stat-fill { height:100%; border-radius:5px; transition:width 0.5s ease; }
+    .home-stat-fill.tier0 { background:#aaa; }
+    .home-stat-fill.tier1 { background:#4a9eff; }
+    .home-stat-fill.tier2 { background:var(--primary); }
+    .home-stat-val { font-size:0.65rem; color:var(--muted); }
+    .home-mission-box { position:relative; overflow:hidden; }
+    .home-mission-inner { text-align:center; padding:8px 0 4px; }
+    .home-mission-ex { font-size:1.5rem; font-weight:800; color:var(--text); min-height:2rem; transition:opacity 0.2s; }
+    .home-mission-meta { font-size:0.8rem; color:var(--muted); margin:4px 0 10px; }
+    .home-mission-stars { color:#f59e0b; font-size:0.9rem; letter-spacing:1px; }
+    .home-mission-btns { display:flex; gap:8px; justify-content:center; }
+    .home-mission-done { background:var(--primary); color:#1a1a1a; font-weight:700; border:none; border-radius:10px; padding:9px 22px; cursor:pointer; font-size:0.9rem; transition:opacity .2s; }
+    .home-mission-skip { background:var(--bg); color:var(--muted); font-weight:600; border:1.5px solid var(--border); border-radius:10px; padding:9px 16px; cursor:pointer; font-size:0.85rem; }
+    .home-mission-done:disabled,.home-mission-skip:disabled { opacity:0.45; cursor:default; }
+    .home-mission-done:not(:disabled):hover { opacity:0.85; }
+    .home-routine-btns { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+    .home-routine-btn { background:var(--bg); border:1.5px solid var(--border); border-radius:10px; padding:10px 6px; font-size:0.85rem; font-weight:700; color:var(--text); cursor:pointer; transition:all .18s; }
+    .home-routine-btn:hover, .home-routine-btn.selected { border-color:var(--primary); background:var(--primary-bg); color:var(--primary); }
+    .home-routine-list { display:flex; flex-direction:column; gap:8px; }
+    .home-routine-item { background:var(--bg); border:1.5px solid var(--border); border-radius:10px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; }
+    .home-routine-item-name { font-size:0.9rem; font-weight:700; color:var(--text); }
+    .home-routine-item-meta { font-size:0.75rem; color:var(--muted); }
+    .home-badges-grid { display:flex; flex-wrap:wrap; gap:8px; }
+    .home-badge { display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 10px; background:var(--bg); border:1.5px solid var(--border); border-radius:10px; min-width:56px; }
+    .home-badge.earned { border-color:var(--primary); background:var(--primary-bg); }
+    .home-badge-icon { font-size:1.4rem; }
+    .home-badge-label { font-size:0.6rem; color:var(--muted); text-align:center; line-height:1.2; }
+    .home-badge.earned .home-badge-label { color:var(--primary); font-weight:700; }
+    .home-streak-bar { display:flex; align-items:center; gap:10px; padding:10px 0 4px; }
+    .home-streak-emoji { font-size:1.6rem; }
+    .home-streak-info { flex:1; }
+    .home-streak-count { font-size:1.1rem; font-weight:800; color:var(--text); }
+    .home-streak-sub { font-size:0.75rem; color:var(--muted); }
+
   </style>
 </head>
 <body>
@@ -1307,6 +1356,93 @@
 </div>
 
 <div class="container">
+
+  <!-- ── PAGE 홈: 게이미피케이션 홈 ── -->
+  <div class="page-view" id="page-home">
+
+    <!-- 캐릭터 + 레벨 -->
+    <div class="card home-char-box">
+      <span class="home-char-emoji" id="home-char-emoji">🥚</span>
+      <div class="home-level-badge" id="home-level-badge">Lv.1</div>
+      <div class="home-title" id="home-char-title">운동 초보</div>
+      <div class="home-xp-bar-wrap">
+        <div class="home-xp-label">
+          <span id="home-xp-cur">0 XP</span>
+          <span id="home-xp-next">다음 레벨: 500 XP</span>
+        </div>
+        <div class="home-xp-track">
+          <div class="home-xp-fill" id="home-xp-fill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RPG 스탯 -->
+    <div class="card">
+      <h3 style="margin:0 0 12px;font-size:0.95rem;">⚔️ 나의 스탯</h3>
+      <div class="home-stats-grid" id="home-stats-grid">
+        <div class="home-stat-item">
+          <div class="home-stat-name">💪 근력</div>
+          <div class="home-stat-track"><div class="home-stat-fill tier0" id="home-stat-str" style="width:0%"></div></div>
+          <div class="home-stat-val" id="home-stat-str-val">0</div>
+        </div>
+        <div class="home-stat-item">
+          <div class="home-stat-name">🏃 지구력</div>
+          <div class="home-stat-track"><div class="home-stat-fill tier0" id="home-stat-end" style="width:0%"></div></div>
+          <div class="home-stat-val" id="home-stat-end-val">0 km</div>
+        </div>
+        <div class="home-stat-item">
+          <div class="home-stat-name">📅 활동량</div>
+          <div class="home-stat-track"><div class="home-stat-fill tier0" id="home-stat-act" style="width:0%"></div></div>
+          <div class="home-stat-val" id="home-stat-act-val">0 일</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 오늘의 미션 -->
+    <div class="card home-mission-box">
+      <h3 style="margin:0 0 8px;font-size:0.95rem;">🎯 오늘의 미션</h3>
+      <div class="home-mission-inner">
+        <div class="home-mission-ex" id="home-mission-ex">로딩 중...</div>
+        <div class="home-mission-meta">
+          <span id="home-mission-sets"></span>
+          &nbsp;
+          <span class="home-mission-stars" id="home-mission-stars"></span>
+        </div>
+        <div class="home-mission-btns">
+          <button class="home-mission-done" id="home-mission-done-btn" onclick="homeMissionComplete()">✅ 완료! (+100 XP)</button>
+          <button class="home-mission-skip" id="home-mission-skip-btn" onclick="homeMissionSkip()">다음에</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 부위별 랜덤 루틴 -->
+    <div class="card">
+      <h3 style="margin:0 0 12px;font-size:0.95rem;">🎲 부위별 랜덤 루틴</h3>
+      <div class="home-routine-btns">
+        <button class="home-routine-btn" onclick="homeRoutine('upper')">🏋️ 상체</button>
+        <button class="home-routine-btn" onclick="homeRoutine('lower')">🦵 하체</button>
+        <button class="home-routine-btn" onclick="homeRoutine('full')">⚡ 전신</button>
+        <button class="home-routine-btn" onclick="homeRoutine('cardio')">🏃 유산소</button>
+      </div>
+      <div class="home-routine-list" id="home-routine-list">
+        <div style="text-align:center;color:var(--muted);font-size:0.85rem;padding:8px 0;">위 버튼을 눌러 루틴을 생성하세요</div>
+      </div>
+    </div>
+
+    <!-- 도전과제 미리보기 -->
+    <div class="card">
+      <h3 style="margin:0 0 10px;font-size:0.95rem;">🏆 도전과제</h3>
+      <div class="home-streak-bar">
+        <span class="home-streak-emoji" id="home-streak-emoji">🔥</span>
+        <div class="home-streak-info">
+          <div class="home-streak-count"><span id="home-streak-count">0</span>일 연속</div>
+          <div class="home-streak-sub" id="home-streak-sub">오늘 운동을 기록하면 스트릭이 시작돼요!</div>
+        </div>
+      </div>
+      <div class="home-badges-grid" id="home-badges-grid" style="margin-top:12px;"></div>
+    </div>
+
+  </div><!-- /page-home -->
 
   <!-- ── PAGE 1: 운동기록 ── -->
   <div class="page-view active" id="page-workout">
@@ -1808,6 +1944,10 @@
 
 <!-- ── 하단 탭바 ── -->
 <nav id="bottom-tabs">
+  <button class="btab" data-page="home" onclick="switchPage('home')">
+    <span class="btab-icon">🏠</span>
+    <span>홈</span>
+  </button>
   <button class="btab active" data-page="workout" onclick="switchPage('workout')">
     <span class="btab-icon">🏋️</span>
     <span>운동기록</span>
@@ -6981,7 +7121,293 @@ async function importData(e) {
   setTimeout(() => location.reload(), 1200);
 }
 </script>
-<div style="text-align:center;padding:16px 0 24px;color:#666;font-size:12px;opacity:0.6;">v1.0</div>
+
+<!-- ── HOME PAGE GAMIFICATION SCRIPT ── -->
+<script>
+// ── 레벨 테이블 ────────────────────────────────────────────
+const HOME_LEVELS = [
+  { lv:1,  xp:0,     emoji:'🥚', title:'운동 초보' },
+  { lv:2,  xp:500,   emoji:'🐣', title:'새싹 트레이니' },
+  { lv:3,  xp:1500,  emoji:'🐥', title:'꾸준한 입문자' },
+  { lv:4,  xp:3000,  emoji:'🏃', title:'달리는 사람' },
+  { lv:5,  xp:6000,  emoji:'💪', title:'근육 성장 중' },
+  { lv:6,  xp:12000, emoji:'🏋️', title:'진지한 트레이너' },
+  { lv:7,  xp:20000, emoji:'⚡', title:'운동 전사' },
+  { lv:8,  xp:35000, emoji:'🔥', title:'불꽃 파이터' },
+  { lv:9,  xp:55000, emoji:'🦅', title:'전설의 시작' },
+  { lv:10, xp:80000, emoji:'🦸', title:'피트니스 레전드' },
+];
+
+// ── XP 계산 ───────────────────────────────────────────────
+function homeCalcXP() {
+  const recs = window._records || { cardio:[], weight:[] };
+  let xp = 0;
+  // 유산소: 1 kcal = 1 XP
+  recs.cardio.forEach(r => { xp += Number(r.calories) || 0; });
+  // 웨이트: weight × sets × reps / 10 = XP
+  recs.weight.forEach(r => {
+    const vol = (Number(r.weight_kg)||0) * (Number(r.sets)||0) * (Number(r.reps)||0);
+    xp += vol / 10;
+  });
+  // 날짜별 보너스: 하루 +50
+  const days = new Set([
+    ...recs.cardio.map(r => r.date),
+    ...recs.weight.map(r => r.date),
+  ]);
+  xp += days.size * 50;
+  // 미션 완료 보너스
+  const motiv = _lsGet(pk('motivation_v2')) || {};
+  if (motiv.missionCompleted) xp += 100;
+  return Math.floor(xp);
+}
+
+function homeGetLevel(xp) {
+  let lvData = HOME_LEVELS[0];
+  for (let i = HOME_LEVELS.length - 1; i >= 0; i--) {
+    if (xp >= HOME_LEVELS[i].xp) { lvData = HOME_LEVELS[i]; break; }
+  }
+  return lvData;
+}
+
+// ── 스트릭 계산 ───────────────────────────────────────────
+function homeCalcStreak() {
+  const recs = window._records || { cardio:[], weight:[] };
+  const allDates = new Set([
+    ...recs.cardio.map(r => r.date),
+    ...recs.weight.map(r => r.date),
+  ]);
+  if (allDates.size === 0) return 0;
+  const sorted = Array.from(allDates).sort().reverse();
+  const today = new Date().toISOString().slice(0,10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+  if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
+  let streak = 0;
+  let check = new Date(sorted[0]);
+  for (const d of sorted) {
+    const checkStr = check.toISOString().slice(0,10);
+    if (d === checkStr) { streak++; check = new Date(check.getTime() - 86400000); }
+    else break;
+  }
+  return streak;
+}
+
+// ── 스탯 계산 ─────────────────────────────────────────────
+function homeCalcStats() {
+  const recs = window._records || { cardio:[], weight:[] };
+  let totalVol = 0;
+  recs.weight.forEach(r => { totalVol += (Number(r.weight_kg)||0) * (Number(r.sets)||0) * (Number(r.reps)||0); });
+  let totalDist = 0;
+  recs.cardio.forEach(r => { totalDist += Number(r.distance_km) || 0; });
+  const allDays = new Set([
+    ...recs.cardio.map(r => r.date),
+    ...recs.weight.map(r => r.date),
+  ]);
+  return { vol: totalVol, dist: totalDist, days: allDays.size };
+}
+
+function homeStatTier(val, unitPer100) {
+  const total = Math.floor(val / unitPer100 * 100);
+  const pct = Math.min(total % 100 || (total >= 100 ? 100 : 0), 100);
+  const tier = Math.floor(total / 100);
+  return { pct: pct || 0, tier: Math.min(tier, 2) };
+}
+
+// ── 배지 정의 ─────────────────────────────────────────────
+const HOME_BADGES = [
+  { id:'run_bronze', icon:'🥉', label:'달리기\n10km', check: s => s.dist >= 10 },
+  { id:'run_silver', icon:'🥈', label:'달리기\n50km', check: s => s.dist >= 50 },
+  { id:'run_gold',   icon:'🥇', label:'달리기\n100km', check: s => s.dist >= 100 },
+  { id:'lift_bronze',icon:'🥉', label:'역도왕\n1천kg', check: s => s.vol >= 1000 },
+  { id:'lift_silver',icon:'🥈', label:'역도왕\n1만kg', check: s => s.vol >= 10000 },
+  { id:'lift_gold',  icon:'🥇', label:'역도왕\n10만kg', check: s => s.vol >= 100000 },
+  { id:'days_bronze',icon:'🥉', label:'성실왕\n10일', check: s => s.days >= 10 },
+  { id:'days_silver',icon:'🥈', label:'성실왕\n50일', check: s => s.days >= 50 },
+  { id:'days_gold',  icon:'🥇', label:'성실왕\n100일', check: s => s.days >= 100 },
+  { id:'streak7',    icon:'🔥', label:'🔥7일\n연속', check: (s,streak) => streak >= 7 },
+  { id:'streak14',   icon:'⚡', label:'⚡14일\n연속', check: (s,streak) => streak >= 14 },
+  { id:'streak30',   icon:'👑', label:'👑30일\n연속', check: (s,streak) => streak >= 30 },
+];
+
+// ── 오늘의 미션 ───────────────────────────────────────────
+function homeGetMission() {
+  const allEx = [
+    ...(EXERCISES.compound || []),
+    ...(EXERCISES.isolation || []),
+    ...(EXERCISES.bodyweight || []),
+    ...(EXERCISES.cardio || []),
+  ];
+  const today = new Date().toISOString().slice(0,10);
+  let seed = 0;
+  for (let i = 0; i < today.length; i++) seed += today.charCodeAt(i);
+  const idx = seed % allEx.length;
+  const name = allEx[idx];
+  const setsReps = ['3×10', '3×12', '4×8', '3×15', '4×10', '5×5'][seed % 6];
+  const difficulty = (seed % 5) + 1;
+  return { name, setsReps, difficulty };
+}
+
+// ── 미션 완료 ─────────────────────────────────────────────
+function homeMissionComplete() {
+  const today = new Date().toISOString().slice(0,10);
+  const motiv = _lsGet(pk('motivation_v2')) || {};
+  if (motiv.missionDate === today && motiv.missionCompleted) return;
+  motiv.missionDate = today;
+  motiv.missionCompleted = true;
+  motiv.missionSkipped = false;
+  _lsSet(pk('motivation_v2'), motiv);
+  toast('🎉 미션 완료! +100 XP 획득!');
+  homeRefresh();
+}
+
+function homeMissionSkip() {
+  const today = new Date().toISOString().slice(0,10);
+  const motiv = _lsGet(pk('motivation_v2')) || {};
+  motiv.missionDate = today;
+  motiv.missionSkipped = true;
+  _lsSet(pk('motivation_v2'), motiv);
+  document.getElementById('home-mission-done-btn').disabled = true;
+  document.getElementById('home-mission-skip-btn').disabled = true;
+  document.getElementById('home-mission-ex').style.opacity = '0.4';
+}
+
+// ── 랜덤 루틴 생성 ────────────────────────────────────────
+const HOME_LOWER_POOL = ['스쿼트','데드리프트','레그프레스','런지','바벨힙쓰러스트','레그컬','레그익스텐션',
+  '루마니안데드리프트','불가리안스플릿스쿼트','핵스쿼트','힙쓰러스트','라잉레그컬','시티드레그컬',
+  '힙어브덕션','힙어덕션','스쿼트(맨몸)','런지','글루트브릿지','싱글레그글루트브릿지','피스톨스쿼트',
+  '점프스쿼트','점프런지','스텝업','박스점프','케틀벨스윙','케틀벨고블릿스쿼트'];
+
+function homeRandPick(arr, n) {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(n, shuffled.length));
+}
+
+function homeRoutine(type) {
+  // Update selected button
+  document.querySelectorAll('.home-routine-btn').forEach(b => b.classList.remove('selected'));
+  event.target.classList.add('selected');
+
+  let items = [];
+  const upper = [...(EXERCISES.compound||[]), ...(EXERCISES.isolation||[])].filter(e => !HOME_LOWER_POOL.includes(e));
+  const lower = HOME_LOWER_POOL;
+  const bw = EXERCISES.bodyweight || [];
+  const cardio = EXERCISES.cardio || [];
+
+  if (type === 'upper') {
+    items = homeRandPick(upper, 4).map(name => ({
+      name, meta:'3×10', time:'~40분', emoji:'🏋️'
+    }));
+  } else if (type === 'lower') {
+    items = homeRandPick(lower, 4).map(name => ({
+      name, meta:'3×12', time:'~35분', emoji:'🦵'
+    }));
+  } else if (type === 'full') {
+    const u = homeRandPick(upper, 2);
+    const l = homeRandPick(lower, 2);
+    const b = homeRandPick(bw, 1);
+    items = [...u, ...l, ...b].map(name => ({
+      name, meta:'3×10', time:'~55분', emoji:'⚡'
+    }));
+  } else if (type === 'cardio') {
+    items = homeRandPick(cardio, 3).map(name => ({
+      name, meta:'30분', time:'~250 kcal', emoji:'🏃'
+    }));
+  }
+
+  const list = document.getElementById('home-routine-list');
+  if (items.length === 0) { list.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:0.85rem;padding:8px 0;">운동 데이터 없음</div>'; return; }
+  list.innerHTML = items.map(it => `
+    <div class="home-routine-item">
+      <div>
+        <div class="home-routine-item-name">${it.emoji} ${it.name}</div>
+        <div class="home-routine-item-meta">${it.meta} · ${it.time}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── 홈 페이지 갱신 ───────────────────────────────────────
+function homeRefresh() {
+  const xp = homeCalcXP();
+  const lvData = homeGetLevel(xp);
+  const nextLvData = HOME_LEVELS.find(l => l.xp > lvData.xp);
+  const stats = homeCalcStats();
+  const streak = homeCalcStreak();
+  const today = new Date().toISOString().slice(0,10);
+  const motiv = _lsGet(pk('motivation_v2')) || {};
+
+  // 캐릭터
+  document.getElementById('home-char-emoji').textContent = lvData.emoji;
+  document.getElementById('home-level-badge').textContent = 'Lv.' + lvData.lv;
+  document.getElementById('home-char-title').textContent = lvData.title;
+
+  // XP 바
+  const curLvXP = lvData.xp;
+  const nextXP = nextLvData ? nextLvData.xp : lvData.xp;
+  const pct = nextLvData ? Math.min(100, Math.floor((xp - curLvXP) / (nextXP - curLvXP) * 100)) : 100;
+  document.getElementById('home-xp-fill').style.width = pct + '%';
+  document.getElementById('home-xp-cur').textContent = xp.toLocaleString() + ' XP';
+  document.getElementById('home-xp-next').textContent = nextLvData ? ('다음: ' + nextXP.toLocaleString() + ' XP') : '최대 레벨!';
+
+  // 스탯
+  const strTier = homeStatTier(stats.vol, 1000);
+  const endTier = homeStatTier(stats.dist, 100);
+  const actTier = homeStatTier(stats.days, 100);
+
+  const strEl = document.getElementById('home-stat-str');
+  strEl.style.width = strTier.pct + '%';
+  strEl.className = 'home-stat-fill tier' + strTier.tier;
+  document.getElementById('home-stat-str-val').textContent = Math.floor(stats.vol).toLocaleString() + ' kg';
+
+  const endEl = document.getElementById('home-stat-end');
+  endEl.style.width = endTier.pct + '%';
+  endEl.className = 'home-stat-fill tier' + endTier.tier;
+  document.getElementById('home-stat-end-val').textContent = stats.dist.toFixed(1) + ' km';
+
+  const actEl = document.getElementById('home-stat-act');
+  actEl.style.width = actTier.pct + '%';
+  actEl.className = 'home-stat-fill tier' + actTier.tier;
+  document.getElementById('home-stat-act-val').textContent = stats.days + ' 일';
+
+  // 오늘의 미션
+  const mission = homeGetMission();
+  const mDone = motiv.missionDate === today && motiv.missionCompleted;
+  const mSkip = motiv.missionDate === today && motiv.missionSkipped;
+  const mDisabled = mDone || mSkip;
+  document.getElementById('home-mission-ex').textContent = mission.name;
+  document.getElementById('home-mission-ex').style.opacity = mDisabled ? '0.4' : '1';
+  document.getElementById('home-mission-sets').textContent = mission.setsReps;
+  document.getElementById('home-mission-stars').textContent = '★'.repeat(mission.difficulty) + '☆'.repeat(5 - mission.difficulty);
+  document.getElementById('home-mission-done-btn').disabled = mDisabled;
+  document.getElementById('home-mission-skip-btn').disabled = mDisabled;
+
+  // 스트릭
+  const streakEmojis = streak >= 30 ? '👑' : streak >= 14 ? '⚡' : streak >= 7 ? '🔥' : '🔥';
+  document.getElementById('home-streak-emoji').textContent = streakEmojis;
+  document.getElementById('home-streak-count').textContent = streak;
+  document.getElementById('home-streak-sub').textContent = streak > 0
+    ? (streak + '일 연속 운동 중! 대단해요!')
+    : '오늘 운동을 기록하면 스트릭이 시작돼요!';
+
+  // 배지
+  const badgesEl = document.getElementById('home-badges-grid');
+  badgesEl.innerHTML = HOME_BADGES.map(b => {
+    const earned = b.check(stats, streak);
+    return `<div class="home-badge${earned ? ' earned' : ''}">
+      <span class="home-badge-icon">${b.icon}</span>
+      <span class="home-badge-label">${b.label}</span>
+    </div>`;
+  }).join('');
+}
+
+// switchPage 확장: home 탭 전환 시 갱신
+const _origSwitchPage = switchPage;
+function switchPage(pageName) {
+  _origSwitchPage(pageName);
+  if (pageName === 'home') homeRefresh();
+}
+</script>
+
+<div style="text-align:center;padding:16px 0 24px;color:#666;font-size:12px;opacity:0.6;">v2.0</div>
 </body>
 </html>
 
