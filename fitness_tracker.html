@@ -2539,6 +2539,7 @@ function refreshAll() {
   renderRecords();
   const activeTab = document.querySelector('.page-view.active .tab-btn.active')?.dataset?.tab;
   if (!activeTab || activeTab === 'stats') renderStats();
+  if (typeof homeRefresh === 'function') homeRefresh();
 }
 
 function updateHeaderStats() {
@@ -7327,7 +7328,7 @@ function homeRoutine(type) {
 }
 
 // ── 홈 페이지 갱신 ───────────────────────────────────────
-function homeRefresh() {
+function homeRefresh() { try {
   const xp = homeCalcXP();
   const lvData = homeGetLevel(xp);
   const nextLvData = HOME_LEVELS.find(l => l.xp > lvData.xp);
@@ -7398,7 +7399,7 @@ function homeRefresh() {
       <span class="home-badge-label">${b.label}</span>
     </div>`;
   }).join('');
-}
+} catch(e) { console.error('homeRefresh error:', e); } }
 
 
 </script>
