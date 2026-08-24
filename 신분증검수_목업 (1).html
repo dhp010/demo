@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AML 신분증 사후검수</title>
+<style>
+  :root{
+    --border:#dcdfe6;
+    --border-light:#ebeef5;
+    --text:#303133;
+    --text-secondary:#606266;
+    --text-placeholder:#909399;
+    --page-bg:#f0f2f5;
+    --blue:#409eff;
+    --blue-dark:#337ecc;
+    --blue-bg:#ecf5ff;
+    --green:#67c23a;
+    --green-bg:#f0f9eb;
+    --red:#f56c6c;
+    --red-bg:#fef0f0;
+    --black-btn:#262626;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:"Malgun Gothic","Apple SD Gothic Neo",-apple-system,sans-serif;
+    background:var(--page-bg);
+    color:var(--text);
+    font-size:13px;
+  }
+  button, select, input, textarea{font-family:inherit;}
+
+  /* ================= App shell ================= */
+  .app-shell{display:flex; height:100vh;}
+
+  /* ---- Sidebar ---- */
+  .sidebar{
+    width:230px;
+    flex-shrink:0;
+    background:#fff;
+    border-right:1px solid var(--border-light);
+    display:flex;
+    flex-direction:column;
+  }
+  .sidebar-search{padding:12px; border-bottom:1px solid var(--border-light);}
+  .sidebar-search-box{
+    display:flex; align-items:center; gap:6px;
+    border:1px solid var(--border); border-radius:4px; padding:6px 8px;
+  }
+  .sidebar-search-box input{border:none;outline:none;font-size:12px;flex:1;color:var(--text);}
+  .sidebar-search-box .x{color:var(--text-placeholder);cursor:pointer;font-size:12px;}
+  .sidebar-nav{flex:1; overflow-y:auto; padding:6px 0;}
+  .nav-group-title{
+    padding:10px 14px; font-weight:700; font-size:13px; color:var(--text);
+    display:flex; align-items:center; justify-content:space-between; cursor:pointer;
+    user-select:none;
+  }
+  .nav-group-title .caret{font-size:10px; color:var(--text-placeholder); transition:transform .15s;}
+  .nav-group-title.collapsed .caret{transform:rotate(-90deg);}
+  .nav-sub-title{padding:8px 14px 8px 26px; font-weight:600; font-size:12.5px; color:var(--text);}
+  .nav-list{list-style:none; margin:0; padding:0;}
+  .nav-list.collapsed{display:none;}
+  .nav-item{
+    padding:8px 14px 8px 38px; font-size:12.5px; color:var(--text-secondary);
+    cursor:pointer; border-left:3px solid transparent;
+  }
+  .nav-item:hover{background:#f5f7fa;}
+  .nav-item.active{background:var(--blue-bg); color:var(--blue); font-weight:700; border-left-color:var(--blue);}
+
+  /* ---- Main area ---- */
+  .main-area{flex:1; display:flex; flex-direction:column; min-width:0;}
+
+  .tab-bar{
+    display:flex; align-items:center; background:#fff;
+    border-bottom:1px solid var(--border-light); height:40px; flex-shrink:0; padding:0 4px;
+  }
+  .tab-collapse{padding:0 12px; color:var(--text-placeholder); cursor:pointer; font-size:13px;}
+  .tab{
+    height:40px; padding:0 14px; display:flex; align-items:center; gap:8px;
+    font-size:13px; color:var(--text-placeholder); border-right:1px solid var(--border-light);
+    cursor:pointer; white-space:nowrap;
+  }
+  .tab.active{color:var(--text); background:var(--page-bg); font-weight:600;}
+  .tab .tab-close{color:var(--text-placeholder); font-size:12px;}
+  .tab.active .tab-close:hover{color:var(--text-secondary);}
+
+  .content{flex:1; overflow-y:auto; padding:18px 22px 60px;}
+
+  .page-title-row{display:flex; align-items:center; gap:8px; margin-bottom:14px;}
+  .page-title-row h2{font-size:17px; margin:0; color:var(--text); font-weight:700;}
+  .star{color:#e6a23c; cursor:pointer; font-size:15px;}
+
+
+  .panel{
+    background:#fff; border:1px solid var(--border-light); border-radius:4px; padding:16px 18px;
+  }
+
+  /* ---- Filter bar ---- */
+  .filter-row{display:flex; flex-wrap:wrap; align-items:center; gap:18px; margin-bottom:12px;}
+  .filter-item{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-secondary);}
+  .filter-item label{white-space:nowrap;}
+  .filter-item input[type="text"], .filter-item select{
+    border:1px solid var(--border); border-radius:4px; padding:6px 8px; font-size:13px; color:var(--text);
+  }
+  .filter-item input[type="date"]{
+    border:1px solid var(--border); border-radius:4px; padding:6px 8px; font-size:13px; color:var(--text); width:135px;
+  }
+  .date-sep{color:var(--text-placeholder);}
+  .quick-date-btn{
+    border:1px solid var(--border); background:#fff; border-radius:4px; padding:5px 10px;
+    font-size:12px; color:var(--text-secondary); cursor:pointer;
+  }
+  .quick-date-btn.active{background:var(--blue); color:#fff; border-color:var(--blue);}
+  .filter-actions{margin-left:auto; display:flex; align-items:center; gap:8px;}
+  .icon-btn{
+    width:30px; height:30px; border:1px solid var(--border); border-radius:4px; background:#fff;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-secondary); font-size:14px;
+  }
+  .icon-btn:hover{color:var(--blue); border-color:var(--blue);}
+  .btn{
+    border:none; border-radius:4px; padding:7px 16px; font-size:13px; font-weight:600;
+    cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:6px;
+  }
+  .btn-search{background:var(--blue); color:#fff;}
+  .btn-search:hover{background:var(--blue-dark);}
+  .btn-ghost{background:#fff; color:var(--text-secondary); border:1px solid var(--border);}
+  .btn-ghost:hover{color:var(--blue); border-color:var(--blue);}
+  .btn-bulk-ok{background:var(--green); color:#fff;}
+  .btn-bulk-ok:hover{background:#5daf34;}
+  .btn-bulk-bad{background:var(--red); color:#fff;}
+  .btn-bulk-bad:hover{background:#e64c4c;}
+
+  /* ---- Result row ---- */
+  .result-row{display:flex; align-items:center; margin:2px 0 8px; font-size:13px; color:var(--text-secondary); gap:14px;}
+  .page-size-select{border:1px solid var(--border); border-radius:4px; padding:5px 8px; font-size:12px;}
+  .result-actions{margin-left:auto; display:flex; gap:8px;}
+  .btn-download{
+    border:1px solid var(--border); background:#fff; border-radius:4px; padding:6px 14px;
+    font-size:12px; color:var(--text-secondary); cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+  }
+  .btn-download:hover{color:var(--blue); border-color:var(--blue);}
+
+  /* ---- Pagination ---- */
+  .pagination-row{display:flex; align-items:center; justify-content:center; gap:14px; margin-top:14px; font-size:13px; color:var(--text-secondary);}
+  .btn-page{padding:6px 14px; font-size:12.5px;}
+  .btn-page:disabled{opacity:.4; cursor:not-allowed;}
+  .btn-page:disabled:hover{color:var(--text-secondary); border-color:var(--border);}
+
+  /* ---- Table ---- */
+  table{width:100%; border-collapse:collapse; font-size:13px; color:var(--text); background:#fff;}
+  thead th{
+    background:#f5f7fa; border:1px solid var(--border-light); padding:9px 8px;
+    font-weight:600; color:var(--text-secondary); text-align:center; font-size:12.5px;
+  }
+  tbody td{border:1px solid var(--border-light); padding:9px 8px; text-align:center;}
+  tbody tr:hover td{background:#f5f7fa;}
+  .link{color:var(--blue); text-decoration:underline; cursor:pointer; font-weight:600;}
+  .status-ok{color:var(--green); font-weight:700;}
+  .status-bad{color:var(--red); font-weight:700;}
+  .status-pending{color:var(--blue); text-decoration:underline; cursor:pointer; font-weight:700;}
+  .empty-row td{text-align:center; color:var(--text-placeholder); padding:40px 0;}
+
+  /* ================= Detail popup (modal) ================= */
+  .detail-overlay{
+    display:none; position:fixed; inset:0; background:rgba(15,23,42,.5);
+    align-items:center; justify-content:center; z-index:200;
+  }
+  .detail-overlay.show{display:flex;}
+  .detail-dialog{
+    background:#fff; width:860px; max-width:94vw; max-height:90vh;
+    border-radius:4px; box-shadow:0 12px 40px rgba(0,0,0,.25);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .detail-dialog-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 20px; border-bottom:1px solid var(--border-light);
+  }
+  .detail-dialog-header h3{margin:0; font-size:15px; font-weight:700; color:var(--text);}
+  .detail-dialog-close{
+    border:none; background:transparent; font-size:16px; color:var(--text-placeholder);
+    cursor:pointer; line-height:1; padding:4px;
+  }
+  .detail-dialog-close:hover{color:var(--text);}
+  .detail-dialog-body{padding:20px; overflow-y:auto;}
+  .detail-dialog-footer{
+    display:flex; justify-content:flex-end; gap:10px;
+    padding:12px 20px; border-top:1px solid var(--border-light);
+  }
+  .detail-grid{display:grid; grid-template-columns:1fr 340px; gap:24px;}
+  .id-image-wrap{
+    background:#f5f7fa; border:1px solid var(--border-light); border-radius:4px; padding:20px;
+    display:flex; align-items:center; justify-content:center; cursor:zoom-in;
+  }
+  .id-image-wrap svg{width:100%; max-width:420px; height:auto; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,.12);}
+  .id-caption{text-align:center; font-size:12px; color:var(--text-placeholder); margin-top:8px;}
+
+  .info-panel dl{margin:0 0 16px; display:grid; grid-template-columns:96px 1fr; row-gap:10px; font-size:13px;}
+  .info-panel dt{color:var(--text-placeholder);}
+  .info-panel dd{margin:0; font-weight:600; color:var(--text);}
+  .status-current{margin-bottom:14px; font-size:13px;}
+
+  .verdict-buttons{display:flex; gap:10px; margin-bottom:14px;}
+  .verdict-btn{
+    flex:1; padding:11px 0; border-radius:4px; border:1px solid var(--border);
+    background:#fff; font-size:14px; font-weight:700; cursor:pointer; color:var(--text-secondary);
+  }
+  .verdict-btn.ok.active{border-color:var(--green); background:var(--green-bg); color:var(--green);}
+  .verdict-btn.bad.active{border-color:var(--red); background:var(--red-bg); color:var(--red);}
+
+  .reason-box{display:none; border:1px solid var(--border-light); border-radius:4px; padding:14px; margin-bottom:14px; background:#f5f7fa;}
+  .reason-box.show{display:block;}
+  .reason-box label{display:block; font-size:12px; font-weight:600; color:var(--text-secondary); margin-bottom:6px;}
+  .reason-box select{width:100%; padding:7px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; margin-bottom:10px;}
+  .reason-box textarea{width:100%; min-height:64px; border:1px solid var(--border); border-radius:4px; padding:7px 8px; font-size:13px; resize:vertical;}
+
+  .validation-msg{font-size:12px; color:var(--red); margin:-6px 0 12px; display:none;}
+  .validation-msg.show{display:block;}
+  .audit-trail{font-size:12px; color:var(--text-placeholder); border-top:1px solid var(--border-light); padding-top:12px; margin-top:6px;}
+
+  .toast{
+    position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:#262626; color:#fff; padding:11px 20px; border-radius:4px; font-size:13px;
+    opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; z-index:50;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .modal-backdrop{
+    display:none; position:fixed; inset:0; background:rgba(15,23,42,.65);
+    align-items:center; justify-content:center; z-index:300; cursor:zoom-out;
+  }
+  .modal-backdrop.show{display:flex;}
+  .modal-backdrop svg{width:min(640px, 90vw); height:auto; border-radius:10px; box-shadow:0 10px 40px rgba(0,0,0,.4);}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar">
+    <div class="sidebar-search">
+      <div class="sidebar-search-box">
+        <span>🔍</span>
+        <input type="text" placeholder="메뉴명을 검색합니다">
+        <span class="x">✕</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group-title" data-target="grp1"><span>관리설정</span><span class="caret">▲</span></div>
+      <ul class="nav-list" id="grp1">
+        <li class="nav-sub-title">FDS 이상거래</li>
+        <li class="nav-item">FDS 이상거래 룰 관리</li>
+        <li class="nav-item">FDS 알럿 점검_모니터링 담당자</li>
+
+        <li class="nav-sub-title">AML</li>
+        <li class="nav-item active" id="navCurrentPage">AML 신분증 사후검수</li>
+
+        <li class="nav-sub-title">고객확인(CDD)</li>
+        <li class="nav-item">고객확인(CDD) 이행현황</li>
+        <li class="nav-item">고위험고객 EDD 관리</li>
+        <li class="nav-item">고객확인 재이행 대상관리</li>
+        <li class="nav-item">고객확인 정보변경 이력관리</li>
+        <li class="nav-item">고객확인 미이행자 관리</li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- ===================== MAIN AREA ===================== -->
+  <div class="main-area">
+
+    <div class="tab-bar">
+      <span class="tab-collapse">«</span>
+      <div class="tab">Dashboard</div>
+      <div class="tab active">AML 신분증 사후검수 <span class="tab-close">✕</span></div>
+    </div>
+
+    <div class="content">
+
+      <!-- ===================== LIST VIEW ===================== -->
+      <section id="listView">
+        <div class="page-title-row">
+          <h2>AML 신분증 사후검수</h2>
+          <span class="star">☆</span>
+        </div>
+
+        <div class="panel">
+          <div class="filter-row">
+            <div class="filter-item">
+              <label>고객번호</label>
+              <input type="text" id="fltSearch" placeholder="고객번호 입력">
+            </div>
+            <div class="filter-item">
+              <label>검수상태</label>
+              <select id="fltStatus">
+                <option value="all">전체</option>
+                <option value="pending">미검수</option>
+                <option value="ok">적정</option>
+                <option value="bad">부적정</option>
+              </select>
+            </div>
+            <div class="filter-actions">
+              <button class="btn btn-bulk-ok" id="btnBulkOk">적정</button>
+              <button class="btn btn-bulk-bad" id="btnBulkBad">부적정</button>
+              <span class="icon-btn" id="btnReset" title="초기화">⟳</span>
+              <button class="btn btn-search" id="btnSearch">🔍 조회</button>
+            </div>
+          </div>
+          <div class="filter-row">
+            <div class="filter-item">
+              <label>수행일자</label>
+              <input type="date" id="fltDateFrom">
+              <span class="date-sep">~</span>
+              <input type="date" id="fltDateTo">
+            </div>
+            <div class="filter-item">
+              <button class="quick-date-btn" data-range="0">당일</button>
+              <button class="quick-date-btn" data-range="7">최근 7일</button>
+              <button class="quick-date-btn" data-range="30">최근 30일</button>
+              <button class="quick-date-btn" data-range="all">전체</button>
+            </div>
+          </div>
+
+          <div class="result-row">
+            <span>총 <b id="resultCount">0</b>건 <span id="selectedCount"></span></span>
+            <select class="page-size-select" id="fltPageSize">
+              <option>10</option><option>20</option><option>50</option><option selected>100</option>
+            </select>
+            <div class="result-actions">
+              <button class="btn-download" id="btnDownload">⬇ 다운로드</button>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th rowspan="2" style="width:36px;"><input type="checkbox" id="selectAll"></th>
+                <th rowspan="2" style="width:44px;">NO</th>
+                <th rowspan="2" style="width:110px;">수행일자</th>
+                <th rowspan="2" style="width:70px;">당일순번</th>
+                <th colspan="3">고객정보</th>
+                <th rowspan="2" style="width:90px;">검수상태</th>
+              </tr>
+              <tr>
+                <th style="width:120px;">고객번호</th>
+                <th>고객명</th>
+                <th style="width:90px;">국적</th>
+              </tr>
+            </thead>
+            <tbody id="listTbody"></tbody>
+          </table>
+
+          <div class="pagination-row" id="paginationRow">
+            <button class="btn-ghost btn-page" id="btnPrevPage">이전</button>
+            <span id="pageIndicator"></span>
+            <button class="btn-ghost btn-page" id="btnNextPage">다음</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===================== DETAIL POPUP ===================== -->
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-dialog" id="detailDialog">
+    <div class="detail-dialog-header">
+      <h3>신분증 사후검수 상세</h3>
+      <button class="detail-dialog-close" id="btnDetailClose">✕</button>
+    </div>
+
+    <div class="detail-dialog-body">
+      <div class="detail-grid">
+        <div>
+          <div class="id-image-wrap" id="idImageWrap"></div>
+          <div class="id-caption">이미지를 클릭하면 확대됩니다</div>
+        </div>
+
+        <div class="info-panel">
+          <dl>
+            <dt>회원코드</dt><dd id="dCustCode"></dd>
+            <dt>고객명</dt><dd id="dCustName"></dd>
+            <dt>국적</dt><dd id="dNationality"></dd>
+            <dt>EDD수행일자</dt><dd id="dDueDate"></dd>
+          </dl>
+
+          <div class="status-current">
+            <span style="color:var(--text-placeholder);">현재 상태&nbsp;</span>
+            <span id="dCurrentStatus"></span>
+          </div>
+
+          <div class="verdict-buttons">
+            <button class="verdict-btn ok" id="btnOk">적정</button>
+            <button class="verdict-btn bad" id="btnBad">부적정</button>
+          </div>
+
+          <div class="reason-box" id="reasonBox">
+            <label>부적정 사유</label>
+            <select id="reasonCode">
+              <option value="">사유를 선택하세요</option>
+              <option value="recapture">화면 재촬영</option>
+              <option value="unidentifiable">정보식별불가</option>
+              <option value="etc">기타</option>
+            </select>
+            <label>상세 사유 (기타 선택 시 필수 입력)</label>
+            <textarea id="reasonText" placeholder="추가 설명을 입력하세요"></textarea>
+          </div>
+          <div class="validation-msg" id="validationMsg"></div>
+
+          <div class="audit-trail" id="auditTrail"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-dialog-footer">
+      <button class="btn btn-ghost" id="btnSaveOnly">저장 후 닫기</button>
+      <button class="btn btn-search" id="btnSaveNext">저장 후 다음 미검수 건</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== BULK 부적정 사유 팝업 ===================== -->
+<div class="detail-overlay" id="bulkBadOverlay">
+  <div class="detail-dialog" style="width:420px;">
+    <div class="detail-dialog-header">
+      <h3>일괄 부적정 처리</h3>
+      <button class="detail-dialog-close" id="btnBulkBadClose">✕</button>
+    </div>
+    <div class="detail-dialog-body">
+      <div style="margin-bottom:12px; font-size:13px; color:var(--text-secondary);">선택한 <b id="bulkBadCount">0</b>건을 부적정으로 처리합니다.</div>
+      <div class="reason-box show">
+        <label>부적정 사유</label>
+        <select id="bulkReasonCode">
+          <option value="">사유를 선택하세요</option>
+          <option value="recapture">화면 재촬영</option>
+          <option value="unidentifiable">정보식별불가</option>
+          <option value="etc">기타</option>
+        </select>
+        <label>상세 사유 (기타 선택 시 필수 입력)</label>
+        <textarea id="bulkReasonText" placeholder="추가 설명을 입력하세요"></textarea>
+      </div>
+      <div class="validation-msg" id="bulkValidationMsg"></div>
+    </div>
+    <div class="detail-dialog-footer">
+      <button class="btn btn-ghost" id="btnBulkBadCancel">취소</button>
+      <button class="btn btn-search" id="btnBulkBadConfirm">확인</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal-backdrop" id="zoomModal"></div>
+
+<script>
+(function(){
+
+  /* ---------------------------------------------------------------
+     Sidebar / tab chrome (decorative)
+  --------------------------------------------------------------- */
+  document.querySelectorAll('.nav-group-title').forEach(function(el){
+    el.addEventListener('click', function(){
+      el.classList.toggle('collapsed');
+      document.getElementById(el.dataset.target).classList.toggle('collapsed');
+    });
+  });
+  document.getElementById('navCurrentPage').addEventListener('click', backToList);
+  document.querySelector('.page-title-row .star').addEventListener('click', function(e){
+    e.target.textContent = e.target.textContent === '☆' ? '★' : '☆';
+  });
+
+  /* ---------------------------------------------------------------
+     Mock dataset
+  --------------------------------------------------------------- */
+  var RAW_DATA = [
+    {id:1,  dueDate:"2026-07-23", photoDate:"2026-07-22", custCode:"32151201", custName:"김도윤",       defect:"none",      seed:11},
+    {id:2,  dueDate:"2026-07-23", photoDate:"2026-07-23", custCode:"32151202", custName:"WANG DAN", custType:"foreign", nationality:"중국", defect:"recapture", seed:22},
+    {id:3,  dueDate:"2026-07-22", photoDate:"2026-07-21", custCode:"32151203", custName:"이서연",       defect:"none",      seed:33},
+    {id:4,  dueDate:"2026-07-22", photoDate:"2026-07-22", custCode:"32151204", custName:"박준혁",       defect:"moire",     seed:44},
+    {id:5,  dueDate:"2026-07-21", photoDate:"2026-07-20", custCode:"32151205", custName:"JOHN SMITH", custType:"foreign", nationality:"미국", defect:"none", seed:55,
+      status:"ok", reviewer:"박준형(AML운영팀)", reviewedAt:"2026-07-21 14:32"},
+    {id:6,  dueDate:"2026-07-21", photoDate:"2026-07-21", custCode:"32151206", custName:"최유진",       defect:"glare",     seed:66},
+    {id:7,  dueDate:"2026-07-20", photoDate:"2026-07-19", custCode:"32151207", custName:"정하은",       defect:"none",      seed:77,
+      status:"bad", reasonCode:"etc", reasonText:"신분증 상 주소와 고객 등록정보 주소가 상이하여 확인 필요",
+      reviewer:"박준형(AML운영팀)", reviewedAt:"2026-07-20 10:05"},
+    {id:8,  dueDate:"2026-07-20", photoDate:"2026-07-20", custCode:"32151208", custName:"NGUYEN VAN ANH", custType:"foreign", nationality:"베트남", defect:"lowres", seed:88},
+    {id:9,  dueDate:"2026-07-19", photoDate:"2026-07-18", custCode:"32151209", custName:"강민서",       defect:"none",      seed:99},
+    {id:10, dueDate:"2026-07-19", photoDate:"2026-07-19", custCode:"32151210", custName:"조은우",       defect:"none",      seed:10,
+      status:"ok", reviewer:"박준형(AML운영팀)", reviewedAt:"2026-07-19 16:47"},
+    {id:11, dueDate:"2026-07-18", photoDate:"2026-07-17", custCode:"32151211", custName:"서지훈",       defect:"recapture", seed:21},
+    {id:12, dueDate:"2026-07-18", photoDate:"2026-07-18", custCode:"32151212", custName:"한소율",       defect:"none",      seed:32},
+    {id:13, dueDate:"2026-07-17", photoDate:"2026-07-16", custCode:"32151213", custName:"배지훈",       defect:"none",      seed:43,
+      status:"ok", reviewer:"박준형(AML운영팀)", reviewedAt:"2026-07-17 09:14"},
+    {id:14, dueDate:"2026-07-17", photoDate:"2026-07-17", custCode:"32151214", custName:"오세준",       defect:"moire",     seed:54},
+    {id:15, dueDate:"2026-07-16", photoDate:"2026-07-15", custCode:"32151215", custName:"임나윤",       defect:"none",      seed:65},
+    {id:16, dueDate:"2026-07-16", photoDate:"2026-07-16", custCode:"32151216", custName:"권도현",       defect:"none",      seed:76},
+    {id:17, dueDate:"2026-07-15", photoDate:"2026-07-14", custCode:"32151217", custName:"신예린",       defect:"glare",     seed:87},
+    {id:18, dueDate:"2026-07-15", photoDate:"2026-07-15", custCode:"32151218", custName:"TANAKA YUI", custType:"foreign", nationality:"일본", defect:"recapture", seed:98,
+      status:"bad", reasonCode:"recapture", reasonText:"카드 테두리 밖으로 모니터 베젤과 반사광이 함께 촬영됨",
+      reviewer:"박준형(AML운영팀)", reviewedAt:"2026-07-15 11:22"},
+    {id:19, dueDate:"2026-07-23", photoDate:"2026-07-23", custCode:"32151202", custName:"WANG DAN", custType:"foreign", nationality:"중국", defect:"none", seed:122}
+  ];
+
+  /* ---- Auto-generated additional records (증량용, 100건 이상 확보) ---- */
+  var GEN_KOREAN_SURNAMES = ["김","이","박","최","정","강","조","윤","장","임","한","서","권","황","안","송","전","고","문","신"];
+  var GEN_KOREAN_GIVEN = ["도윤","서연","준혁","하은","민서","은우","지훈","소율","세준","나윤","도현","예린","시우","수아","지안","하윤","연우","다은","우진","채원","건우","서아","시윤","유나","은서","현우","지우","수빈","동현","서현"];
+  var GEN_FOREIGN_POOL = [
+    {country:"중국",   names:["WANG DAN","LI MING","ZHANG WEI","LIU YANG","CHEN JING","ZHAO LEI","HUANG FANG","SUN LI"]},
+    {country:"일본",   names:["TANAKA YUI","SATO KENJI","SUZUKI AI","YAMAMOTO REN","ITO HARUKA","WATANABE SHO"]},
+    {country:"미국",   names:["JOHN SMITH","EMILY DAVIS","MICHAEL BROWN","JESSICA WILSON","DAVID MILLER","ASHLEY MOORE"]},
+    {country:"베트남", names:["NGUYEN VAN ANH","TRAN THI MAI","LE VAN DUC","PHAM THI LAN"]},
+    {country:"필리핀", names:["MARIA SANTOS","JUAN DELA CRUZ","ANA REYES"]},
+    {country:"우즈베키스탄", names:["ABDULLAYEV BEK","KARIMOVA DILNOZA"]},
+    {country:"태국",   names:["SOMCHAI JAIDEE","NIRAN SUKSAWAT"]}
+  ];
+  var GEN_DEFECTS = ["none","none","none","recapture","moire","glare","lowres"];
+  var GEN_REASON_CODES = ["recapture","unidentifiable","etc"];
+  var GEN_REASON_TEXT = {
+    recapture:"카드 테두리 밖으로 화면 재촬영 흔적이 확인됨",
+    unidentifiable:"이미지 해상도가 낮아 신분증 정보 식별이 불가함",
+    etc:"신분증 상 정보와 고객 등록정보가 상이하여 확인 필요"
+  };
+
+  function generateExtraRecords(startId, count){
+    var out = [];
+    var base = new Date('2026-07-23T00:00:00');
+    for(var i=0; i<count; i++){
+      var id = startId + i;
+      var dayOffset = i % 45;
+      var d = new Date(base.getTime());
+      d.setDate(d.getDate() - dayOffset);
+      var dueDate = d.toISOString().slice(0,10);
+      var pd = new Date(d.getTime());
+      pd.setDate(pd.getDate() - (i % 2));
+      var photoDate = pd.toISOString().slice(0,10);
+
+      var rec = {
+        id:id,
+        dueDate:dueDate,
+        photoDate:photoDate,
+        custCode:String(32160000 + id),
+        defect:GEN_DEFECTS[i % GEN_DEFECTS.length],
+        seed:(id * 7 + 13) % 100
+      };
+
+      if(i % 4 === 3){
+        var fp = GEN_FOREIGN_POOL[i % GEN_FOREIGN_POOL.length];
+        rec.custName = fp.names[i % fp.names.length];
+        rec.custType = "foreign";
+        rec.nationality = fp.country;
+      } else {
+        rec.custName = GEN_KOREAN_SURNAMES[i % GEN_KOREAN_SURNAMES.length] + GEN_KOREAN_GIVEN[(i * 3) % GEN_KOREAN_GIVEN.length];
+      }
+
+      var mod = i % 5;
+      if(mod === 2 || mod === 3){
+        rec.status = "ok";
+        rec.reviewer = "박준형(AML운영팀)";
+        rec.reviewedAt = dueDate + " " + String(9 + (i % 8)).padStart(2,"0") + ":" + String((i * 7) % 60).padStart(2,"0");
+      } else if(mod === 4){
+        var reasonCode = GEN_REASON_CODES[i % GEN_REASON_CODES.length];
+        rec.status = "bad";
+        rec.reasonCode = reasonCode;
+        rec.reasonText = GEN_REASON_TEXT[reasonCode];
+        rec.reviewer = "박준형(AML운영팀)";
+        rec.reviewedAt = dueDate + " " + String(9 + (i % 8)).padStart(2,"0") + ":" + String((i * 7) % 60).padStart(2,"0");
+      }
+      // mod === 0, 1 => 기본값 pending 유지
+
+      out.push(rec);
+    }
+    return out;
+  }
+
+  RAW_DATA = RAW_DATA.concat(generateExtraRecords(20, 105));
+
+  var ADDR_POOL = [
+    "서울특별시 강남구 테헤란로 123",
+    "서울특별시 강동구 성내동 562-15",
+    "경기도 성남시 분당구 판교역로 235",
+    "부산광역시 해운대구 센텀중앙로 79",
+    "인천광역시 연수구 송도과학로 32",
+    "서울특별시 마포구 월드컵북로 396",
+    "대전광역시 유성구 대학로 291",
+    "서울특별시 서초구 반포대로 58"
+  ];
+  var AUTH_POOL = ["서울특별시 강동구청장","서울특별시 강남구청장","성남시 분당구청장","부산광역시 해운대구청장","인천광역시 연수구청장"];
+  var FOREIGN_AUTH_POOL = ["서울출입국·외국인청장","인천출입국·외국인청장","수원출입국·외국인청장"];
+
+  function maskRRN(seed){
+    var yy = String(70 + (seed % 30)).slice(-2);
+    var mm = String(1 + (seed % 12)).padStart(2,"0");
+    var dd = String(1 + (seed % 27)).padStart(2,"0");
+    var g = (seed % 2 === 0) ? "1" : "2";
+    return yy+mm+dd+"-"+g+"●●●●●●";
+  }
+
+  function maskForeignRegNo(seed){
+    var yy = String(70 + (seed % 30)).slice(-2);
+    var mm = String(1 + (seed % 12)).padStart(2,"0");
+    var dd = String(1 + (seed % 27)).padStart(2,"0");
+    // 외국인등록번호 성별 구분코드: 남 5/7, 여 6/8
+    var g = (seed % 2 === 0) ? "5" : "6";
+    return yy+mm+dd+"-"+g+"●●●●●●";
+  }
+
+  var STATUS_LABEL = {pending:"검수필요", ok:"적정", bad:"부적정"};
+  var STATUS_CLASS = {pending:"status-pending", ok:"status-ok", bad:"status-bad"};
+  var REASON_LABEL = {
+    recapture:"화면 재촬영", unidentifiable:"정보식별불가", etc:"기타"
+  };
+
+  /* ---------------------------------------------------------------
+     State: merge localStorage overrides on top of RAW_DATA
+  --------------------------------------------------------------- */
+  var STORAGE_KEY = "amlReviewState_v1";
+
+  function loadOverrides(){
+    try{
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    }catch(e){ return {}; }
+  }
+  function saveOverride(id, patch){
+    var all = loadOverrides();
+    all[id] = Object.assign({}, all[id], patch);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+  }
+
+  function buildRecords(){
+    var overrides = loadOverrides();
+    var dailyCounters = {};
+    return RAW_DATA.map(function(r){
+      var rec = Object.assign({
+        status:"pending", reasonCode:"", reasonText:"", reviewer:"", reviewedAt:"",
+        custType:"domestic"
+      }, r);
+      if(!rec.nationality){
+        rec.nationality = (rec.custType === 'foreign') ? '외국인' : '대한민국';
+      }
+      if(overrides[r.id]) Object.assign(rec, overrides[r.id]);
+      // 같은 고객이 같은 날 여러 번 제출한 경우의 당일 순번 (1, 2, 3...)
+      var dailyKey = rec.custCode + '|' + rec.dueDate;
+      dailyCounters[dailyKey] = (dailyCounters[dailyKey] || 0) + 1;
+      rec.dailySeq = dailyCounters[dailyKey];
+      return rec;
+    });
+  }
+
+  var records = buildRecords();
+
+  /* ---------------------------------------------------------------
+     ID card SVG rendering
+  --------------------------------------------------------------- */
+  function hueFromSeed(seed){ return seed * 37 % 360; }
+
+  function renderCardSVG(rec, big){
+    var w = 400, h = 250;
+    var hue = hueFromSeed(rec.seed);
+    var isForeign = rec.custType === 'foreign';
+    var addr = ADDR_POOL[rec.seed % ADDR_POOL.length];
+    var auth = isForeign
+      ? FOREIGN_AUTH_POOL[rec.seed % FOREIGN_AUTH_POOL.length]
+      : AUTH_POOL[rec.seed % AUTH_POOL.length];
+    var issue = rec.photoDate; // demo: issue date shown same era as photo date
+
+    var defs = '<defs>' +
+      '<radialGradient id="bg'+rec.id+'" cx="15%" cy="20%" r="90%">' +
+        '<stop offset="0%" stop-color="hsl('+hue+',70%,92%)"/>' +
+        '<stop offset="60%" stop-color="hsl('+((hue+40)%360)+',60%,95%)"/>' +
+        '<stop offset="100%" stop-color="#ffffff"/>' +
+      '</radialGradient>' +
+      '<pattern id="moirePat'+rec.id+'" width="6" height="6" patternTransform="rotate(20)" patternUnits="userSpaceOnUse">' +
+        '<line x1="0" y1="0" x2="0" y2="6" stroke="hsl('+((hue+180)%360)+',90%,55%)" stroke-width="1.4" opacity="0.35"/>' +
+      '</pattern>' +
+      (big ? '' : '<filter id="blur'+rec.id+'"><feGaussianBlur stdDeviation="1.1"/></filter>') +
+    '</defs>';
+
+    var bg = '<rect x="0" y="0" width="'+w+'" height="'+h+'" rx="14" fill="url(#bg'+rec.id+')" stroke="#c9d3e0" stroke-width="1.5"/>';
+
+    var guilloche = '';
+    for(var i=0;i<4;i++){
+      var cx = 30 + i*14, cy = 40 + i*10, r = 46 - i*6;
+      guilloche += '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="hsl('+((hue+i*20)%360)+',65%,75%)" stroke-width="1" opacity="0.5"/>';
+    }
+
+    var title = '<text x="24" y="34" font-size="19" font-weight="700" fill="#1f2937" font-family="Malgun Gothic, sans-serif">'+(isForeign?'외국인등록증':'주민등록증')+'</text>';
+    var nameFontSize = rec.custName.length > 10 ? 15 : 22;
+    var name = '<text x="24" y="78" font-size="'+nameFontSize+'" font-weight="700" fill="#111827" font-family="Malgun Gothic, sans-serif">'+rec.custName+'</text>';
+    var rrn = '<text x="24" y="104" font-size="16" fill="#374151" font-family="Consolas, monospace">'+(isForeign?maskForeignRegNo(rec.seed):maskRRN(rec.seed))+'</text>';
+    var addr1 = '<text x="24" y="134" font-size="13" fill="#4b5563" font-family="Malgun Gothic, sans-serif">'+addr+'</text>';
+
+    var issueRow = '<text x="24" y="228" font-size="12" fill="#374151" font-family="Malgun Gothic, sans-serif">'+issue+'</text>';
+    var authRow = '<text x="130" y="228" font-size="13" font-weight="700" fill="#1f2937" font-family="Malgun Gothic, sans-serif">'+auth+'</text>';
+
+    var stamp = '<g transform="translate(330,205) rotate(-14)" opacity="0.55">' +
+        '<circle r="22" fill="none" stroke="#b91c1c" stroke-width="2"/>' +
+        '<text x="0" y="4" font-size="9" fill="#b91c1c" text-anchor="middle" font-weight="700">발급확인</text>' +
+      '</g>';
+
+    var photoBox = '<g>' +
+      '<rect x="290" y="30" width="86" height="106" rx="6" fill="#e5e7eb" stroke="#c1c9d4"/>' +
+      '<circle cx="333" cy="66" r="20" fill="#b9c2cf"/>' +
+      '<path d="M301 128 Q333 96 365 128 L365 132 L301 132 Z" fill="#b9c2cf"/>' +
+    '</g>';
+
+    var body = defs + bg + guilloche + title + name + rrn + addr1 + issueRow + authRow + photoBox + stamp;
+
+    // Defect overlays
+    var overlay = '';
+    if(rec.defect === 'moire'){
+      overlay = '<rect x="0" y="0" width="'+w+'" height="'+h+'" rx="14" fill="url(#moirePat'+rec.id+')"/>';
+    } else if(rec.defect === 'recapture'){
+      overlay =
+        '<rect x="6" y="6" width="'+(w-12)+'" height="'+(h-12)+'" rx="10" fill="none" stroke="#111827" stroke-width="6" opacity="0.18"/>' +
+        '<ellipse cx="'+(w*0.7)+'" cy="'+(h*0.25)+'" rx="140" ry="60" fill="#ffffff" opacity="0.25"/>' +
+        repeatScanlines(w,h);
+    } else if(rec.defect === 'glare'){
+      overlay = '<ellipse cx="'+(w*0.62)+'" cy="'+(h*0.42)+'" rx="150" ry="95" fill="#ffffff" opacity="0.55"/>';
+    }
+
+    var groupOpen = (rec.defect === 'lowres' && !big) ? '<g filter="url(#blur'+rec.id+')">' : '<g>';
+    var lowresDim = (rec.defect === 'lowres') ? '<rect x="0" y="0" width="'+w+'" height="'+h+'" rx="14" fill="#ffffff" opacity="0.12"/>' : '';
+
+    var svg = '<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg">' +
+        groupOpen + body + overlay + lowresDim + '</g>' +
+      '</svg>';
+    return svg;
+  }
+
+  function repeatScanlines(w,h){
+    var lines = '';
+    for(var y=10; y<h; y+=5){
+      lines += '<line x1="0" y1="'+y+'" x2="'+w+'" y2="'+y+'" stroke="#ffffff" stroke-width="1" opacity="0.06"/>';
+    }
+    return lines;
+  }
+
+  /* ---------------------------------------------------------------
+     List view rendering
+  --------------------------------------------------------------- */
+  var listTbody = document.getElementById('listTbody');
+  var resultCountEl = document.getElementById('resultCount');
+  var selectedCountEl = document.getElementById('selectedCount');
+
+  var lastFiltered = [];
+  var selectedIds = new Set();
+  var currentPage = 1;
+
+  function currentFilters(){
+    return {
+      from: document.getElementById('fltDateFrom').value,
+      to: document.getElementById('fltDateTo').value,
+      status: document.getElementById('fltStatus').value,
+      search: document.getElementById('fltSearch').value.trim().toLowerCase()
+    };
+  }
+
+  function passesFilter(rec, f){
+    if(f.from && rec.dueDate < f.from) return false;
+    if(f.to && rec.dueDate > f.to) return false;
+    if(f.status !== 'all' && rec.status !== f.status) return false;
+    if(f.search){
+      var hay = rec.custCode.toLowerCase();
+      if(hay.indexOf(f.search) === -1) return false;
+    }
+    return true;
+  }
+
+  function updateSelectedCount(){
+    selectedCountEl.textContent = selectedIds.size > 0 ? ('· 선택 ' + selectedIds.size + '건') : '';
+  }
+
+  function renderList(){
+    var f = currentFilters();
+    var filtered = records.filter(function(r){ return passesFilter(r, f); });
+
+    filtered.sort(function(a,b){
+      var pa = a.status === 'pending' ? 0 : 1;
+      var pb = b.status === 'pending' ? 0 : 1;
+      if(pa !== pb) return pa - pb;
+      return a.dueDate < b.dueDate ? 1 : (a.dueDate > b.dueDate ? -1 : 0);
+    });
+
+    lastFiltered = filtered;
+    selectedIds.clear();
+    updateSelectedCount();
+    document.getElementById('selectAll').checked = false;
+
+    var pageSize = parseInt(document.getElementById('fltPageSize').value, 10) || 100;
+    var totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    if(currentPage > totalPages) currentPage = totalPages;
+    if(currentPage < 1) currentPage = 1;
+    var startIdx = (currentPage - 1) * pageSize;
+    var pageRows = filtered.slice(startIdx, startIdx + pageSize);
+
+    listTbody.innerHTML = '';
+    if(pageRows.length === 0){
+      listTbody.innerHTML = '<tr class="empty-row"><td colspan="8">조회 결과가 없습니다.</td></tr>';
+    } else {
+      pageRows.forEach(function(r, idx){
+        var tr = document.createElement('tr');
+        var statusCell = (r.status === 'pending')
+          ? '<span class="status-pending" data-id="'+r.id+'">'+STATUS_LABEL[r.status]+'</span>'
+          : '<span class="'+STATUS_CLASS[r.status]+'">'+STATUS_LABEL[r.status]+'</span>';
+        tr.innerHTML =
+          '<td><input type="checkbox" class="rowCheck" data-id="'+r.id+'"></td>' +
+          '<td>'+(startIdx+idx+1)+'</td>' +
+          '<td>'+r.dueDate+'</td>' +
+          '<td>'+r.dailySeq+'</td>' +
+          '<td><span class="link" data-id="'+r.id+'">'+r.custCode+'</span></td>' +
+          '<td>'+r.custName+'</td>' +
+          '<td>'+r.nationality+'</td>' +
+          '<td>'+statusCell+'</td>';
+        listTbody.appendChild(tr);
+      });
+    }
+
+    resultCountEl.textContent = filtered.length;
+    document.getElementById('pageIndicator').textContent = currentPage + ' / ' + totalPages + ' 페이지';
+    document.getElementById('btnPrevPage').disabled = (currentPage <= 1);
+    document.getElementById('btnNextPage').disabled = (currentPage >= totalPages);
+  }
+
+  listTbody.addEventListener('click', function(e){
+    var t = e.target.closest('.link, .status-pending');
+    if(!t) return;
+    openDetail(parseInt(t.dataset.id, 10));
+  });
+
+  listTbody.addEventListener('change', function(e){
+    if(!e.target.classList.contains('rowCheck')) return;
+    var id = parseInt(e.target.dataset.id, 10);
+    if(e.target.checked) selectedIds.add(id); else selectedIds.delete(id);
+    updateSelectedCount();
+  });
+
+  document.getElementById('selectAll').addEventListener('change', function(e){
+    var checked = e.target.checked;
+    listTbody.querySelectorAll('.rowCheck').forEach(function(cb){
+      cb.checked = checked;
+      var id = parseInt(cb.dataset.id, 10);
+      if(checked) selectedIds.add(id); else selectedIds.delete(id);
+    });
+    updateSelectedCount();
+  });
+
+  document.getElementById('btnSearch').addEventListener('click', function(){
+    currentPage = 1;
+    renderList();
+  });
+  document.getElementById('btnReset').addEventListener('click', function(){
+    document.getElementById('fltDateFrom').value = '';
+    document.getElementById('fltDateTo').value = '';
+    document.getElementById('fltStatus').value = 'all';
+    document.getElementById('fltSearch').value = '';
+    document.querySelectorAll('.quick-date-btn').forEach(function(b){ b.classList.remove('active'); });
+    currentPage = 1;
+    renderList();
+  });
+  document.getElementById('fltSearch').addEventListener('keyup', function(e){
+    if(e.key === 'Enter'){ currentPage = 1; renderList(); }
+  });
+
+  document.getElementById('fltPageSize').addEventListener('change', function(){
+    currentPage = 1;
+    renderList();
+  });
+  document.getElementById('btnPrevPage').addEventListener('click', function(){
+    currentPage--;
+    renderList();
+  });
+  document.getElementById('btnNextPage').addEventListener('click', function(){
+    currentPage++;
+    renderList();
+  });
+
+  document.querySelectorAll('.quick-date-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.quick-date-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentPage = 1;
+      var range = btn.dataset.range;
+      if(range === 'all'){
+        document.getElementById('fltDateFrom').value = '';
+        document.getElementById('fltDateTo').value = '';
+      } else {
+        var days = records.map(function(r){ return r.dueDate; }).sort();
+        var latest = days[days.length-1] || '2026-07-23';
+        var to = new Date(latest+'T00:00:00');
+        var from = new Date(to);
+        from.setDate(from.getDate() - parseInt(range, 10));
+        function fmt(d){ return d.toISOString().slice(0,10); }
+        document.getElementById('fltDateTo').value = fmt(to);
+        document.getElementById('fltDateFrom').value = fmt(from);
+      }
+      renderList();
+    });
+  });
+
+  document.getElementById('btnDownload').addEventListener('click', function(){
+    var rows = selectedIds.size > 0
+      ? lastFiltered.filter(function(r){ return selectedIds.has(r.id); })
+      : lastFiltered;
+    var header = ['수행일자','당일순번','고객번호','고객명','국적','검수상태'];
+    var lines = [header.join(',')];
+    rows.forEach(function(r){
+      lines.push([r.dueDate, r.dailySeq, r.custCode, r.custName, r.nationality, STATUS_LABEL[r.status]].join(','));
+    });
+    var csv = '﻿' + lines.join('\r\n');
+    var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'AML_신분증_사후검수_목록.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  /* ---------------------------------------------------------------
+     Bulk 적정/부적정 처리
+  --------------------------------------------------------------- */
+  function applyBulkStatus(ids, patchBase){
+    ids.forEach(function(id){
+      var patch = Object.assign({}, patchBase, {reviewer:'박준형(AML운영팀)', reviewedAt:formatNow()});
+      var rec = findRecord(id);
+      Object.assign(rec, patch);
+      saveOverride(id, patch);
+    });
+  }
+
+  document.getElementById('btnBulkOk').addEventListener('click', function(){
+    if(selectedIds.size === 0){ showToast('선택된 건이 없습니다.'); return; }
+    var ids = Array.from(selectedIds);
+    applyBulkStatus(ids, {status:'ok', reasonCode:'', reasonText:''});
+    showToast(ids.length + '건이 적정 처리되었습니다.');
+    renderList();
+  });
+
+  var bulkBadOverlay = document.getElementById('bulkBadOverlay');
+  function closeBulkBad(){ bulkBadOverlay.classList.remove('show'); }
+
+  document.getElementById('btnBulkBad').addEventListener('click', function(){
+    if(selectedIds.size === 0){ showToast('선택된 건이 없습니다.'); return; }
+    document.getElementById('bulkBadCount').textContent = selectedIds.size;
+    document.getElementById('bulkReasonCode').value = '';
+    document.getElementById('bulkReasonText').value = '';
+    document.getElementById('bulkValidationMsg').classList.remove('show');
+    bulkBadOverlay.classList.add('show');
+  });
+  document.getElementById('btnBulkBadClose').addEventListener('click', closeBulkBad);
+  document.getElementById('btnBulkBadCancel').addEventListener('click', closeBulkBad);
+  bulkBadOverlay.addEventListener('click', function(e){
+    if(e.target === bulkBadOverlay) closeBulkBad();
+  });
+  document.getElementById('btnBulkBadConfirm').addEventListener('click', function(){
+    var code = document.getElementById('bulkReasonCode').value;
+    var text = document.getElementById('bulkReasonText').value.trim();
+    var msgEl = document.getElementById('bulkValidationMsg');
+    if(!code){
+      msgEl.textContent = '부적정 사유를 선택해주세요.';
+      msgEl.classList.add('show');
+      return;
+    }
+    if(code === 'etc' && !text){
+      msgEl.textContent = '"기타" 사유는 상세 사유를 반드시 입력해주세요.';
+      msgEl.classList.add('show');
+      return;
+    }
+    var ids = Array.from(selectedIds);
+    applyBulkStatus(ids, {status:'bad', reasonCode:code, reasonText:text});
+    closeBulkBad();
+    showToast(ids.length + '건이 부적정 처리되었습니다.');
+    renderList();
+  });
+
+  /* ---------------------------------------------------------------
+     Detail view rendering
+  --------------------------------------------------------------- */
+  var detailOverlay = document.getElementById('detailOverlay');
+  var detailDialog = document.getElementById('detailDialog');
+  var currentId = null;
+  var pendingVerdict = null; // 'ok' | 'bad' while editing, before save
+
+  function findRecord(id){
+    return records.filter(function(r){ return r.id === id; })[0];
+  }
+
+  function openDetail(id){
+    currentId = id;
+    var rec = findRecord(id);
+    pendingVerdict = (rec.status === 'ok' || rec.status === 'bad') ? rec.status : null;
+    renderDetail(rec);
+    detailOverlay.classList.add('show');
+  }
+
+  function backToList(){
+    detailOverlay.classList.remove('show');
+    renderList();
+  }
+  document.getElementById('btnDetailClose').addEventListener('click', backToList);
+  detailOverlay.addEventListener('click', function(e){
+    if(e.target === detailOverlay) backToList();
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'Escape') return;
+    if(document.getElementById('bulkBadOverlay').classList.contains('show')) closeBulkBad();
+    else if(detailOverlay.classList.contains('show')) backToList();
+  });
+
+  function renderDetail(rec){
+    document.getElementById('idImageWrap').innerHTML = renderCardSVG(rec, false);
+    document.getElementById('dCustCode').textContent = rec.custCode;
+    document.getElementById('dCustName').textContent = rec.custName;
+    document.getElementById('dNationality').textContent = rec.nationality;
+    document.getElementById('dDueDate').textContent = rec.dueDate;
+    document.getElementById('dCurrentStatus').innerHTML =
+      '<span class="'+STATUS_CLASS[rec.status]+'">'+STATUS_LABEL[rec.status]+'</span>';
+
+    document.getElementById('btnOk').classList.toggle('active', pendingVerdict === 'ok');
+    document.getElementById('btnBad').classList.toggle('active', pendingVerdict === 'bad');
+    document.getElementById('reasonBox').classList.toggle('show', pendingVerdict === 'bad');
+    document.getElementById('reasonCode').value = rec.reasonCode || '';
+    document.getElementById('reasonText').value = rec.reasonText || '';
+    document.getElementById('validationMsg').classList.remove('show');
+
+    var audit = document.getElementById('auditTrail');
+    if(rec.reviewer){
+      audit.innerHTML = '검수자: '+rec.reviewer+' &middot; 검수일시: '+rec.reviewedAt;
+    } else {
+      audit.innerHTML = '아직 검수 이력이 없습니다.';
+    }
+  }
+
+  document.getElementById('btnOk').addEventListener('click', function(){
+    pendingVerdict = 'ok';
+    document.getElementById('btnOk').classList.add('active');
+    document.getElementById('btnBad').classList.remove('active');
+    document.getElementById('reasonBox').classList.remove('show');
+    document.getElementById('validationMsg').classList.remove('show');
+  });
+  document.getElementById('btnBad').addEventListener('click', function(){
+    pendingVerdict = 'bad';
+    document.getElementById('btnBad').classList.add('active');
+    document.getElementById('btnOk').classList.remove('active');
+    document.getElementById('reasonBox').classList.add('show');
+  });
+
+  function validateAndBuildPatch(){
+    if(!pendingVerdict){
+      showValidation('적정 또는 부적정을 선택해주세요.');
+      return null;
+    }
+    if(pendingVerdict === 'ok'){
+      return {status:'ok', reasonCode:'', reasonText:''};
+    }
+    var code = document.getElementById('reasonCode').value;
+    var text = document.getElementById('reasonText').value.trim();
+    if(!code){
+      showValidation('부적정 사유를 선택해주세요.');
+      return null;
+    }
+    if(code === 'etc' && !text){
+      showValidation('"기타" 사유는 상세 사유를 반드시 입력해주세요.');
+      return null;
+    }
+    return {status:'bad', reasonCode:code, reasonText:text};
+  }
+
+  function showValidation(msg){
+    var el = document.getElementById('validationMsg');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  function formatNow(){
+    var d = new Date();
+    function p(n){ return String(n).padStart(2,'0'); }
+    return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+  }
+
+  function doSave(thenNext){
+    var patch = validateAndBuildPatch();
+    if(!patch) return;
+    patch.reviewer = '박준형(AML운영팀)';
+    patch.reviewedAt = formatNow();
+
+    var rec = findRecord(currentId);
+    Object.assign(rec, patch);
+    saveOverride(currentId, patch);
+
+    showToast('저장되었습니다.');
+
+    if(thenNext){
+      var next = findNextPending(currentId);
+      if(next){
+        openDetail(next.id);
+      } else {
+        showToast('모든 건의 검수가 완료되었습니다.');
+        backToList();
+      }
+    } else {
+      backToList();
+    }
+  }
+
+  function findNextPending(excludeId){
+    var sorted = records.slice().sort(function(a,b){
+      return a.dueDate < b.dueDate ? 1 : (a.dueDate > b.dueDate ? -1 : 0);
+    });
+    for(var i=0;i<sorted.length;i++){
+      if(sorted[i].id !== excludeId && sorted[i].status === 'pending') return sorted[i];
+    }
+    return null;
+  }
+
+  document.getElementById('btnSaveOnly').addEventListener('click', function(){ doSave(false); });
+  document.getElementById('btnSaveNext').addEventListener('click', function(){ doSave(true); });
+
+  /* ---------------------------------------------------------------
+     Toast
+  --------------------------------------------------------------- */
+  var toastEl = document.getElementById('toast');
+  var toastTimer = null;
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 2200);
+  }
+
+  /* ---------------------------------------------------------------
+     Zoom modal
+  --------------------------------------------------------------- */
+  var zoomModal = document.getElementById('zoomModal');
+  document.getElementById('idImageWrap').addEventListener('click', function(){
+    var rec = findRecord(currentId);
+    zoomModal.innerHTML = renderCardSVG(rec, true);
+    zoomModal.classList.add('show');
+  });
+  zoomModal.addEventListener('click', function(){
+    zoomModal.classList.remove('show');
+  });
+
+  /* ---------------------------------------------------------------
+     Init
+  --------------------------------------------------------------- */
+  renderList();
+
+})();
+</script>
+
+</body>
+</html>

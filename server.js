@@ -617,6 +617,21 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // 신분증검수 목업 다운로드 엔드포인트
+  if (urlPath === '/download-id-check') {
+    const filePath = path.join(BASE, '신분증검수_목업 (1).html');
+    fs.readFile(filePath, (err, data) => {
+      if (err) { res.writeHead(404); return res.end('Not found'); }
+      res.writeHead(200, {
+        'Content-Type': 'application/octet-stream',
+        'Content-Disposition': "attachment; filename*=UTF-8''%EC%8B%A0%EB%B6%84%EC%A6%9D%EA%B2%80%EC%88%98_%EB%AA%A9%EC%97%85.html",
+        'Content-Length': data.length,
+      });
+      res.end(data);
+    });
+    return;
+  }
+
   // Static files — 기본 페이지는 fitness_tracker.html
   const PAGE_MAP = {
     '/': 'fitness_tracker.html',
