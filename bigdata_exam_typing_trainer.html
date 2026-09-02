@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>손코딩 트레이너</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d1017;
+    --surface:#161b26;
+    --surface-2:#1d2330;
+    --surface-3:#262d3d;
+    --border:#2a3040;
+    --border-strong:#3a4258;
+    --text:#e7e9f2;
+    --text-dim:#98a0b5;
+    --text-faint:#565e75;
+    --accent:#f0a63f;
+    --accent-dim:#c98a34;
+    --accent-soft:rgba(240,166,63,0.14);
+    --correct:#59c290;
+    --correct-soft:rgba(89,194,144,0.16);
+    --wrong:#e8637d;
+    --wrong-soft:rgba(232,99,125,0.18);
+    --pending:#4b5169;
+    --radius:10px;
+    --font-ui:'IBM Plex Sans KR', 'Malgun Gothic', sans-serif;
+    --font-code:'JetBrains Mono', 'Consolas', monospace;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-ui);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--accent-soft); color:var(--accent); }
+
+  button{ font-family:inherit; cursor:pointer; }
+  input{ font-family:inherit; }
+
+  *:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+
+  /* ---------- header ---------- */
+  header{
+    display:flex;
+    align-items:center;
+    gap:24px;
+    flex-wrap:wrap;
+    padding:18px 28px;
+    border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);
+    position:sticky;
+    top:0;
+    z-index:20;
+  }
+  .brand{ display:flex; flex-direction:column; gap:2px; }
+  .brand h1{
+    margin:0;
+    font-size:19px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  .brand h1 .mark{ color:var(--accent); font-family:var(--font-code); }
+  .brand .sub{
+    margin:0;
+    font-size:12px;
+    color:var(--text-faint);
+    font-family:var(--font-code);
+    letter-spacing:0.02em;
+  }
+
+  .progress-wrap{
+    flex:1 1 260px;
+    min-width:200px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .progress-label{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    color:var(--text-dim);
+  }
+  .progress-label strong{
+    font-family:var(--font-code);
+    color:var(--text);
+    font-variant-numeric:tabular-nums;
+  }
+  .progress-bar{
+    height:8px;
+    border-radius:99px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg, var(--accent-dim), var(--accent));
+    transition:width .3s ease;
+    border-radius:99px;
+  }
+
+  .chip-btn{
+    border:1px solid var(--border-strong);
+    background:var(--surface-2);
+    color:var(--text-dim);
+    padding:9px 16px;
+    border-radius:99px;
+    font-size:13px;
+    font-weight:600;
+    white-space:nowrap;
+    transition:background .15s, color .15s, border-color .15s;
+  }
+  .chip-btn:hover{ border-color:var(--accent-dim); color:var(--text); }
+  .chip-btn.active{
+    background:var(--wrong-soft);
+    border-color:var(--wrong);
+    color:var(--wrong);
+  }
+
+  /* ---------- tabs ---------- */
+  .tabs{
+    display:flex;
+    gap:4px;
+    padding:12px 28px 0 28px;
+    overflow-x:auto;
+  }
+  .tab-btn{
+    border:1px solid var(--border);
+    border-bottom:none;
+    background:var(--surface);
+    color:var(--text-dim);
+    padding:10px 18px;
+    border-radius:8px 8px 0 0;
+    font-size:13px;
+    font-weight:600;
+    position:relative;
+    top:1px;
+  }
+  .tab-btn.active{
+    background:var(--surface-2);
+    color:var(--accent);
+    border-color:var(--border-strong);
+  }
+
+  /* ---------- workbench ---------- */
+  .workbench{
+    display:grid;
+    grid-template-columns:340px 1fr;
+    gap:1px;
+    background:var(--border);
+    border-top:1px solid var(--border-strong);
+    min-height:calc(100vh - 132px);
+  }
+  @media (max-width:900px){
+    .workbench{ grid-template-columns:1fr; }
+  }
+
+  .sidebar{
+    background:var(--surface);
+    padding:14px;
+    overflow-y:auto;
+    max-height:calc(100vh - 133px);
+  }
+  @media (max-width:900px){
+    .sidebar{ max-height:none; }
+  }
+
+  details.category{
+    border:1px solid var(--border);
+    border-radius:8px;
+    margin-bottom:8px;
+    background:var(--surface-2);
+    overflow:hidden;
+  }
+  details.category[open]{ border-color:var(--border-strong); }
+  details.category.hidden{ display:none; }
+  summary{
+    list-style:none;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:11px 12px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--text);
+  }
+  summary::-webkit-details-marker{ display:none; }
+  summary::before{
+    content:'▸';
+    color:var(--text-faint);
+    font-size:11px;
+    margin-right:8px;
+    transition:transform .15s;
+    display:inline-block;
+  }
+  details[open] > summary::before{ transform:rotate(90deg); color:var(--accent); }
+  .cat-name{ flex:1; }
+  .cat-badge{
+    font-family:var(--font-code);
+    font-size:11px;
+    color:var(--text-faint);
+    background:var(--surface-3);
+    border:1px solid var(--border);
+    padding:2px 7px;
+    border-radius:99px;
+    font-variant-numeric:tabular-nums;
+  }
+  .cat-badge.full{ color:var(--correct); border-color:var(--correct); }
+
+  .items{ padding:2px 8px 10px 8px; display:flex; flex-direction:column; gap:2px; }
+  .item-btn{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    text-align:left;
+    border:1px solid transparent;
+    background:transparent;
+    color:var(--text-dim);
+    padding:7px 8px;
+    border-radius:6px;
+    font-size:12.5px;
+    line-height:1.4;
+  }
+  .item-btn:hover{ background:var(--surface-3); color:var(--text); }
+  .item-btn.selected{ background:var(--accent-soft); color:var(--text); border-color:var(--accent-dim); }
+  .item-btn.hidden{ display:none; }
+
+  .status-dot{
+    flex:none;
+    width:8px; height:8px;
+    border-radius:50%;
+    background:var(--text-faint);
+    position:relative;
+  }
+  .status-dot.progress{ background:var(--accent); }
+  .status-dot.done{ background:var(--correct); }
+  .status-dot.flagged::after{
+    content:'';
+    position:absolute;
+    top:-3px; right:-3px;
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--wrong);
+    border:1px solid var(--surface);
+  }
+
+  /* dictionary tab */
+  .dict-search{
+    width:100%;
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid var(--border-strong);
+    background:var(--surface-2);
+    color:var(--text);
+    font-size:13px;
+    margin-bottom:10px;
+  }
+  .dict-list{ display:flex; flex-direction:column; gap:3px; }
+  .dict-item{
+    display:flex;
+    align-items:flex-start;
+    gap:9px;
+    border:1px solid var(--border);
+    background:var(--surface-2);
+    color:var(--text-dim);
+    padding:9px 10px;
+    border-radius:7px;
+    text-align:left;
+  }
+  .dict-item:hover{ border-color:var(--accent-dim); color:var(--text); }
+  .dict-item .status-dot{ margin-top:4px; }
+  .dict-meta{ display:flex; flex-direction:column; gap:3px; }
+  .dict-tag{
+    font-family:var(--font-code);
+    font-size:10.5px;
+    color:var(--text-faint);
+    letter-spacing:0.02em;
+  }
+  .dict-empty{ color:var(--text-faint); font-size:13px; padding:20px 4px; text-align:center; }
+
+  /* ---------- practice pane ---------- */
+  .practice{
+    background:var(--bg);
+    padding:22px 26px 40px 26px;
+    overflow-y:auto;
+  }
+  .empty-state{
+    height:100%;
+    min-height:300px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    color:var(--text-faint);
+    text-align:center;
+  }
+  .empty-state .glyph{ font-size:34px; color:var(--border-strong); font-family:var(--font-code); }
+  .empty-state p{ margin:0; font-size:13.5px; }
+
+  .practice-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    gap:16px;
+    margin-bottom:18px;
+  }
+  .crumb{
+    font-family:var(--font-code);
+    font-size:11.5px;
+    color:var(--text-faint);
+    letter-spacing:0.02em;
+    margin-bottom:4px;
+  }
+  .item-title{
+    margin:0;
+    font-size:19px;
+    font-weight:700;
+    text-wrap:balance;
+    max-width:56ch;
+  }
+
+  .stat-row{ display:flex; align-items:center; gap:14px; }
+  .stat{ display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+  .stat-label{ font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.06em; }
+  .stat-value{
+    font-family:var(--font-code);
+    font-size:16px;
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
+    color:var(--text);
+  }
+  .stat-value.acc-low{ color:var(--wrong); }
+  .badge-done{
+    background:var(--correct-soft);
+    border:1px solid var(--correct);
+    color:var(--correct);
+    font-size:12px;
+    font-weight:700;
+    padding:6px 12px;
+    border-radius:99px;
+    letter-spacing:0.03em;
+  }
+
+  .editor-block{ margin-bottom:16px; }
+  .editor-tabbar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-bottom:none;
+    border-radius:9px 9px 0 0;
+    padding:9px 14px;
+  }
+  .editor-tabbar .dot{ width:9px; height:9px; border-radius:50%; }
+  .editor-tabbar .dot.red{ background:#e0637d; }
+  .editor-tabbar .dot.yellow{ background:#e8b750; }
+  .editor-tabbar .dot.green{ background:#59c290; }
+  .filename{
+    font-family:var(--font-code);
+    font-size:12px;
+    color:var(--text-dim);
+  }
+  .retry-btn{
+    margin-left:auto;
+    border:1px solid var(--border-strong);
+    background:var(--surface-3);
+    color:var(--text-dim);
+    padding:6px 12px;
+    border-radius:6px;
+    font-size:12px;
+    font-weight:600;
+  }
+  .retry-btn:hover{ color:var(--accent); border-color:var(--accent-dim); }
+
+  .code-ref{
+    margin:0;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:0 0 9px 9px;
+    padding:14px 0;
+    font-family:var(--font-code);
+    font-size:13.5px;
+    line-height:1.7;
+    overflow-x:auto;
+  }
+  .code-row{ display:flex; padding:0 16px; white-space:pre; }
+  .ln{
+    flex:none;
+    width:26px;
+    color:var(--text-faint);
+    user-select:none;
+    text-align:right;
+    margin-right:16px;
+  }
+  .lc{ color:var(--text); white-space:pre-wrap; word-break:break-word; }
+
+  .type-area{
+    position:relative;
+    border:1px solid var(--border-strong);
+    border-radius:0 0 9px 9px;
+    background:var(--surface);
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .type-area.is-complete{
+    border-color:var(--correct);
+    box-shadow:0 0 0 3px var(--correct-soft);
+  }
+  .type-overlay, textarea.type-input{
+    margin:0;
+    padding:14px 16px;
+    font-family:var(--font-code);
+    font-size:13.5px;
+    line-height:1.7;
+    white-space:pre-wrap;
+    word-break:break-word;
+    width:100%;
+    min-height:120px;
+  }
+  .type-overlay{
+    color:var(--pending);
+    pointer-events:none;
+  }
+  textarea.type-input{
+    position:absolute;
+    inset:0;
+    border:none;
+    background:transparent;
+    color:transparent;
+    caret-color:var(--accent);
+    resize:none;
+    outline:none;
+  }
+  textarea.type-input:read-only{ caret-color:transparent; }
+
+  .ch.ok{ color:var(--correct); }
+  .ch.bad{ color:var(--wrong); background:var(--wrong-soft); border-radius:2px; }
+  .ch.extra{ color:var(--wrong); background:var(--wrong-soft); text-decoration:underline wavy var(--wrong); border-radius:2px; }
+  .ch.pending{ color:var(--pending); }
+
+  .hint{
+    margin-top:10px;
+    font-size:11.5px;
+    color:var(--text-faint);
+    display:flex;
+    gap:6px;
+    align-items:center;
+  }
+  .hint kbd{
+    font-family:var(--font-code);
+    background:var(--surface-3);
+    border:1px solid var(--border-strong);
+    border-radius:4px;
+    padding:1px 6px;
+    font-size:10.5px;
+    color:var(--text-dim);
+  }
+
+  .problem-brief{
+    border:1px solid var(--border);
+    background:var(--surface);
+    border-radius:9px;
+    padding:16px 18px;
+    margin-bottom:16px;
+  }
+  .problem-brief .scenario{
+    margin:0 0 12px 0;
+    font-size:13.5px;
+    line-height:1.6;
+    color:var(--text-dim);
+    max-width:70ch;
+  }
+  .table-scroll{ overflow-x:auto; margin-bottom:14px; }
+  table.sample-table{
+    border-collapse:collapse;
+    font-family:var(--font-code);
+    font-size:12px;
+    min-width:100%;
+  }
+  table.sample-table th, table.sample-table td{
+    border:1px solid var(--border);
+    padding:6px 12px;
+    text-align:left;
+    white-space:nowrap;
+  }
+  table.sample-table th{
+    background:var(--surface-2);
+    color:var(--text-dim);
+    font-weight:600;
+  }
+  table.sample-table td{ color:var(--text); }
+  ol.steps{
+    margin:0;
+    padding-left:20px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  ol.steps li{
+    font-size:13px;
+    line-height:1.55;
+    color:var(--text);
+  }
+  ol.steps li::marker{
+    color:var(--accent);
+    font-family:var(--font-code);
+    font-weight:700;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1><span class="mark">&gt;_</span> 손코딩 트레이너</h1>
+    <p class="sub">빅데이터분석기사 실기 · Python 타이핑 연습</p>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-label"><span>전체 진행률</span><strong id="progressText">0/0 완료</strong></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+  <button class="chip-btn" id="wrongToggle" type="button">★ 오답노트</button>
+</header>
+
+<nav class="tabs" id="tabs"></nav>
+
+<div class="workbench">
+  <aside class="sidebar" id="sidebar"></aside>
+  <section class="practice" id="practice">
+    <div class="empty-state">
+      <div class="glyph">{ }</div>
+      <p>왼쪽 목록에서 연습할 코드를 선택하세요.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+
+var DATA = [
+  { key:'t1', label:'작업형1', categories:[
+    { name:'데이터 불러오기/탐색', items:[
+      {d:'CSV 파일 불러오기', c:"df = pd.read_csv('data.csv')"},
+      {d:'상위 5개 행 확인', c:"df.head()"},
+      {d:'데이터프레임 요약 정보 확인', c:"df.info()"},
+      {d:'기술통계 요약 확인', c:"df.describe()"},
+      {d:'행/열 개수 확인', c:"df.shape"},
+      {d:'컬럼별 결측치 개수 확인', c:"df.isnull().sum()"},
+      {d:'컬럼별 데이터 타입 확인', c:"df.dtypes"},
+      {d:'컬럼 고유값 개수 확인', c:"df['col'].nunique()"},
+      {d:'컬럼 고유값 목록 확인', c:"df['col'].unique()"},
+    ]},
+    { name:'결측치 처리', items:[
+      {d:'결측치가 있는 행 제거', c:"df = df.dropna()"},
+      {d:'결측치를 특정 값으로 대체', c:"df['col'] = df['col'].fillna(0)"},
+      {d:'결측치를 평균값으로 대체', c:"df['col'] = df['col'].fillna(df['col'].mean())"},
+      {d:'결측치를 중앙값으로 대체', c:"df['col'] = df['col'].fillna(df['col'].median())"},
+      {d:'결측치를 최빈값으로 대체', c:"df['col'] = df['col'].fillna(df['col'].mode()[0])"},
+      {d:'결측치를 이전 값으로 대체(ffill)', c:"df['col'] = df['col'].fillna(method='ffill')"},
+      {d:'결측치를 다음 값으로 대체(bfill)', c:"df['col'] = df['col'].fillna(method='bfill')"},
+    ]},
+    { name:'이상치 처리', items:[
+      {d:'1사분위수, 3사분위수 계산', c:"Q1 = df['col'].quantile(0.25)\nQ3 = df['col'].quantile(0.75)"},
+      {d:'IQR 계산', c:"IQR = Q3 - Q1"},
+      {d:'이상치 경계값 계산', c:"lower = Q1 - 1.5 * IQR\nupper = Q3 + 1.5 * IQR"},
+      {d:'IQR 기준으로 이상치 제거', c:"df = df[(df['col'] >= lower) & (df['col'] <= upper)]"},
+      {d:'Z-score 기준으로 이상치 제거', c:"from scipy import stats\ndf['z'] = stats.zscore(df['col'])\ndf = df[abs(df['z']) <= 3]"},
+    ]},
+    { name:'스케일링', items:[
+      {d:'MinMaxScaler로 정규화', c:"from sklearn.preprocessing import MinMaxScaler\nscaler = MinMaxScaler()\ndf[['col']] = scaler.fit_transform(df[['col']])"},
+      {d:'StandardScaler로 표준화', c:"from sklearn.preprocessing import StandardScaler\nscaler = StandardScaler()\ndf[['col']] = scaler.fit_transform(df[['col']])"},
+      {d:'RobustScaler로 스케일링', c:"from sklearn.preprocessing import RobustScaler\nscaler = RobustScaler()\ndf[['col']] = scaler.fit_transform(df[['col']])"},
+    ]},
+    { name:'인코딩', items:[
+      {d:'원핫인코딩 적용', c:"df = pd.get_dummies(df, columns=['col'])"},
+      {d:'원핫인코딩(첫 범주 제거)', c:"df = pd.get_dummies(df, columns=['col'], drop_first=True)"},
+      {d:'라벨인코딩 적용', c:"from sklearn.preprocessing import LabelEncoder\nle = LabelEncoder()\ndf['col'] = le.fit_transform(df['col'])"},
+    ]},
+    { name:'그룹/집계', items:[
+      {d:'그룹별 집계 연산', c:"df.groupby('col1').agg({'col2': 'mean'})"},
+      {d:'범주별 개수 세기', c:"df['col'].value_counts()"},
+      {d:'값 기준 내림차순 정렬', c:"df.sort_values(by='col', ascending=False)"},
+      {d:'피벗 테이블 생성', c:"pd.pivot_table(df, index='col1', columns='col2', values='col3', aggfunc='mean')"},
+    ]},
+    { name:'조건 필터링/파생변수', items:[
+      {d:'라벨 기반 조건 선택(loc)', c:"df.loc[df['col'] > 10, 'col2']"},
+      {d:'위치 기반 인덱싱(iloc)', c:"df.iloc[0:5, 1:3]"},
+      {d:'apply와 lambda로 파생변수 생성', c:"df['new'] = df['col'].apply(lambda x: x * 2)"},
+      {d:'구간화(cut)로 범주 생성', c:"df['bin'] = pd.cut(df['col'], bins=[0, 10, 20, 30])"},
+      {d:'동일 빈도 구간화(qcut)', c:"df['bin'] = pd.qcut(df['col'], q=4)"},
+    ]},
+    { name:'날짜 처리', items:[
+      {d:'문자열을 날짜형으로 변환', c:"df['date'] = pd.to_datetime(df['date'])"},
+      {d:'연도 추출', c:"df['year'] = df['date'].dt.year"},
+      {d:'월 추출', c:"df['month'] = df['date'].dt.month"},
+      {d:'일 추출', c:"df['day'] = df['date'].dt.day"},
+      {d:'요일 추출(dayofweek)', c:"df['dow'] = df['date'].dt.dayofweek"},
+      {d:'요일 추출(weekday)', c:"df['weekday'] = df['date'].dt.weekday"},
+    ]},
+    { name:'문자열 처리', items:[
+      {d:'특정 문자열 포함 여부로 필터링', c:"df[df['col'].str.contains('abc')]"},
+      {d:'문자열 치환', c:"df['col'] = df['col'].str.replace('a', 'b')"},
+      {d:'문자열 분리', c:"df['col'] = df['col'].str.split(',')"},
+      {d:'문자열 앞뒤 공백 제거', c:"df['col'] = df['col'].str.strip()"},
+    ]},
+    { name:'상관/공분산', items:[
+      {d:'전체 상관계수 행렬', c:"df.corr()"},
+      {d:'전체 공분산 행렬', c:"df.cov()"},
+      {d:'두 컬럼 간 상관계수', c:"df['col1'].corr(df['col2'])"},
+    ]},
+    { name:'인덱스/병합', items:[
+      {d:'인덱스 초기화', c:"df = df.reset_index(drop=True)"},
+      {d:'특정 컬럼을 인덱스로 지정', c:"df = df.set_index('col')"},
+      {d:'두 데이터프레임 병합', c:"pd.merge(df1, df2, on='col', how='left')"},
+      {d:'데이터프레임 이어붙이기', c:"pd.concat([df1, df2], axis=0)"},
+    ]},
+  ]},
+  { key:'t2', label:'작업형2', categories:[
+    { name:'데이터 분할', items:[
+      {d:'학습/평가 데이터 분할', c:"from sklearn.model_selection import train_test_split\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)"},
+      {d:'클래스 비율 유지 분할(stratify)', c:"X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)"},
+      {d:'학습 데이터 비율 지정 분할', c:"X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, random_state=42)"},
+    ]},
+    { name:'분류 모델', items:[
+      {d:'랜덤포레스트 분류기 학습', c:"from sklearn.ensemble import RandomForestClassifier\nmodel = RandomForestClassifier(random_state=42)\nmodel.fit(X_train, y_train)"},
+      {d:'의사결정나무 분류기 학습', c:"from sklearn.tree import DecisionTreeClassifier\nmodel = DecisionTreeClassifier(random_state=42)\nmodel.fit(X_train, y_train)"},
+      {d:'로지스틱 회귀 분류기 학습', c:"from sklearn.linear_model import LogisticRegression\nmodel = LogisticRegression()\nmodel.fit(X_train, y_train)"},
+      {d:'XGBoost 분류기 학습', c:"from xgboost import XGBClassifier\nmodel = XGBClassifier()\nmodel.fit(X_train, y_train)"},
+    ]},
+    { name:'회귀 모델', items:[
+      {d:'랜덤포레스트 회귀 학습', c:"from sklearn.ensemble import RandomForestRegressor\nmodel = RandomForestRegressor(random_state=42)\nmodel.fit(X_train, y_train)"},
+      {d:'선형 회귀 학습', c:"from sklearn.linear_model import LinearRegression\nmodel = LinearRegression()\nmodel.fit(X_train, y_train)"},
+      {d:'XGBoost 회귀 학습', c:"from xgboost import XGBRegressor\nmodel = XGBRegressor()\nmodel.fit(X_train, y_train)"},
+    ]},
+    { name:'모델 학습/예측 공통 패턴', items:[
+      {d:'모델 학습(fit)', c:"model.fit(X_train, y_train)"},
+      {d:'예측값 생성(predict)', c:"y_pred = model.predict(X_test)"},
+      {d:'클래스 확률 예측(predict_proba)', c:"y_proba = model.predict_proba(X_test)[:, 1]"},
+    ]},
+    { name:'분류 평가지표', items:[
+      {d:'정확도(accuracy) 계산', c:"from sklearn.metrics import accuracy_score\naccuracy_score(y_test, y_pred)"},
+      {d:'정밀도(precision) 계산', c:"from sklearn.metrics import precision_score\nprecision_score(y_test, y_pred)"},
+      {d:'재현율(recall) 계산', c:"from sklearn.metrics import recall_score\nrecall_score(y_test, y_pred)"},
+      {d:'F1 스코어 계산', c:"from sklearn.metrics import f1_score\nf1_score(y_test, y_pred)"},
+      {d:'ROC-AUC 계산', c:"from sklearn.metrics import roc_auc_score\nroc_auc_score(y_test, y_proba)"},
+      {d:'혼동행렬 계산', c:"from sklearn.metrics import confusion_matrix\nconfusion_matrix(y_test, y_pred)"},
+      {d:'분류 리포트 출력', c:"from sklearn.metrics import classification_report\nprint(classification_report(y_test, y_pred))"},
+    ]},
+    { name:'회귀 평가지표', items:[
+      {d:'평균제곱오차(MSE) 계산', c:"from sklearn.metrics import mean_squared_error\nmean_squared_error(y_test, y_pred)"},
+      {d:'평균절대오차(MAE) 계산', c:"from sklearn.metrics import mean_absolute_error\nmean_absolute_error(y_test, y_pred)"},
+      {d:'결정계수(R2) 계산', c:"from sklearn.metrics import r2_score\nr2_score(y_test, y_pred)"},
+      {d:'RMSE 계산식', c:"rmse = mean_squared_error(y_test, y_pred) ** 0.5"},
+    ]},
+    { name:'교차검증', items:[
+      {d:'교차검증 점수 계산', c:"from sklearn.model_selection import cross_val_score\nscores = cross_val_score(model, X, y, cv=5)"},
+      {d:'평가지표 지정 교차검증', c:"scores = cross_val_score(model, X, y, cv=5, scoring='accuracy')"},
+      {d:'KFold 객체 생성', c:"from sklearn.model_selection import KFold\nkf = KFold(n_splits=5, shuffle=True, random_state=42)"},
+    ]},
+    { name:'하이퍼파라미터', items:[
+      {d:'탐색할 파라미터 그리드 정의', c:"params = {'n_estimators': [100, 200], 'max_depth': [4, 6]}"},
+      {d:'GridSearchCV 생성 및 학습', c:"from sklearn.model_selection import GridSearchCV\ngrid = GridSearchCV(model, param_grid=params, cv=5)\ngrid.fit(X_train, y_train)"},
+      {d:'최적 파라미터 확인', c:"grid.best_params_"},
+    ]},
+    { name:'결과 제출 형식', items:[
+      {d:'제출용 데이터프레임 생성', c:"result = pd.DataFrame({'id': test_id, 'pred': y_pred})"},
+      {d:'CSV 파일로 저장', c:"result.to_csv('result.csv', index=False)"},
+      {d:'예측 확률 제출 파일 생성', c:"pd.DataFrame({'id': test_id, 'proba': y_proba}).to_csv('result.csv', index=False)"},
+    ]},
+  ]},
+  { key:'t3', label:'작업형3', categories:[
+    { name:'기술통계', items:[
+      {d:'평균 계산', c:"df['col'].mean()"},
+      {d:'표준편차 계산', c:"df['col'].std()"},
+      {d:'분산 계산', c:"df['col'].var()"},
+      {d:'중앙값 계산', c:"df['col'].median()"},
+    ]},
+    { name:'정규성 검정', items:[
+      {d:'샤피로-윌크 검정 실행', c:"from scipy.stats import shapiro\nstat, p = shapiro(df['col'])"},
+      {d:'유의수준 기준 정규성 판단', c:"if p > 0.05:\n    print('정규성을 만족한다')"},
+      {d:'그룹별 정규성 검정', c:"stat, p = shapiro(df[df['group'] == 'A']['col'])"},
+    ]},
+    { name:'t검정', items:[
+      {d:'단일표본 t검정', c:"from scipy.stats import ttest_1samp\nstat, p = ttest_1samp(df['col'], popmean=50)"},
+      {d:'대응표본 t검정', c:"from scipy.stats import ttest_rel\nstat, p = ttest_rel(df['before'], df['after'])"},
+      {d:'독립표본 t검정(등분산 가정)', c:"from scipy.stats import ttest_ind\nstat, p = ttest_ind(group1, group2, equal_var=True)"},
+      {d:'독립표본 t검정(이분산 가정)', c:"stat, p = ttest_ind(group1, group2, equal_var=False)"},
+    ]},
+    { name:'카이제곱검정', items:[
+      {d:'교차표 생성', c:"table = pd.crosstab(df['col1'], df['col2'])"},
+      {d:'카이제곱 독립성 검정', c:"from scipy.stats import chi2_contingency\nchi2, p, dof, expected = chi2_contingency(table)"},
+      {d:'검정통계량과 p-value 확인', c:"print(chi2, p)"},
+    ]},
+    { name:'분산분석', items:[
+      {d:'그룹별 데이터 준비', c:"group1 = df[df['col'] == 'A']['value']\ngroup2 = df[df['col'] == 'B']['value']\ngroup3 = df[df['col'] == 'C']['value']"},
+      {d:'일원배치 분산분석 실행', c:"from scipy.stats import f_oneway\nstat, p = f_oneway(group1, group2, group3)"},
+      {d:'유의수준 기준 결과 해석', c:"if p < 0.05:\n    print('집단 간 평균에 유의한 차이가 있다')"},
+    ]},
+    { name:'상관분석', items:[
+      {d:'피어슨 상관분석', c:"from scipy.stats import pearsonr\ncorr, p = pearsonr(df['col1'], df['col2'])"},
+      {d:'스피어만 상관분석', c:"from scipy.stats import spearmanr\ncorr, p = spearmanr(df['col1'], df['col2'])"},
+      {d:'스피어만 상관계수 행렬', c:"df[['col1', 'col2']].corr(method='spearman')"},
+    ]},
+    { name:'회귀분석', items:[
+      {d:'OLS 회귀모형 적합', c:"import statsmodels.formula.api as smf\nmodel = smf.ols('y ~ x1 + x2', data=df).fit()"},
+      {d:'회귀분석 결과 요약 출력', c:"print(model.summary())"},
+      {d:'회귀계수 확인', c:"model.params"},
+      {d:'회귀계수 유의확률 확인', c:"model.pvalues"},
+    ]},
+    { name:'로지스틱회귀', items:[
+      {d:'로지스틱 회귀모형 적합', c:"model = smf.logit('y ~ x1 + x2', data=df).fit()"},
+      {d:'오즈비 계산', c:"odds_ratio = np.exp(model.params)"},
+      {d:'회귀계수 신뢰구간 계산', c:"conf = model.conf_int()"},
+      {d:'오즈비 신뢰구간 계산', c:"np.exp(model.conf_int())"},
+    ]},
+    { name:'다중공선성', items:[
+      {d:'VIF 계산용 함수 불러오기', c:"from statsmodels.stats.outliers_influence import variance_inflation_factor"},
+      {d:'VIF 결과 저장용 데이터프레임 생성', c:"vif = pd.DataFrame()\nvif['feature'] = X.columns"},
+      {d:'컬럼별 VIF 값 계산', c:"vif['VIF'] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]"},
+    ]},
+  ]},
+  { key:'t4', label:'종합문제', categories:[
+    { name:'작업형1 유형', items:[
+      {
+        d:'결측치·이상치 종합 처리',
+        scenario:'고객 데이터에는 income 컬럼에 결측치가 있고, age 컬럼에는 극단적인 값이 섞여 있다. 아래 조건에 따라 데이터를 정제한 뒤 남은 행의 개수를 구하시오.',
+        table:{ cols:['id','age','income'], rows:[['1','29','3100'],['2','41',''],['3','120','2800'],['4','35','4200'],['5','27','2600']] },
+        steps:[
+          'income 컬럼의 결측치를 income의 평균값으로 대체하시오.',
+          'age 컬럼에 대해 IQR 방식으로 하한/상한을 계산하고, 범위를 벗어나는 행을 제거하시오.',
+          '최종 데이터프레임의 행 개수를 출력하시오.'
+        ],
+        c:"df['income'] = df['income'].fillna(df['income'].mean())\nQ1 = df['age'].quantile(0.25)\nQ3 = df['age'].quantile(0.75)\nIQR = Q3 - Q1\nlower = Q1 - 1.5 * IQR\nupper = Q3 + 1.5 * IQR\ndf = df[(df['age'] >= lower) & (df['age'] <= upper)]\nprint(df.shape[0])"
+      },
+      {
+        d:'그룹 집계·파생변수 종합',
+        scenario:'지점별 판매 데이터에서 월별 파생변수를 만들고, 지역(region)별 평균 매출(sales)이 가장 높은 상위 3개 지역을 확인하시오.',
+        table:{ cols:['region','date','sales'], rows:[['서울','2024-01-05','1200'],['부산','2024-01-08','950'],['서울','2024-02-11','1400'],['대구','2024-02-19','870']] },
+        steps:[
+          'date 컬럼을 datetime 타입으로 변환하시오.',
+          'date에서 월을 추출하여 month 파생변수를 생성하시오.',
+          'region별 sales 평균을 구해 내림차순 정렬한 뒤 상위 3개를 출력하시오.'
+        ],
+        c:"df['date'] = pd.to_datetime(df['date'])\ndf['month'] = df['date'].dt.month\nresult = df.groupby('region')['sales'].mean().sort_values(ascending=False)\nprint(result.head(3))"
+      },
+      {
+        d:'인코딩·스케일링·상관분석 종합',
+        scenario:'설문 데이터에서 범주형 변수를 인코딩하고 점수를 표준화한 뒤, 두 변수 간의 관계를 상관계수로 확인하시오.',
+        table:{ cols:['id','gender','score'], rows:[['1','M','78'],['2','F','92'],['3','F','65'],['4','M','81']] },
+        steps:[
+          'gender 컬럼을 LabelEncoder로 인코딩하시오.',
+          'score 컬럼을 StandardScaler로 표준화하시오.',
+          '인코딩된 gender와 표준화된 score 간의 상관계수를 출력하시오.'
+        ],
+        c:"from sklearn.preprocessing import LabelEncoder, StandardScaler\nle = LabelEncoder()\ndf['gender'] = le.fit_transform(df['gender'])\nscaler = StandardScaler()\ndf[['score']] = scaler.fit_transform(df[['score']])\nprint(df['gender'].corr(df['score']))"
+      },
+    ]},
+    { name:'작업형2 유형', items:[
+      {
+        d:'분류 모델 종합(이탈 예측)',
+        scenario:'고객 이탈 여부(churn)를 예측하는 분류 모델을 만들고, 테스트셋에 대한 F1 스코어를 확인한 뒤 예측 결과를 제출 파일로 저장하시오.',
+        table:{ cols:['id','age','income','churn'], rows:[['1','34','3200','0'],['2','45','2100','1'],['3','29','4400','0'],['4','52','1800','1']] },
+        steps:[
+          'churn을 target(y)으로, id와 churn을 제외한 나머지를 feature(X)로 분리하시오.',
+          'test_size=0.2, stratify=y, random_state=42로 학습/평가 데이터를 분할하시오.',
+          'RandomForestClassifier(random_state=42)로 학습하시오.',
+          '예측 결과에 대한 F1 스코어를 출력하시오.',
+          'id와 예측값을 담은 데이터프레임을 result.csv로 저장하시오(index 제외).'
+        ],
+        c:"X = df.drop(columns=['id', 'churn'])\ny = df['churn']\nfrom sklearn.model_selection import train_test_split\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)\nfrom sklearn.ensemble import RandomForestClassifier\nmodel = RandomForestClassifier(random_state=42)\nmodel.fit(X_train, y_train)\ny_pred = model.predict(X_test)\nfrom sklearn.metrics import f1_score\nprint(f1_score(y_test, y_pred))\nresult = pd.DataFrame({'id': test_id, 'pred': y_pred})\nresult.to_csv('result.csv', index=False)"
+      },
+      {
+        d:'회귀 모델 종합(주택 가격 예측)',
+        scenario:'면적과 방 개수로 주택 가격(price)을 예측하는 회귀 모델을 만들고, 예측 성능을 RMSE로 확인하시오.',
+        table:{ cols:['id','area','rooms','price'], rows:[['1','84','3','52000'],['2','59','2','38500'],['3','102','4','67000'],['4','71','3','45000']] },
+        steps:[
+          'price를 target(y)으로, id와 price를 제외한 나머지를 feature(X)로 분리하시오.',
+          'test_size=0.3, random_state=42로 학습/평가 데이터를 분할하시오.',
+          'LinearRegression으로 학습하시오.',
+          '예측 결과에 대한 RMSE를 계산하여 출력하시오.'
+        ],
+        c:"X = df.drop(columns=['id', 'price'])\ny = df['price']\nfrom sklearn.model_selection import train_test_split\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)\nfrom sklearn.linear_model import LinearRegression\nmodel = LinearRegression()\nmodel.fit(X_train, y_train)\ny_pred = model.predict(X_test)\nfrom sklearn.metrics import mean_squared_error\nrmse = mean_squared_error(y_test, y_pred) ** 0.5\nprint(rmse)"
+      },
+      {
+        d:'교차검증·그리드서치 종합',
+        scenario:'RandomForestClassifier의 n_estimators를 그리드서치로 탐색하여 최적 파라미터를 찾고, 그 모델의 테스트 정확도를 확인하시오.',
+        table:{ cols:['id','x1','x2','target'], rows:[['1','12.4','0.55','1'],['2','9.8','0.31','0'],['3','15.1','0.72','1'],['4','7.3','0.19','0']] },
+        steps:[
+          'target을 y로, id와 target을 제외한 나머지를 X로 분리하시오.',
+          'test_size=0.2, random_state=42로 학습/평가 데이터를 분할하시오.',
+          "n_estimators 후보를 [100, 200, 300]으로 하여 GridSearchCV(cv=5)를 수행하시오.",
+          '탐색된 최적 모델(best_estimator_)로 테스트 정확도를 출력하시오.'
+        ],
+        c:"X = df.drop(columns=['id', 'target'])\ny = df['target']\nfrom sklearn.model_selection import train_test_split, GridSearchCV\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\nfrom sklearn.ensemble import RandomForestClassifier\nparams = {'n_estimators': [100, 200, 300]}\ngrid = GridSearchCV(RandomForestClassifier(random_state=42), param_grid=params, cv=5)\ngrid.fit(X_train, y_train)\ny_pred = grid.best_estimator_.predict(X_test)\nfrom sklearn.metrics import accuracy_score\nprint(accuracy_score(y_test, y_pred))"
+      },
+    ]},
+    { name:'작업형3 유형', items:[
+      {
+        d:'독립표본 t검정 종합',
+        scenario:'두 그룹(A, B)의 점수 평균에 차이가 있는지 유의수준 0.05에서 검정하고 결론을 출력하시오.',
+        table:{ cols:['group','score'], rows:[['A','82'],['A','76'],['B','69'],['B','74']] },
+        steps:[
+          "group이 'A'인 데이터와 'B'인 데이터의 score를 각각 분리하시오.",
+          '등분산을 가정하고 독립표본 t검정을 실시하시오.',
+          'p-value를 소수 넷째 자리까지 반올림하여 출력하시오.',
+          '유의수준 0.05를 기준으로 판단한 결론을 출력하시오.'
+        ],
+        c:"groupA = df[df['group'] == 'A']['score']\ngroupB = df[df['group'] == 'B']['score']\nfrom scipy.stats import ttest_ind\nstat, p = ttest_ind(groupA, groupB, equal_var=True)\nprint(round(p, 4))\nif p < 0.05:\n    print('두 그룹 간 평균 차이가 유의하다')\nelse:\n    print('두 그룹 간 평균 차이가 유의하지 않다')"
+      },
+      {
+        d:'카이제곱 독립성검정 종합',
+        scenario:'성별(gender)과 구매 여부(purchase)가 서로 독립적인지 유의수준 0.05에서 검정하시오.',
+        table:{ cols:['gender','purchase'], rows:[['M','Y'],['F','N'],['F','Y'],['M','N']] },
+        steps:[
+          'gender와 purchase에 대한 교차표를 생성하시오.',
+          '카이제곱 독립성 검정을 실시하시오.',
+          '검정통계량과 p-value를 출력하시오.',
+          '유의수준 0.05를 기준으로 판단한 결론을 출력하시오.'
+        ],
+        c:"table = pd.crosstab(df['gender'], df['purchase'])\nfrom scipy.stats import chi2_contingency\nchi2, p, dof, expected = chi2_contingency(table)\nprint(chi2, p)\nif p < 0.05:\n    print('두 변수는 서로 독립이 아니다')\nelse:\n    print('두 변수는 서로 독립이다')"
+      },
+      {
+        d:'로지스틱 회귀 종합',
+        scenario:'공부 시간과 출석률로 합격 여부(pass)를 설명하는 로지스틱 회귀모형을 적합하고, study_hours의 오즈비를 구하시오.',
+        table:{ cols:['study_hours','attendance','pass'], rows:[['3.5','0.92','1'],['1.2','0.65','0'],['4.0','0.88','1'],['0.8','0.55','0']] },
+        steps:[
+          "smf.logit으로 'pass ~ study_hours + attendance' 모형을 적합하시오.",
+          '적합된 모형의 회귀계수를 오즈비(np.exp)로 변환하시오.',
+          'study_hours의 오즈비를 출력하시오.'
+        ],
+        c:"import statsmodels.formula.api as smf\nmodel = smf.logit('pass ~ study_hours + attendance', data=df).fit()\nodds_ratio = np.exp(model.params)\nprint(odds_ratio['study_hours'])"
+      },
+    ]},
+  ]},
+];
+
+/* ---------- build index ---------- */
+var ITEM_INDEX = {};
+var ALL_IDS = [];
+var state = {};
+
+DATA.forEach(function(tab, ti){
+  tab.categories.forEach(function(cat, ci){
+    cat.items.forEach(function(it, ii){
+      var id = tab.key + '-' + ci + '-' + ii;
+      ITEM_INDEX[id] = { desc: it.d, code: it.c, tabLabel: tab.label, catName: cat.name, tabIdx: ti, catIdx: ci, scenario: it.scenario, table: it.table, steps: it.steps };
+      ALL_IDS.push(id);
+      state[id] = { typed:'', completed:false, everWrong:false, elapsedSec:0, running:false, startTs:null };
+    });
+  });
+});
+
+var activeTabIdx = 0;
+var currentId = null;
+var wrongOnly = false;
+var timerHandle = null;
+
+var tabsEl = document.getElementById('tabs');
+var sidebarEl = document.getElementById('sidebar');
+var practiceEl = document.getElementById('practice');
+var progressTextEl = document.getElementById('progressText');
+var progressFillEl = document.getElementById('progressFill');
+var wrongToggleEl = document.getElementById('wrongToggle');
+
+/* ---------- tabs ---------- */
+function renderTabs(){
+  tabsEl.innerHTML = '';
+  var labels = DATA.map(function(t){ return t.label; }).concat(['전체 함수 사전']);
+  labels.forEach(function(label, idx){
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tab-btn' + (idx === activeTabIdx ? ' active' : '');
+    btn.textContent = label;
+    btn.addEventListener('click', function(){
+      if(activeTabIdx === idx) return;
+      activeTabIdx = idx;
+      deactivateCurrent();
+      currentId = null;
+      renderPracticeEmpty();
+      renderTabs();
+      renderSidebar();
+    });
+    tabsEl.appendChild(btn);
+  });
+}
+
+function renderSidebar(){
+  if(activeTabIdx < DATA.length){
+    renderSidebarForTab(activeTabIdx);
+  } else {
+    renderDictTab();
+  }
+}
+
+function renderSidebarForTab(tabIdx){
+  var tab = DATA[tabIdx];
+  sidebarEl.innerHTML = '';
+  tab.categories.forEach(function(cat, ci){
+    var catId = tab.key + '-' + ci;
+    var details = document.createElement('details');
+    details.className = 'category';
+    details.dataset.catId = catId;
+
+    var summary = document.createElement('summary');
+    var nameSpan = document.createElement('span');
+    nameSpan.className = 'cat-name';
+    nameSpan.textContent = cat.name;
+    var badge = document.createElement('span');
+    badge.className = 'cat-badge';
+    badge.id = 'catbadge-' + catId;
+    summary.appendChild(nameSpan);
+    summary.appendChild(badge);
+    details.appendChild(summary);
+
+    var list = document.createElement('div');
+    list.className = 'items';
+    cat.items.forEach(function(item, ii){
+      var id = catId + '-' + ii;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'item-btn';
+      btn.dataset.id = id;
+      var dot = document.createElement('span');
+      dot.className = 'status-dot';
+      dot.id = 'dot-' + id;
+      var desc = document.createElement('span');
+      desc.className = 'item-desc';
+      desc.textContent = item.d;
+      btn.appendChild(dot);
+      btn.appendChild(desc);
+      btn.addEventListener('click', function(){ activateItem(id); });
+      list.appendChild(btn);
+    });
+    details.appendChild(list);
+    sidebarEl.appendChild(details);
+  });
+  refreshTabDots(tabIdx);
+  applyWrongFilter();
+}
+
+function renderDictTab(){
+  sidebarEl.innerHTML = '';
+  var search = document.createElement('input');
+  search.type = 'text';
+  search.className = 'dict-search';
+  search.placeholder = '함수/코드 검색 (예: fillna, groupby, ttest_ind)';
+  search.id = 'dictSearch';
+  sidebarEl.appendChild(search);
+  var listEl = document.createElement('div');
+  listEl.className = 'dict-list';
+  listEl.id = 'dictList';
+  sidebarEl.appendChild(listEl);
+  search.addEventListener('input', function(){ renderDictList(search.value); });
+  renderDictList('');
+}
+
+function renderDictList(query){
+  var listEl = document.getElementById('dictList');
+  if(!listEl) return;
+  listEl.innerHTML = '';
+  var q = query.trim().toLowerCase();
+  var ids = ALL_IDS;
+  if(wrongOnly) ids = ids.filter(function(id){ return state[id].everWrong; });
+  if(q) ids = ids.filter(function(id){
+    var it = ITEM_INDEX[id];
+    return it.desc.toLowerCase().indexOf(q) !== -1 || it.code.toLowerCase().indexOf(q) !== -1;
+  });
+  if(ids.length === 0){
+    var empty = document.createElement('div');
+    empty.className = 'dict-empty';
+    empty.textContent = '검색 결과가 없습니다.';
+    listEl.appendChild(empty);
+    return;
+  }
+  ids.forEach(function(id){
+    var it = ITEM_INDEX[id];
+    var row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'dict-item';
+    var dot = document.createElement('span');
+    dot.className = 'status-dot';
+    dot.id = 'dot-' + id;
+    var meta = document.createElement('div');
+    meta.className = 'dict-meta';
+    var tag = document.createElement('span');
+    tag.className = 'dict-tag';
+    tag.textContent = it.tabLabel + ' · ' + it.catName;
+    var desc = document.createElement('span');
+    desc.className = 'item-desc';
+    desc.textContent = it.desc;
+    meta.appendChild(tag);
+    meta.appendChild(desc);
+    row.appendChild(dot);
+    row.appendChild(meta);
+    row.addEventListener('click', function(){ activateItem(id); });
+    listEl.appendChild(row);
+  });
+  ids.forEach(updateDot);
+}
+
+/* ---------- status dots / badges / progress ---------- */
+function updateDot(id){
+  var dot = document.getElementById('dot-' + id);
+  if(!dot) return;
+  var st = state[id];
+  var cls = 'status-dot';
+  if(st.completed) cls += ' done';
+  else if(st.typed) cls += ' progress';
+  if(st.everWrong) cls += ' flagged';
+  dot.className = cls;
+}
+
+function updateCatBadge(catId){
+  var badge = document.getElementById('catbadge-' + catId);
+  if(!badge) return;
+  var ids = ALL_IDS.filter(function(id){ return id.indexOf(catId + '-') === 0; });
+  var done = ids.filter(function(id){ return state[id].completed; }).length;
+  badge.textContent = done + '/' + ids.length;
+  badge.className = 'cat-badge' + (done === ids.length ? ' full' : '');
+}
+
+function refreshTabDots(tabIdx){
+  var tab = DATA[tabIdx];
+  tab.categories.forEach(function(cat, ci){
+    var catId = tab.key + '-' + ci;
+    cat.items.forEach(function(item, ii){ updateDot(catId + '-' + ii); });
+    updateCatBadge(catId);
+  });
+}
+
+function updateHeaderProgress(){
+  var completed = ALL_IDS.filter(function(id){ return state[id].completed; }).length;
+  progressTextEl.textContent = completed + '/' + ALL_IDS.length + ' 완료';
+  progressFillEl.style.width = (ALL_IDS.length ? (completed / ALL_IDS.length * 100) : 0) + '%';
+}
+
+/* ---------- wrong-note filter ---------- */
+function applyWrongFilter(){
+  if(activeTabIdx >= DATA.length){
+    var search = document.getElementById('dictSearch');
+    renderDictList(search ? search.value : '');
+    return;
+  }
+  var buttons = sidebarEl.querySelectorAll('.item-btn');
+  buttons.forEach(function(btn){
+    var id = btn.dataset.id;
+    var hide = wrongOnly && !state[id].everWrong;
+    btn.classList.toggle('hidden', hide);
+  });
+  var groups = sidebarEl.querySelectorAll('details.category');
+  groups.forEach(function(det){
+    var visible = det.querySelectorAll('.item-btn:not(.hidden)').length;
+    det.classList.toggle('hidden', visible === 0);
+  });
+}
+
+wrongToggleEl.addEventListener('click', function(){
+  wrongOnly = !wrongOnly;
+  wrongToggleEl.classList.toggle('active', wrongOnly);
+  applyWrongFilter();
+});
+
+/* ---------- practice pane ---------- */
+function renderPracticeEmpty(){
+  practiceEl.innerHTML =
+    '<div class="empty-state">' +
+      '<div class="glyph">{ }</div>' +
+      '<p>왼쪽 목록에서 연습할 코드를 선택하세요.</p>' +
+    '</div>';
+}
+
+function formatTime(sec){
+  sec = Math.max(0, Math.floor(sec));
+  var m = Math.floor(sec / 60);
+  var s = sec % 60;
+  return (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+}
+
+function normalizeNewlines(v){ return v.replace(/\r\n/g, '\n'); }
+
+function activateItem(id){
+  if(currentId === id) return;
+  deactivateCurrent();
+  currentId = id;
+  renderPracticeFor(id);
+  var btn = sidebarEl.querySelector('.item-btn[data-id="' + id + '"]');
+  sidebarEl.querySelectorAll('.item-btn.selected').forEach(function(b){ b.classList.remove('selected'); });
+  if(btn) btn.classList.add('selected');
+}
+
+function deactivateCurrent(){
+  if(timerHandle){ clearInterval(timerHandle); timerHandle = null; }
+  if(!currentId) return;
+  var st = state[currentId];
+  if(st.running){
+    st.elapsedSec += (Date.now() - st.startTs) / 1000;
+    st.running = false;
+    st.startTs = null;
+  }
+}
+
+function renderCodeRef(container, code){
+  container.innerHTML = '';
+  code.split('\n').forEach(function(line, i){
+    var row = document.createElement('div');
+    row.className = 'code-row';
+    var ln = document.createElement('span');
+    ln.className = 'ln';
+    ln.textContent = String(i + 1);
+    var lc = document.createElement('span');
+    lc.className = 'lc';
+    lc.textContent = line.length ? line : ' ';
+    row.appendChild(ln);
+    row.appendChild(lc);
+    container.appendChild(row);
+  });
+}
+
+function renderProblemBrief(container, it){
+  container.innerHTML = '';
+  var p = document.createElement('p');
+  p.className = 'scenario';
+  p.textContent = it.scenario;
+  container.appendChild(p);
+
+  if(it.table){
+    var scroll = document.createElement('div');
+    scroll.className = 'table-scroll';
+    var table = document.createElement('table');
+    table.className = 'sample-table';
+    var thead = document.createElement('thead');
+    var trh = document.createElement('tr');
+    it.table.cols.forEach(function(c){
+      var th = document.createElement('th');
+      th.textContent = c;
+      trh.appendChild(th);
+    });
+    thead.appendChild(trh);
+    table.appendChild(thead);
+    var tbody = document.createElement('tbody');
+    it.table.rows.forEach(function(r){
+      var tr = document.createElement('tr');
+      r.forEach(function(v){
+        var td = document.createElement('td');
+        td.textContent = v === '' ? 'NaN' : v;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    scroll.appendChild(table);
+    container.appendChild(scroll);
+  }
+
+  var ol = document.createElement('ol');
+  ol.className = 'steps';
+  it.steps.forEach(function(s){
+    var li = document.createElement('li');
+    li.textContent = s;
+    ol.appendChild(li);
+  });
+  container.appendChild(ol);
+}
+
+function renderPracticeFor(id){
+  var it = ITEM_INDEX[id];
+  var st = state[id];
+
+  practiceEl.innerHTML =
+    '<div class="practice-head">' +
+      '<div>' +
+        '<div class="crumb">' + it.tabLabel + ' / ' + it.catName + '</div>' +
+        '<h2 class="item-title" id="itemTitle"></h2>' +
+      '</div>' +
+      '<div class="stat-row">' +
+        '<div class="stat"><span class="stat-label">정확도</span><span class="stat-value" id="accVal">100%</span></div>' +
+        '<div class="stat"><span class="stat-label">시간</span><span class="stat-value" id="timeVal">00:00</span></div>' +
+        '<span class="badge-done" id="doneBadge" hidden>완료</span>' +
+      '</div>' +
+    '</div>' +
+    (it.steps ? '<div class="problem-brief" id="problemBrief"></div>' : '') +
+    '<div class="editor-block">' +
+      '<div class="editor-tabbar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="filename">정답.py</span></div>' +
+      '<div class="code-ref" id="codeRef"></div>' +
+    '</div>' +
+    '<div class="editor-block">' +
+      '<div class="editor-tabbar"><span class="filename">내_입력.py</span><button class="retry-btn" type="button" id="retryBtn">&#8635; 다시 시도</button></div>' +
+      '<div class="type-area" id="typeArea">' +
+        '<div class="type-overlay" id="typeOverlay"></div>' +
+        '<textarea class="type-input" id="typeInput" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off"></textarea>' +
+      '</div>' +
+    '</div>' +
+    '<p class="hint">들여쓰기는 <kbd>Tab</kbd> 키로 스페이스 4칸이 입력됩니다. 괄호, 콤마, 공백까지 완전히 일치해야 완료 처리됩니다.</p>';
+
+  document.getElementById('itemTitle').textContent = it.desc;
+  if(it.steps){ renderProblemBrief(document.getElementById('problemBrief'), it); }
+  renderCodeRef(document.getElementById('codeRef'), it.code);
+
+  var textarea = document.getElementById('typeInput');
+  textarea.value = st.typed;
+  textarea.rows = Math.max(it.code.split('\n').length + 1, 3);
+  if(st.completed){
+    textarea.setAttribute('readonly', '');
+    document.getElementById('typeArea').classList.add('is-complete');
+    document.getElementById('doneBadge').hidden = false;
+  } else {
+    textarea.focus();
+  }
+
+  renderOverlay(id);
+  updateStatsDisplay(id);
+
+  textarea.addEventListener('input', function(e){ onInput(id, e); });
+  textarea.addEventListener('keydown', function(e){ onKeydown(id, e); });
+  document.getElementById('retryBtn').addEventListener('click', function(){ resetItem(id); });
+
+  if(st.running){
+    timerHandle = setInterval(function(){ tick(id); }, 250);
+  }
+}
+
+function renderOverlay(id){
+  var it = ITEM_INDEX[id];
+  var st = state[id];
+  var overlay = document.getElementById('typeOverlay');
+  if(!overlay) return;
+  var target = it.code;
+  var typed = st.typed;
+  var max = Math.max(target.length, typed.length);
+  var frag = document.createDocumentFragment();
+  var hasError = false;
+  for(var i = 0; i < max; i++){
+    var span = document.createElement('span');
+    span.className = 'ch';
+    if(i < target.length && i < typed.length){
+      if(typed[i] === target[i]){
+        span.classList.add('ok');
+        span.textContent = target[i];
+      } else {
+        span.classList.add('bad');
+        span.textContent = target[i];
+        hasError = true;
+      }
+    } else if(i >= target.length){
+      span.classList.add('extra');
+      span.textContent = typed[i];
+      hasError = true;
+    } else {
+      span.classList.add('pending');
+      span.textContent = target[i];
+    }
+    frag.appendChild(span);
+  }
+  overlay.innerHTML = '';
+  overlay.appendChild(frag);
+  if(hasError) st.everWrong = true;
+}
+
+function updateStatsDisplay(id){
+  var st = state[id];
+  var it = ITEM_INDEX[id];
+  var typedLen = st.typed.length;
+  var correctCount = 0;
+  var minLen = Math.min(typedLen, it.code.length);
+  for(var i = 0; i < minLen; i++){ if(st.typed[i] === it.code[i]) correctCount++; }
+  var accuracy = typedLen ? Math.round((correctCount / typedLen) * 100) : 100;
+  var accEl = document.getElementById('accVal');
+  if(accEl){
+    accEl.textContent = accuracy + '%';
+    accEl.classList.toggle('acc-low', accuracy < 90);
+  }
+  var timeEl = document.getElementById('timeVal');
+  if(timeEl){
+    var elapsed = st.elapsedSec + (st.running ? (Date.now() - st.startTs) / 1000 : 0);
+    timeEl.textContent = formatTime(elapsed);
+  }
+}
+
+function tick(id){ updateStatsDisplay(id); }
+
+function onInput(id, e){
+  var st = state[id];
+  if(st.completed) return;
+  var val = normalizeNewlines(e.target.value);
+
+  if(st.typed.length === 0 && val.length > 0 && !st.running){
+    st.running = true;
+    st.startTs = Date.now();
+    if(timerHandle) clearInterval(timerHandle);
+    timerHandle = setInterval(function(){ tick(id); }, 250);
+  }
+
+  st.typed = val;
+  renderOverlay(id);
+  updateStatsDisplay(id);
+  updateDot(id);
+  var it = ITEM_INDEX[id];
+  updateCatBadge(it.tabLabel === undefined ? '' : idPrefix(id));
+  applyWrongFilter();
+
+  if(val === it.code){
+    completeItem(id);
+  }
+}
+
+function idPrefix(id){
+  var parts = id.split('-');
+  return parts[0] + '-' + parts[1];
+}
+
+function completeItem(id){
+  var st = state[id];
+  st.completed = true;
+  if(st.running){
+    st.elapsedSec += (Date.now() - st.startTs) / 1000;
+    st.running = false;
+    st.startTs = null;
+  }
+  if(timerHandle){ clearInterval(timerHandle); timerHandle = null; }
+  updateStatsDisplay(id);
+  updateDot(id);
+  updateCatBadge(idPrefix(id));
+  updateHeaderProgress();
+
+  var textarea = document.getElementById('typeInput');
+  if(textarea) textarea.setAttribute('readonly', '');
+  var typeArea = document.getElementById('typeArea');
+  if(typeArea) typeArea.classList.add('is-complete');
+  var doneBadge = document.getElementById('doneBadge');
+  if(doneBadge) doneBadge.hidden = false;
+}
+
+function onKeydown(id, e){
+  var st = state[id];
+  if(st.completed) return;
+  if(e.key === 'Tab'){
+    e.preventDefault();
+    var ta = e.target;
+    var start = ta.selectionStart, end = ta.selectionEnd;
+    var value = ta.value;
+    ta.value = value.slice(0, start) + '    ' + value.slice(end);
+    ta.selectionStart = ta.selectionEnd = start + 4;
+    ta.dispatchEvent(new Event('input'));
+  }
+}
+
+function resetItem(id){
+  var st = state[id];
+  st.typed = '';
+  st.completed = false;
+  st.elapsedSec = 0;
+  st.running = false;
+  st.startTs = null;
+  if(timerHandle){ clearInterval(timerHandle); timerHandle = null; }
+
+  var textarea = document.getElementById('typeInput');
+  if(textarea){
+    textarea.value = '';
+    textarea.removeAttribute('readonly');
+    textarea.focus();
+  }
+  var typeArea = document.getElementById('typeArea');
+  if(typeArea) typeArea.classList.remove('is-complete');
+  var doneBadge = document.getElementById('doneBadge');
+  if(doneBadge) doneBadge.hidden = true;
+
+  renderOverlay(id);
+  updateStatsDisplay(id);
+  updateDot(id);
+  updateCatBadge(idPrefix(id));
+  updateHeaderProgress();
+  applyWrongFilter();
+}
+
+/* ---------- init ---------- */
+renderTabs();
+renderSidebar();
+updateHeaderProgress();
+
+})();
+</script>
+</body>
+</html>
