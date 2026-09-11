@@ -9,23 +9,22 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0d1017;
-    --surface:#161b26;
-    --surface-2:#1d2330;
-    --surface-3:#262d3d;
-    --border:#2a3040;
-    --border-strong:#3a4258;
-    --text:#e7e9f2;
-    --text-dim:#98a0b5;
-    --text-faint:#565e75;
-    --accent:#f0a63f;
-    --accent-dim:#c98a34;
-    --accent-soft:rgba(240,166,63,0.14);
-    --correct:#59c290;
-    --correct-soft:rgba(89,194,144,0.16);
-    --wrong:#e8637d;
-    --wrong-soft:rgba(232,99,125,0.18);
-    --pending:#4b5169;
+    --bg:#f5f7fb;
+    --surface:#ffffff;
+    --surface-2:#eef1f7;
+    --surface-3:#e3e7f0;
+    --border:#dde2ec;
+    --border-strong:#c7cee0;
+    --text:#1e2433;
+    --text-dim:#5f6779;
+    --text-faint:#9aa2b5;
+    --accent:#e08b2e;
+    --accent-dim:#b8691c;
+    --accent-soft:rgba(224,139,46,0.14);
+    --correct:#15915b;
+    --correct-soft:rgba(21,145,91,0.14);
+    --wrong:#e0355f;
+    --wrong-soft:rgba(224,53,95,0.13);
     --radius:10px;
     --font-ui:'IBM Plex Sans KR', 'Malgun Gothic', sans-serif;
     --font-code:'JetBrains Mono', 'Consolas', monospace;
@@ -282,6 +281,7 @@
     text-align:left;
   }
   .dict-item:hover{ border-color:var(--accent-dim); color:var(--text); }
+  .dict-item.selected{ background:var(--accent-soft); color:var(--text); border-color:var(--accent-dim); }
   .dict-item .status-dot{ margin-top:4px; }
   .dict-meta{ display:flex; flex-direction:column; gap:3px; }
   .dict-tag{
@@ -377,8 +377,19 @@
     font-size:12px;
     color:var(--text-dim);
   }
-  .retry-btn{
+  .submit-btn{
     margin-left:auto;
+    border:1px solid var(--accent-dim);
+    background:var(--accent-soft);
+    color:var(--accent-dim);
+    padding:6px 14px;
+    border-radius:6px;
+    font-size:12px;
+    font-weight:700;
+  }
+  .submit-btn:hover{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .submit-btn:disabled{ opacity:0.5; cursor:default; background:var(--surface-3); color:var(--text-faint); border-color:var(--border-strong); }
+  .retry-btn{
     border:1px solid var(--border-strong);
     background:var(--surface-3);
     color:var(--text-dim);
@@ -388,6 +399,37 @@
     font-weight:600;
   }
   .retry-btn:hover{ color:var(--accent); border-color:var(--accent-dim); }
+
+  .feedback-panel{
+    margin-top:10px;
+    border:1px solid var(--wrong);
+    background:var(--wrong-soft);
+    border-radius:9px;
+    padding:12px 14px;
+  }
+  .feedback-panel[hidden]{ display:none; }
+  .feedback-title{
+    margin:0 0 8px 0;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--wrong);
+  }
+  .feedback-note{
+    margin:8px 0 0 0;
+    font-size:12px;
+    color:var(--text-dim);
+  }
+  .feedback-code{
+    margin:0;
+    font-family:var(--font-code);
+    font-size:13px;
+    line-height:1.7;
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .ch.ok{ color:var(--correct); }
+  .ch.bad{ color:var(--wrong); background:var(--wrong-soft); border-radius:2px; font-weight:700; }
+  .ch.extra{ color:var(--wrong); background:var(--wrong-soft); text-decoration:underline wavy var(--wrong); border-radius:2px; }
 
   .code-ref{
     margin:0;
@@ -412,7 +454,6 @@
   .lc{ color:var(--text); white-space:pre-wrap; word-break:break-word; }
 
   .type-area{
-    position:relative;
     border:1px solid var(--border-strong);
     border-radius:0 0 9px 9px;
     background:var(--surface);
@@ -422,7 +463,8 @@
     border-color:var(--correct);
     box-shadow:0 0 0 3px var(--correct-soft);
   }
-  .type-overlay, textarea.type-input{
+  textarea.type-input{
+    display:block;
     margin:0;
     padding:14px 16px;
     font-family:var(--font-code);
@@ -432,27 +474,14 @@
     word-break:break-word;
     width:100%;
     min-height:120px;
-  }
-  .type-overlay{
-    color:var(--pending);
-    pointer-events:none;
-  }
-  textarea.type-input{
-    position:absolute;
-    inset:0;
     border:none;
     background:transparent;
-    color:transparent;
+    color:var(--text);
     caret-color:var(--accent);
     resize:none;
     outline:none;
   }
   textarea.type-input:read-only{ caret-color:transparent; }
-
-  .ch.ok{ color:var(--correct); }
-  .ch.bad{ color:var(--wrong); background:var(--wrong-soft); border-radius:2px; }
-  .ch.extra{ color:var(--wrong); background:var(--wrong-soft); text-decoration:underline wavy var(--wrong); border-radius:2px; }
-  .ch.pending{ color:var(--pending); }
 
   .hint{
     margin-top:10px;
@@ -470,6 +499,53 @@
     padding:1px 6px;
     font-size:10.5px;
     color:var(--text-dim);
+  }
+
+  .info-panel{
+    border:1px solid var(--border);
+    background:var(--surface);
+    border-radius:9px;
+    padding:14px 18px;
+    margin-bottom:16px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .info-row{ display:flex; gap:14px; align-items:flex-start; }
+  .info-label{
+    flex:none;
+    font-size:11px;
+    font-weight:700;
+    color:var(--accent-dim);
+    background:var(--accent-soft);
+    padding:3px 9px;
+    border-radius:99px;
+    letter-spacing:0.03em;
+    margin-top:2px;
+  }
+  .info-formula{
+    margin:0;
+    font-family:var(--font-code);
+    font-size:13.5px;
+    color:var(--text);
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .info-example{
+    margin:0;
+    font-family:var(--font-code);
+    font-size:12.5px;
+    color:var(--text-dim);
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .info-label.usage{ color:var(--correct); background:var(--correct-soft); }
+  .info-usage{
+    margin:0;
+    font-family:var(--font-ui);
+    font-size:13px;
+    line-height:1.6;
+    color:var(--text);
   }
 
   .problem-brief{
@@ -523,6 +599,51 @@
     font-weight:700;
   }
 
+  /* ---------- print() 경고 배너 ---------- */
+  .print-notice{
+    display:flex;
+    align-items:flex-start;
+    gap:9px;
+    border:1px solid var(--accent-dim);
+    background:var(--accent-soft);
+    border-radius:9px;
+    padding:10px 14px;
+    margin-bottom:16px;
+    font-size:12.5px;
+    line-height:1.55;
+    color:var(--text);
+  }
+  .print-notice .bang{
+    flex:none;
+    font-weight:700;
+    color:var(--accent-dim);
+    font-family:var(--font-code);
+  }
+
+  /* ---------- 정답 접기 ---------- */
+  .reveal-btn{
+    margin-left:auto;
+    border:1px solid var(--border-strong);
+    background:var(--surface-3);
+    color:var(--text-dim);
+    padding:6px 12px;
+    border-radius:6px;
+    font-size:12px;
+    font-weight:600;
+  }
+  .reveal-btn:hover{ color:var(--accent); border-color:var(--accent-dim); }
+  .code-ref.masked{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:90px;
+    color:var(--text-faint);
+    font-size:12.5px;
+    font-family:var(--font-ui);
+    padding:20px;
+    text-align:center;
+  }
+
   @media (prefers-reduced-motion: reduce){
     *{ transition:none !important; }
   }
@@ -540,6 +661,7 @@
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
   </div>
   <button class="chip-btn" id="wrongToggle" type="button">★ 오답노트</button>
+  <button class="chip-btn" id="resetAllBtn" type="button" title="저장된 진행상황을 모두 지웁니다">↺ 전체 초기화</button>
 </header>
 
 <nav class="tabs" id="tabs"></nav>
@@ -559,296 +681,633 @@
 
 var DATA = [
   { key:'t1', label:'작업형1', categories:[
+    { name:'★ 실기 답안 작성 규칙', items:[
+      {d:'답을 화면에 출력하기(print)', c:"print(round(df['col'].mean(), 2))", example:"변수에 담기만 하면 채점되지 않는다\nans = df['col'].mean()   ← 0점\nprint(ans)               ← 정답 처리", usage:"작업형1·3은 print()로 출력된 값만 채점한다. 실기에서 답을 다 구하고도 print를 빠뜨려 0점을 받는 사고가 가장 흔하다"},
+      {d:'소수 n째 자리까지 반올림해 출력', c:"print(round(df['col'].sum(), 2))", formula:"round(x, n) → 소수 n+1째 자리에서 반올림하여 소수 n째 자리까지 남김", example:"round(12.5487, 2) → 12.55\n주의: '소수 둘째 자리까지'는 round(x, 2), '소수 둘째 자리에서 반올림'은 round(x, 1)", usage:"문제의 '~자리까지'와 '~자리에서'는 서로 다른 지시다. 이 한 글자 차이로 오답 처리되므로 반드시 구분해서 읽는다"},
+      {d:'정수로 변환해 출력', c:"print(int(df['col'].mean()))", example:"int(12.9) → 12 (버림, 반올림이 아님)\nround(12.9) → 13", usage:"'정수로 출력'은 보통 round() 후 int(). int()만 쓰면 무조건 버림이 되므로 문제 지시를 확인한다"},
+      {d:'함수 사용법 확인(help)', c:"help(pd.DataFrame.fillna)", example:"출력: 파라미터 목록과 설명이 그대로 콘솔에 표시됨", usage:"시험장에는 인터넷도 교재도 없다. 인자 이름이 기억나지 않을 때 유일한 구명줄이므로 미리 손에 익혀둔다"},
+      {d:'사용 가능한 메서드 목록 확인(dir)', c:"print(dir(pd.DataFrame))", example:"출력: ['abs', 'add', ..., 'value_counts', 'var'] 형태의 이름 목록", usage:"메서드 이름 자체가 기억나지 않을 때 후보를 훑어보고 찾아낼 때"},
+      {d:'경고 메시지 숨기기', c:"import warnings\nwarnings.filterwarnings('ignore')", example:"FutureWarning, ConvergenceWarning 등이 출력에서 사라짐", usage:"경고가 답안 출력과 뒤섞여 답을 찾기 어려울 때. 스크립트 맨 위에 한 번만 실행"},
+      {d:'모든 컬럼이 잘리지 않게 출력', c:"pd.set_option('display.max_columns', None)", example:"컬럼이 많을 때 중간이 ...으로 생략되던 것이 전부 표시됨", usage:"컬럼이 20개 넘는 데이터에서 df.head()가 생략 출력될 때"},
+    ]},
     { name:'데이터 불러오기/탐색', items:[
-      {d:'CSV 파일 불러오기', c:"df = pd.read_csv('data.csv')"},
-      {d:'상위 5개 행 확인', c:"df.head()"},
-      {d:'데이터프레임 요약 정보 확인', c:"df.info()"},
-      {d:'기술통계 요약 확인', c:"df.describe()"},
-      {d:'행/열 개수 확인', c:"df.shape"},
-      {d:'컬럼별 결측치 개수 확인', c:"df.isnull().sum()"},
-      {d:'컬럼별 데이터 타입 확인', c:"df.dtypes"},
-      {d:'컬럼 고유값 개수 확인', c:"df['col'].nunique()"},
-      {d:'컬럼 고유값 목록 확인', c:"df['col'].unique()"},
+      {d:'CSV 파일 불러오기', c:"df = pd.read_csv('data.csv')", example:"data.csv 파일을 읽어 df라는 데이터프레임 변수에 저장", usage:"데이터 분석의 시작점. 실기 문제 대부분 CSV로 데이터가 제공되므로 가장 먼저 실행"},
+      {d:'상위 5개 행 확인', c:"df.head()", example:"입력: df (1000행)\n출력: 처음 5개 행 출력", usage:"데이터를 불러온 직후 컬럼 구성과 값의 형태를 빠르게 훑어볼 때"},
+      {d:'데이터프레임 요약 정보 확인', c:"df.info()", example:"출력: 컬럼별 이름, 결측치 아닌 개수, dtype 등 요약 정보", usage:"결측치 유무와 컬럼별 dtype을 한 번에 확인해 전처리 방향을 잡을 때"},
+      {d:'기술통계 요약 확인', c:"df.describe()", example:"출력: count, mean, std, min, 25%, 50%, 75%, max", usage:"수치형 컬럼의 분포(평균, 범위 등)를 빠르게 파악해 이상치 존재 여부를 가늠할 때"},
+      {d:'행/열 개수 확인', c:"df.shape", example:"df가 100행 5열이면 → 출력: (100, 5)", usage:"행/열 개수를 확인해 전처리 전후 데이터 손실 여부를 검증할 때"},
+      {d:'컬럼별 결측치 개수 확인', c:"df.isnull().sum()", example:"입력: age=[23,None,31,None]\n출력: age    2", usage:"어떤 컬럼에 결측치 처리가 필요한지 파악하는 첫 단계"},
+      {d:'컬럼별 데이터 타입 확인', c:"df.dtypes", example:"출력: age int64, name object ...", usage:"문자열로 저장된 숫자·날짜처럼 타입 변환이 필요한 컬럼을 찾을 때"},
+      {d:'컬럼 고유값 개수 확인', c:"df['col'].nunique()", example:"입력: col=['A','B','A','C']\n출력: 3", usage:"범주형 변수인지, 인코딩이 필요한 컬럼인지 판단할 때"},
+      {d:'컬럼 고유값 목록 확인', c:"df['col'].unique()", example:"입력: col=['A','B','A','C']\n출력: array(['A','B','C'])", usage:"범주값의 실제 목록(오타, 표기 차이 등)을 직접 확인할 때"},
     ]},
     { name:'결측치 처리', items:[
-      {d:'결측치가 있는 행 제거', c:"df = df.dropna()"},
-      {d:'결측치를 특정 값으로 대체', c:"df['col'] = df['col'].fillna(0)"},
-      {d:'결측치를 평균값으로 대체', c:"df['col'] = df['col'].fillna(df['col'].mean())"},
-      {d:'결측치를 중앙값으로 대체', c:"df['col'] = df['col'].fillna(df['col'].median())"},
-      {d:'결측치를 최빈값으로 대체', c:"df['col'] = df['col'].fillna(df['col'].mode()[0])"},
-      {d:'결측치를 이전 값으로 대체(ffill)', c:"df['col'] = df['col'].fillna(method='ffill')"},
-      {d:'결측치를 다음 값으로 대체(bfill)', c:"df['col'] = df['col'].fillna(method='bfill')"},
+      {d:'결측치가 있는 행 제거', c:"df = df.dropna()", example:"입력: 3행 중 1행에 NaN 포함\n출력: NaN이 있는 행이 제거되어 2행만 남음", usage:"결측치 비율이 매우 적고, 행을 지워도 데이터 손실 영향이 적을 때"},
+      {d:'결측치를 특정 값으로 대체', c:"df['col'] = df['col'].fillna(0)", example:"입력: col=[1, NaN, 3]\n출력: col=[1, 0, 3]", usage:"결측치가 '값이 없음=0'처럼 특정 의미를 가질 때(예: 구매 이력 없음)"},
+      {d:'결측치를 평균값으로 대체', c:"df['col'] = df['col'].fillna(df['col'].mean())", formula:"평균 μ = (Σxᵢ) / n", example:"입력: col=[10, NaN, 20]\n평균=15 → 출력: col=[10, 15, 20]", usage:"결측치가 적고 데이터 분포가 대칭적일 때(평균이 대표값으로 적절)"},
+      {d:'결측치를 중앙값으로 대체', c:"df['col'] = df['col'].fillna(df['col'].median())", formula:"x₍₁₎≤...≤x₍ₙ₎ 정렬 시, n 홀수면 x₍₍ₙ₊₁₎/₂₎, 짝수면 (x₍ₙ/₂₎+x₍ₙ/₂₊₁₎)/2", example:"입력: col=[10, NaN, 20, 100]\n중앙값=20 → 출력: col=[10, 20, 20, 100]", usage:"데이터가 한쪽으로 치우쳤거나 이상치가 있어 평균이 왜곡될 때"},
+      {d:'결측치를 최빈값으로 대체', c:"df['col'] = df['col'].fillna(df['col'].mode()[0])", formula:"mode = argmax_x f(x)  (f(x): 값 x의 출현 빈도)", example:"입력: col=['a', NaN, 'a', 'b']\n최빈값='a' → 출력: col=['a','a','a','b']", usage:"범주형(문자열) 컬럼의 결측치를 대체할 때"},
+      {d:'결측치를 이전 값으로 대체(ffill)', c:"df['col'] = df['col'].ffill()", example:"입력: col=[1, NaN, NaN, 4]\n출력: col=[1, 1, 1, 4] (바로 앞 값으로 채움)", usage:"시계열 데이터에서 '직전 상태가 그대로 유지된다'고 볼 수 있을 때. 예전 방식인 fillna(method='ffill')은 pandas 2.1에서 경고, 3.0에서 삭제되므로 .ffill()을 쓸 것"},
+      {d:'결측치를 다음 값으로 대체(bfill)', c:"df['col'] = df['col'].bfill()", example:"입력: col=[1, NaN, NaN, 4]\n출력: col=[1, 4, 4, 4] (바로 뒤 값으로 채움)", usage:"시계열 데이터에서 앞쪽 결측치를 이후 값으로 채워야 할 때. fillna(method='bfill') 대신 .bfill()을 쓸 것"},
+      {d:'컬럼별 결측치 비율 확인', c:"print(df.isnull().mean())", formula:"결측 비율 = (결측 개수) / (전체 행 수)", example:"400행 중 100행이 결측 → 0.25", usage:"'결측치 비율이 X% 이상인 컬럼을 제거하라' 유형에서 판단 기준을 만들 때"},
+      {d:'특정 컬럼 삭제', c:"df = df.drop(columns=['col'])", example:"입력: 컬럼 [id, col, age] → 출력: [id, age]", usage:"결측치가 지나치게 많거나 분석에 불필요한 컬럼(예: id)을 제거할 때"},
     ]},
     { name:'이상치 처리', items:[
-      {d:'1사분위수, 3사분위수 계산', c:"Q1 = df['col'].quantile(0.25)\nQ3 = df['col'].quantile(0.75)"},
-      {d:'IQR 계산', c:"IQR = Q3 - Q1"},
-      {d:'이상치 경계값 계산', c:"lower = Q1 - 1.5 * IQR\nupper = Q3 + 1.5 * IQR"},
-      {d:'IQR 기준으로 이상치 제거', c:"df = df[(df['col'] >= lower) & (df['col'] <= upper)]"},
-      {d:'Z-score 기준으로 이상치 제거', c:"from scipy import stats\ndf['z'] = stats.zscore(df['col'])\ndf = df[abs(df['z']) <= 3]"},
+      {d:'1사분위수, 3사분위수 계산', c:"Q1 = df['col'].quantile(0.25)\nQ3 = df['col'].quantile(0.75)", formula:"Q1 = 하위 25% 지점 값,  Q3 = 하위 75% 지점 값", example:"입력: col=[10,20,30,40,50]\n출력: Q1=20.0, Q3=40.0", usage:"IQR 기반 이상치 탐지를 시작하기 위한 준비 단계"},
+      {d:'IQR 계산', c:"IQR = Q3 - Q1", formula:"IQR = Q3 - Q1", example:"Q1=20, Q3=40 → IQR=20", usage:"이상치에 민감하지 않게 데이터의 퍼진 정도를 파악할 때"},
+      {d:'이상치 경계값 계산', c:"lower = Q1 - 1.5 * IQR\nupper = Q3 + 1.5 * IQR", formula:"하한 = Q1 - 1.5×IQR,  상한 = Q3 + 1.5×IQR", example:"Q1=20, Q3=40, IQR=20 → 하한=-10, 상한=70", usage:"IQR 규칙으로 이상치 판정 기준선을 정할 때"},
+      {d:'IQR 기준으로 이상치 제거', c:"df = df[(df['col'] >= lower) & (df['col'] <= upper)]", example:"입력: col=[10,20,30,40,200]\n하한=-10~상한=70 범위 밖인 200이 제거됨", usage:"분포가 정규분포가 아니거나 이상치가 있을 때 가장 널리 쓰이는 이상치 제거 방법"},
+      {d:'Z-score 기준으로 이상치 제거(scipy)', c:"from scipy import stats\ndf['z'] = stats.zscore(df['col'])\ndf = df[abs(df['z']) <= 3]", formula:"Z = (x - μ) / σ", example:"|Z| > 3인 값은 평균에서 표준편차 3배 이상 벗어난 이상치로 간주해 제거", usage:"데이터가 대략 정규분포를 따를 때 쓰는 대안. 주의 ① stats.zscore는 모표준편차(ddof=0), df.std()는 표본표준편차(ddof=1)라 값이 다르다 ② 표본이 작으면 |Z|의 최댓값이 (n-1)/√n으로 제한되어 n<11이면 |Z|>3이 아예 나올 수 없다"},
+      {d:'Z-score 기준으로 이상치 제거(pandas)', c:"df['z'] = (df['col'] - df['col'].mean()) / df['col'].std()\ndf = df[abs(df['z']) <= 3]", formula:"Z = (x - x̄) / s  (s: 표본표준편차, ddof=1)", example:"scipy 방식과 분모만 다름(n-1 vs n). 문제에서 '표준편차'라고만 하면 보통 이쪽 값을 기대한다", usage:"공식 답안이 df.std() 기준일 때. scipy 결과와 소수점이 어긋나 오답 처리되는 것을 피하려면 이 형태를 기본으로 외울 것"},
     ]},
     { name:'스케일링', items:[
-      {d:'MinMaxScaler로 정규화', c:"from sklearn.preprocessing import MinMaxScaler\nscaler = MinMaxScaler()\ndf[['col']] = scaler.fit_transform(df[['col']])"},
-      {d:'StandardScaler로 표준화', c:"from sklearn.preprocessing import StandardScaler\nscaler = StandardScaler()\ndf[['col']] = scaler.fit_transform(df[['col']])"},
-      {d:'RobustScaler로 스케일링', c:"from sklearn.preprocessing import RobustScaler\nscaler = RobustScaler()\ndf[['col']] = scaler.fit_transform(df[['col']])"},
+      {d:'MinMaxScaler로 정규화', c:"from sklearn.preprocessing import MinMaxScaler\nscaler = MinMaxScaler()\ndf[['col']] = scaler.fit_transform(df[['col']])", formula:"x' = (x - min) / (max - min)", example:"입력: [10,20,30] (min=10,max=30)\n출력: [0.0, 0.5, 1.0] (0~1 범위로 변환)", usage:"입력 범위가 0~1로 고정되어야 하거나(신경망 등) 이상치가 거의 없는 데이터일 때"},
+      {d:'StandardScaler로 표준화', c:"from sklearn.preprocessing import StandardScaler\nscaler = StandardScaler()\ndf[['col']] = scaler.fit_transform(df[['col']])", formula:"x' = (x - μ) / σ", example:"입력: [10,20,30] (μ=20, σ≈8.16)\n출력: [-1.22, 0, 1.22] (평균 0, 표준편차 1)", usage:"데이터가 대략 정규분포를 따르고 이상치가 심하지 않을 때(가장 일반적으로 사용)"},
+      {d:'RobustScaler로 스케일링', c:"from sklearn.preprocessing import RobustScaler\nscaler = RobustScaler()\ndf[['col']] = scaler.fit_transform(df[['col']])", formula:"x' = (x - 중앙값) / IQR", example:"극단값이 섞여 있어도 중앙값·IQR 기준이라 이상치 영향을 적게 받음", usage:"이상치가 많은 데이터를 스케일링할 때(중앙값·IQR 기반이라 이상치 영향이 적음)"},
     ]},
     { name:'인코딩', items:[
-      {d:'원핫인코딩 적용', c:"df = pd.get_dummies(df, columns=['col'])"},
-      {d:'원핫인코딩(첫 범주 제거)', c:"df = pd.get_dummies(df, columns=['col'], drop_first=True)"},
-      {d:'라벨인코딩 적용', c:"from sklearn.preprocessing import LabelEncoder\nle = LabelEncoder()\ndf['col'] = le.fit_transform(df['col'])"},
+      {d:'원핫인코딩 적용', c:"df = pd.get_dummies(df, columns=['col'])", formula:"xᵢ = 1 (해당 범주인 경우), 0 (그 외)", example:"입력: col=['A','B']\n출력: col_A=[1,0], col_B=[0,1]", usage:"범주 간 순서·크기 의미가 없는 명목형 변수를 선형모델/거리기반 모델에 넣을 때"},
+      {d:'원핫인코딩(첫 범주 제거)', c:"df = pd.get_dummies(df, columns=['col'], drop_first=True)", formula:"xᵢ = 1 (해당 범주인 경우), 0 (그 외)  — 기준범주는 열 자체를 생략", example:"입력: col=['A','B']\n출력: col_B=[0,1] (기준범주 A는 제거됨)", usage:"회귀분석처럼 다중공선성(더미변수 함정)을 피해야 할 때"},
+      {d:'라벨인코딩 적용', c:"from sklearn.preprocessing import LabelEncoder\nle = LabelEncoder()\ndf['col'] = le.fit_transform(df['col'])", example:"입력: col=['A','B','A']\n출력: col=[0,1,0] (알파벳순 정수 매핑)", usage:"순서가 있는 범주, 또는 트리 기반 모델처럼 순서 인코딩에 영향을 덜 받는 모델에 사용"},
     ]},
     { name:'그룹/집계', items:[
-      {d:'그룹별 집계 연산', c:"df.groupby('col1').agg({'col2': 'mean'})"},
-      {d:'범주별 개수 세기', c:"df['col'].value_counts()"},
-      {d:'값 기준 내림차순 정렬', c:"df.sort_values(by='col', ascending=False)"},
-      {d:'피벗 테이블 생성', c:"pd.pivot_table(df, index='col1', columns='col2', values='col3', aggfunc='mean')"},
+      {d:'그룹별 집계 연산', c:"df.groupby('col1').agg({'col2': 'mean'})", example:"입력: (col1,col2)=[(A,10),(A,20),(B,5)]\n출력: A→15.0, B→5.0", usage:"범주별 통계 요약이 필요한 문제(예: 지역별 평균 매출)"},
+      {d:'범주별 개수 세기', c:"df['col'].value_counts()", example:"입력: col=['A','B','A']\n출력: A    2\nB    1", usage:"범주형 변수의 분포(어떤 값이 많은지)를 빠르게 볼 때"},
+      {d:'값 기준 내림차순 정렬', c:"df.sort_values(by='col', ascending=False)", example:"입력: col=[3,1,2]\n출력 순서: [3,2,1]", usage:"순위·최댓값/최솟값을 찾는 문제에서 정렬 후 상위값을 뽑을 때"},
+      {d:'피벗 테이블 생성', c:"pd.pivot_table(df, index='col1', columns='col2', values='col3', aggfunc='mean')", example:"행=col1, 열=col2별 col3의 평균을 표 형태로 정리", usage:"두 범주 조합별 요약 통계를 표 형태로 봐야 할 때"},
+      {d:'그룹별 행 개수 세기', c:"df.groupby('col1').size()", example:"입력: col1=['A','A','B']\n출력: A    2\nB    1", usage:"그룹별 '건수'를 셀 때. count()는 결측치를 빼고 세지만 size()는 결측치를 포함한 전체 행 수를 센다"},
+      {d:'최댓값을 가진 인덱스 찾기(idxmax)', c:"df.groupby('col1')['col2'].mean().idxmax()", example:"평균이 A=15.0, B=5.0이면 → 출력: 'A' (값이 아니라 인덱스명을 반환)", usage:"'평균이 가장 높은 그룹의 이름을 구하라' 유형. 값이 필요하면 .max(), 이름이 필요하면 .idxmax()"},
+      {d:'최솟값을 가진 인덱스 찾기(idxmin)', c:"df.groupby('col1')['col2'].mean().idxmin()", example:"평균이 A=15.0, B=5.0이면 → 출력: 'B'", usage:"'가장 낮은 그룹'을 묻는 문제. idxmax와 짝으로 외운다"},
+    ]},
+    { name:'정렬/순위/상위 n', items:[
+      {d:'정렬 후 상위 n개 추출', c:"top = df.sort_values(by='col', ascending=False).head(10)", example:"col 기준 내림차순 정렬 후 상위 10행만 남김", usage:"'상위 10개의 평균을 구하라' 유형에서 가장 기본이 되는 형태"},
+      {d:'상위 n개 바로 뽑기(nlargest)', c:"top = df.nlargest(10, 'col')", example:"df.sort_values('col', ascending=False).head(10)과 같은 결과를 한 줄로", usage:"정렬+head를 한 번에 처리하고 싶을 때(타이핑이 짧아 시간 절약)"},
+      {d:'하위 n개 바로 뽑기(nsmallest)', c:"bottom = df.nsmallest(10, 'col')", example:"col이 작은 순으로 10행", usage:"'하위 n개'를 묻는 문제"},
+      {d:'순위 매기기(rank)', c:"df['rank'] = df['col'].rank(ascending=False)", example:"입력: col=[10,30,20]\n출력: rank=[3.0, 1.0, 2.0] (동점이면 평균 순위)", usage:"등수를 파생변수로 만들어야 할 때. 동점 처리를 바꾸려면 method='min' 등을 지정"},
+      {d:'상위 70% 행만 사용', c:"df = df.iloc[:int(len(df) * 0.7)]", example:"1000행 → int(700) → 앞에서 700행만 남김", usage:"'데이터의 앞 70%를 사용하라'처럼 비율로 자르라는 지시가 나올 때(정수 변환 필수)"},
+      {d:'중복 행 제거', c:"df = df.drop_duplicates()", example:"완전히 동일한 행이 2번 나오면 1번만 남김", usage:"중복 데이터를 제거한 뒤의 행 수·통계를 묻는 문제. 특정 컬럼 기준이면 subset=['col']을 준다"},
     ]},
     { name:'조건 필터링/파생변수', items:[
-      {d:'라벨 기반 조건 선택(loc)', c:"df.loc[df['col'] > 10, 'col2']"},
-      {d:'위치 기반 인덱싱(iloc)', c:"df.iloc[0:5, 1:3]"},
-      {d:'apply와 lambda로 파생변수 생성', c:"df['new'] = df['col'].apply(lambda x: x * 2)"},
-      {d:'구간화(cut)로 범주 생성', c:"df['bin'] = pd.cut(df['col'], bins=[0, 10, 20, 30])"},
-      {d:'동일 빈도 구간화(qcut)', c:"df['bin'] = pd.qcut(df['col'], q=4)"},
+      {d:'라벨 기반 조건 선택(loc)', c:"df.loc[df['col'] > 10, 'col2']", example:"입력: col=[5,15,25]\n출력: col>10인 행의 col2 값만 선택 (2건)", usage:"조건식에 맞는 행을 라벨 기준으로 선택할 때"},
+      {d:'위치 기반 인덱싱(iloc)', c:"df.iloc[0:5, 1:3]", example:"0~4행, 1~2번째 열만 위치 기준으로 선택", usage:"순서(위치) 기준으로 특정 행/열을 잘라낼 때"},
+      {d:'apply와 lambda로 파생변수 생성', c:"df['new'] = df['col'].apply(lambda x: x * 2)", example:"입력: col=[1,2,3]\n출력: new=[2,4,6] (각 값 ×2)", usage:"기존 함수로 표현하기 어려운 사용자 정의 계산을 컬럼에 적용할 때"},
+      {d:'경계값 지정 구간화(cut)', c:"df['bin'] = pd.cut(df['col'], bins=[0, 10, 20, 30])", example:"입력: col=[5,15,25]\nbins=[0,10,20,30] → 출력: (0,10], (10,20], (20,30]\n기본은 오른쪽 닫힌 구간이라 10은 (0,10]에 들어감", usage:"경계값을 직접 지정해 범주화할 때(예: 나이 0~10, 10~20). bins에 정수를 주면(pd.cut(x, bins=3)) 대신 등간격으로 3등분한다"},
+      {d:'동일 빈도 구간화(qcut)', c:"df['bin'] = pd.qcut(df['col'], q=4)", example:"100개 데이터를 q=4로 나누면 각 구간에 25개씩 배분(등빈도 구간화)", usage:"데이터 개수를 기준으로 동일한 크기의 그룹(예: 상위 25%)으로 나눌 때"},
+      {d:'조건에 따라 두 값 중 하나 배정(np.where)', c:"import numpy as np\ndf['flag'] = np.where(df['col'] >= 30, 1, 0)", example:"입력: col=[10, 35, 50]\n출력: flag=[0, 1, 1]", usage:"'기준값 이상이면 1, 아니면 0' 같은 이진 파생변수를 만들 때(apply보다 빠르고 짧다)"},
+      {d:'조건에 맞는 행의 값만 변경', c:"df.loc[df['col'] > 100, 'col'] = 100", example:"입력: col=[50, 150]\n출력: col=[50, 100] (100 초과를 100으로 눌러 담음)", usage:"이상치를 제거하지 않고 상·하한으로 대체(윈저화)하라는 문제일 때"},
+      {d:'데이터 타입 변환', c:"df['col'] = df['col'].astype(int)", example:"입력: col=['1','2'] (문자열)\n출력: col=[1, 2] (정수)", usage:"숫자가 문자열로 저장돼 있어 연산·정렬이 안 될 때. 결측치가 있으면 int 변환이 실패하므로 결측치 처리를 먼저 한다"},
     ]},
     { name:'날짜 처리', items:[
-      {d:'문자열을 날짜형으로 변환', c:"df['date'] = pd.to_datetime(df['date'])"},
-      {d:'연도 추출', c:"df['year'] = df['date'].dt.year"},
-      {d:'월 추출', c:"df['month'] = df['date'].dt.month"},
-      {d:'일 추출', c:"df['day'] = df['date'].dt.day"},
-      {d:'요일 추출(dayofweek)', c:"df['dow'] = df['date'].dt.dayofweek"},
-      {d:'요일 추출(weekday)', c:"df['weekday'] = df['date'].dt.weekday"},
+      {d:'문자열을 날짜형으로 변환', c:"df['date'] = pd.to_datetime(df['date'])", example:"입력: '2024-05-01' (문자열)\n출력: Timestamp('2024-05-01 00:00:00')", usage:"날짜 컬럼에서 연/월/일 등을 추출하기 전 반드시 선행해야 하는 단계"},
+      {d:'연도 추출', c:"df['year'] = df['date'].dt.year", example:"2024-05-01 → 2024", usage:"연도별 추세나 그룹 분석이 필요할 때"},
+      {d:'월 추출', c:"df['month'] = df['date'].dt.month", example:"2024-05-01 → 5", usage:"월별 계절성 패턴을 분석할 때"},
+      {d:'일 추출', c:"df['day'] = df['date'].dt.day", example:"2024-05-01 → 1", usage:"일 단위 패턴(예: 월초/월말)을 분석할 때"},
+      {d:'요일 추출(dayofweek)', c:"df['dow'] = df['date'].dt.dayofweek", example:"2024-05-01(수요일) → 2 (월=0 기준)", usage:"요일별 패턴(예: 주말 매출 차이)을 분석할 때"},
+      {d:'요일 추출(weekday)', c:"df['weekday'] = df['date'].dt.weekday", example:"dayofweek와 동일: 2024-05-01(수요일) → 2", usage:"dayofweek와 목적은 동일하고 표현만 다름"},
     ]},
     { name:'문자열 처리', items:[
-      {d:'특정 문자열 포함 여부로 필터링', c:"df[df['col'].str.contains('abc')]"},
-      {d:'문자열 치환', c:"df['col'] = df['col'].str.replace('a', 'b')"},
-      {d:'문자열 분리', c:"df['col'] = df['col'].str.split(',')"},
-      {d:'문자열 앞뒤 공백 제거', c:"df['col'] = df['col'].str.strip()"},
+      {d:'특정 문자열 포함 여부로 필터링', c:"df[df['col'].str.contains('abc', na=False)]", example:"입력: col=['apple','banana']\n'an' 포함 여부 → [False, True]", usage:"특정 키워드가 포함된 행만 걸러낼 때. na=False가 없으면 결측치 행이 True/False가 아닌 NaN이 되어 'Cannot mask with non-boolean array containing NA' 에러로 멈춘다 — 실기에서 자주 걸리는 함정이라 습관으로 붙여둔다"},
+      {d:'문자열 치환', c:"df['col'] = df['col'].str.replace('a', 'b')", example:"입력: 'cat' → 출력: 'cbt' ('a'→'b' 치환)", usage:"오타, 단위 표기 등 값을 통일해야 할 때"},
+      {d:'문자열 분리', c:"df['col'] = df['col'].str.split(',')", example:"입력: 'a,b,c' → 출력: ['a','b','c']", usage:"하나의 컬럼에 여러 정보가 콤마 등으로 뭉쳐있을 때 분리"},
+      {d:'문자열 앞뒤 공백 제거', c:"df['col'] = df['col'].str.strip()", example:"입력: '  hello  ' → 출력: 'hello'", usage:"입력 과정에서 생긴 불필요한 공백 때문에 값 비교/그룹화가 실패하는 것을 막을 때"},
     ]},
     { name:'상관/공분산', items:[
-      {d:'전체 상관계수 행렬', c:"df.corr()"},
-      {d:'전체 공분산 행렬', c:"df.cov()"},
-      {d:'두 컬럼 간 상관계수', c:"df['col1'].corr(df['col2'])"},
+      {d:'전체 상관계수 행렬', c:"print(df.corr(numeric_only=True))", formula:"피어슨 상관계수 r = Σ((xᵢ-x̄)(yᵢ-ȳ)) / (n·σx·σy)", example:"출력: 컬럼 간 상관계수를 담은 정사각 행렬(대각선은 항상 1)", usage:"여러 변수 간 관계를 한 번에 훑어볼 때. pandas 2.0부터 문자열 컬럼이 섞여 있으면 df.corr()이 ValueError를 내므로 numeric_only=True를 붙이는 게 안전하다"},
+      {d:'전체 공분산 행렬', c:"print(df.cov(numeric_only=True))", formula:"Cov(X,Y) = Σ((xᵢ-x̄)(yᵢ-ȳ)) / (n-1)", example:"출력: 컬럼 간 공분산을 담은 정사각 행렬", usage:"두 변수가 같은 방향으로 움직이는지 부호만 볼 때. corr과 마찬가지로 문자열 컬럼이 있으면 numeric_only=True가 필요하다"},
+      {d:'두 컬럼 간 상관계수', c:"df['col1'].corr(df['col2'])", formula:"r = Σ((xᵢ-x̄)(yᵢ-ȳ)) / √(Σ(xᵢ-x̄)²·Σ(yᵢ-ȳ)²)", example:"col1, col2가 함께 증가하는 경향이면 1에 가까운 양수", usage:"특정 두 변수 사이의 선형 관계만 구체적으로 확인할 때"},
     ]},
     { name:'인덱스/병합', items:[
-      {d:'인덱스 초기화', c:"df = df.reset_index(drop=True)"},
-      {d:'특정 컬럼을 인덱스로 지정', c:"df = df.set_index('col')"},
-      {d:'두 데이터프레임 병합', c:"pd.merge(df1, df2, on='col', how='left')"},
-      {d:'데이터프레임 이어붙이기', c:"pd.concat([df1, df2], axis=0)"},
+      {d:'인덱스 초기화', c:"df = df.reset_index(drop=True)", example:"입력 인덱스: [3,5,7] → 출력 인덱스: [0,1,2] (기존 인덱스는 버림)", usage:"필터링/정렬 후 인덱스가 뒤섞였을 때 0,1,2,...로 깔끔하게 재정렬"},
+      {d:'특정 컬럼을 인덱스로 지정', c:"df = df.set_index('col')", example:"'col' 값을 새 인덱스로 사용 (기존 0,1,2,... 인덱스 대체)", usage:"특정 컬럼(예: id, 날짜)을 기준으로 조회/조인하고 싶을 때"},
+      {d:'두 데이터프레임 병합', c:"pd.merge(df1, df2, on='col', how='left')", example:"df1(id,name)과 df2(id,score)를 id 기준으로 왼쪽 조인", usage:"서로 다른 테이블의 정보를 공통 키로 합쳐야 할 때(예: 고객정보+주문정보)"},
+      {d:'데이터프레임 이어붙이기', c:"pd.concat([df1, df2], axis=0)", example:"df1(3행)+df2(2행) → 세로로 이어붙여 5행", usage:"같은 형식의 데이터를 위아래로 이어붙일 때(예: 월별 데이터 합치기)"},
     ]},
   ]},
   { key:'t2', label:'작업형2', categories:[
+    { name:'★ 실전 진행 순서', items:[
+      {d:'train/test 파일 불러오기', c:"train = pd.read_csv('train.csv')\ntest = pd.read_csv('test.csv')", example:"train에는 정답 컬럼(target)이 있고 test에는 없다", usage:"작업형2의 첫 단계. test에는 정답이 없으므로 test로 성능을 평가할 수 없다는 점을 여기서부터 의식해야 한다"},
+      {d:'제출용 id 미리 분리', c:"test_id = test['id']\nX_test = test.drop(columns=['id'])", example:"예측이 끝난 뒤 result 데이터프레임에 붙일 id를 미리 빼둠", usage:"id를 feature로 학습시키면 성능이 망가진다. 반대로 미리 지워버리면 제출 파일을 만들 수 없으므로 '빼서 보관'이 정답"},
+      {d:'설명변수와 목표변수 분리', c:"X = train.drop(columns=['target'])\ny = train['target']", example:"train 20컬럼 → X 19컬럼 + y 1컬럼", usage:"모델은 X와 y를 따로 받는다. 여기서 target을 X에 남겨두면 정답을 보고 학습하는 꼴이 된다"},
+      {d:'범주형 컬럼 목록 자동 추출', c:"cat_cols = X.select_dtypes(include='object').columns", example:"출력: Index(['gender', 'contract_type'], dtype='object')", usage:"컬럼이 많을 때 어떤 것이 문자열인지 일일이 확인하지 않고 한 번에 잡아낼 때"},
+      {d:'수치형 결측치 일괄 대체', c:"med = X.median(numeric_only=True)\nX = X.fillna(med)\nX_test = X_test.fillna(med)", example:"수치형 컬럼의 NaN을 각 컬럼의 중앙값으로 한 번에 채움", usage:"컬럼별로 fillna를 반복하지 않고 한 번에 끝낼 때. 중앙값은 반드시 **먼저 변수에 담아** train·test에 같은 값을 쓴다. X를 채운 뒤 다시 X.median()을 부르면 이미 변형된 데이터에서 계산하는 셈이고, test에서 따로 계산하면 데이터 누수가 된다"},
+    ]},
+    { name:'★ 학습/평가 데이터 정렬(가장 흔한 실패 지점)', items:[
+      {d:'train 기준으로 test 컬럼 맞추기', c:"X = pd.get_dummies(X, columns=cat_cols)\nX_test = pd.get_dummies(X_test, columns=cat_cols)\nX_test = X_test.reindex(columns=X.columns, fill_value=0)", example:"train에만 있는 범주 'two year'가 test에 없으면 컬럼 수가 달라져 predict가 실패한다.\nreindex로 train과 같은 컬럼 구성·순서를 강제로 맞춘다", usage:"train과 test를 따로 get_dummies 하면 컬럼이 어긋난다. 작업형2에서 코드가 터지거나 점수가 이상하게 나오는 원인 1순위이므로 reindex 한 줄을 반드시 세트로 외운다"},
+      {d:'train+test 합쳐서 인코딩 후 분리', c:"n_train = len(X)\nall_df = pd.concat([X, X_test])\nall_df = pd.get_dummies(all_df, columns=cat_cols)\nX = all_df.iloc[:n_train]\nX_test = all_df.iloc[n_train:]", example:"합친 상태로 인코딩하면 범주 목록이 같아지므로 컬럼이 어긋날 수 없다", usage:"reindex 대신 쓸 수 있는 방법. 자르는 위치 n_train을 먼저 변수에 담아둬야 한다 — X를 먼저 덮어쓴 뒤 len(X)를 다시 부르면 값이 바뀌어 있다. concat 후 인덱스가 겹치므로 [ ]가 아니라 .iloc로 위치 기준 슬라이싱을 쓴다"},
+      {d:'LabelEncoder는 train으로만 fit', c:"from sklearn.preprocessing import LabelEncoder\nle = LabelEncoder()\nX['col'] = le.fit_transform(X['col'])\nX_test['col'] = le.transform(X_test['col'])", example:"train: fit_transform / test: transform\ntest에만 있는 새 범주가 나오면 ValueError가 나므로 그럴 땐 get_dummies를 쓴다", usage:"데이터 누수를 막는 표준 패턴. test에 fit_transform을 다시 하면 같은 문자열이 다른 숫자로 매핑돼 예측이 망가진다"},
+    ]},
     { name:'데이터 분할', items:[
-      {d:'학습/평가 데이터 분할', c:"from sklearn.model_selection import train_test_split\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)"},
-      {d:'클래스 비율 유지 분할(stratify)', c:"X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)"},
-      {d:'학습 데이터 비율 지정 분할', c:"X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, random_state=42)"},
+      {d:'학습/평가 데이터 분할', c:"from sklearn.model_selection import train_test_split\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)", example:"100행 → test_size=0.2 → train 80행, test 20행", usage:"모델 성능을 학습에 쓰지 않은 데이터로 검증하기 위해 항상 가장 먼저 수행"},
+      {d:'클래스 비율 유지 분할(stratify)', c:"from sklearn.model_selection import train_test_split\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)", example:"y가 0:80개/1:20개일 때, train/test 각각 같은 80:20 비율로 유지", usage:"분류 문제에서 클래스 불균형이 있어 분할 후에도 비율을 유지해야 할 때"},
+      {d:'학습 데이터 비율 지정 분할', c:"from sklearn.model_selection import train_test_split\nX_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.7, random_state=42)", example:"100행, train_size=0.7 → train 70행, test 30행", usage:"문제에서 분할 비율을 test_size가 아닌 train_size로 명시했을 때"},
+      {d:'검증용 분할(실전 형태)', c:"from sklearn.model_selection import train_test_split\nX_tr, X_val, y_tr, y_val = train_test_split(X, y, test_size=0.2, random_state=42)", example:"train.csv → 학습용 X_tr / 검증용 X_val 로 다시 쪼갬.\ntest.csv(제출 대상)는 여기 끼어들지 않는다", usage:"실기에서 test.csv에는 정답이 없으므로 y_test로 채점할 수 없다. 성능을 확인하려면 반드시 train을 다시 나눠 검증 세트를 직접 만들어야 한다"},
     ]},
     { name:'분류 모델', items:[
-      {d:'랜덤포레스트 분류기 학습', c:"from sklearn.ensemble import RandomForestClassifier\nmodel = RandomForestClassifier(random_state=42)\nmodel.fit(X_train, y_train)"},
-      {d:'의사결정나무 분류기 학습', c:"from sklearn.tree import DecisionTreeClassifier\nmodel = DecisionTreeClassifier(random_state=42)\nmodel.fit(X_train, y_train)"},
-      {d:'로지스틱 회귀 분류기 학습', c:"from sklearn.linear_model import LogisticRegression\nmodel = LogisticRegression()\nmodel.fit(X_train, y_train)"},
-      {d:'XGBoost 분류기 학습', c:"from xgboost import XGBClassifier\nmodel = XGBClassifier()\nmodel.fit(X_train, y_train)"},
+      {d:'랜덤포레스트 분류기 학습', c:"from sklearn.ensemble import RandomForestClassifier\nmodel = RandomForestClassifier(random_state=42)\nmodel.fit(X_train, y_train)", example:"여러 개의 결정트리를 앙상블(다수결)해서 분류하는 모델", usage:"특별한 조건 없이 안정적인 성능을 내는 기본 분류 모델이 필요할 때(실기 기본 선택지)"},
+      {d:'의사결정나무 분류기 학습', c:"from sklearn.tree import DecisionTreeClassifier\nmodel = DecisionTreeClassifier(random_state=42)\nmodel.fit(X_train, y_train)", example:"조건 분기(if-else 트리)로 데이터를 나눠 분류하는 단일 트리 모델", usage:"모델의 판단 기준(트리 구조)을 해석하거나 간단한 베이스라인이 필요할 때"},
+      {d:'로지스틱 회귀 분류기 학습', c:"from sklearn.linear_model import LogisticRegression\nmodel = LogisticRegression()\nmodel.fit(X_train, y_train)", formula:"P(y=1) = 1 / (1 + e^-(b0+b1x1+...))", example:"선형 결합값을 시그모이드 함수에 통과시켜 0~1 확률로 변환", usage:"해석 가능한 선형 분류 모델이 필요하거나 확률값 자체가 중요한 문제일 때"},
+      {d:'그래디언트 부스팅 분류기 학습', c:"from sklearn.ensemble import GradientBoostingClassifier\nmodel = GradientBoostingClassifier(random_state=42)\nmodel.fit(X_train, y_train)", example:"이전 트리의 오차를 보완하는 트리를 순차적으로 추가(부스팅)하는 모델", usage:"랜덤포레스트보다 성능을 더 끌어올리고 싶을 때. sklearn에 포함돼 있어 시험 환경에서 반드시 동작한다(xgboost는 미설치일 수 있음)"},
+      {d:'XGBoost 분류기 학습(설치 확인 필요)', c:"from xgboost import XGBClassifier\nmodel = XGBClassifier()\nmodel.fit(X_train, y_train)", example:"시험장에서는 먼저 import만 실행해 설치 여부를 확인한 뒤 쓴다.\nModuleNotFoundError가 나면 즉시 GradientBoosting/RandomForest로 갈아탄다", usage:"⚠ 시험 환경(구름 IDE)에 xgboost가 설치돼 있지 않을 수 있다. 여기에 의존하는 습관이 들면 시험장에서 그대로 막히므로, 주력은 sklearn 계열로 잡고 이건 예비용으로만 외운다"},
     ]},
     { name:'회귀 모델', items:[
-      {d:'랜덤포레스트 회귀 학습', c:"from sklearn.ensemble import RandomForestRegressor\nmodel = RandomForestRegressor(random_state=42)\nmodel.fit(X_train, y_train)"},
-      {d:'선형 회귀 학습', c:"from sklearn.linear_model import LinearRegression\nmodel = LinearRegression()\nmodel.fit(X_train, y_train)"},
-      {d:'XGBoost 회귀 학습', c:"from xgboost import XGBRegressor\nmodel = XGBRegressor()\nmodel.fit(X_train, y_train)"},
+      {d:'랜덤포레스트 회귀 학습', c:"from sklearn.ensemble import RandomForestRegressor\nmodel = RandomForestRegressor(random_state=42)\nmodel.fit(X_train, y_train)", example:"여러 결정트리 예측값의 평균으로 연속값을 예측", usage:"비선형 관계가 있는 데이터에서 안정적인 회귀 예측이 필요할 때"},
+      {d:'선형 회귀 학습', c:"from sklearn.linear_model import LinearRegression\nmodel = LinearRegression()\nmodel.fit(X_train, y_train)", formula:"y = b0 + b1x1 + b2x2 + ... + ε", example:"입력 변수들의 가중합으로 연속값을 예측하는 직선 모형", usage:"변수 간 선형 관계를 가정할 수 있고 계수 해석이 필요할 때"},
+      {d:'그래디언트 부스팅 회귀 학습', c:"from sklearn.ensemble import GradientBoostingRegressor\nmodel = GradientBoostingRegressor(random_state=42)\nmodel.fit(X_train, y_train)", example:"회귀용 그래디언트 부스팅 트리 모델", usage:"랜덤포레스트보다 더 높은 예측 성능이 필요한 회귀 문제. sklearn 내장이라 시험 환경에서 확실히 동작한다"},
     ]},
     { name:'모델 학습/예측 공통 패턴', items:[
-      {d:'모델 학습(fit)', c:"model.fit(X_train, y_train)"},
-      {d:'예측값 생성(predict)', c:"y_pred = model.predict(X_test)"},
-      {d:'클래스 확률 예측(predict_proba)', c:"y_proba = model.predict_proba(X_test)[:, 1]"},
+      {d:'모델 학습(fit)', c:"model.fit(X_train, y_train)", example:"학습 데이터(X_train, y_train)로 모델 파라미터를 추정", usage:"모델 객체 생성 후 실제로 학습 데이터를 넣어 파라미터를 추정할 때(항상 필요)"},
+      {d:'예측값 생성(predict)', c:"y_pred = model.predict(X_test)", example:"입력 X_test 5행 → 출력 y_pred 5개 예측값(또는 예측 클래스)", usage:"학습된 모델로 새 데이터의 값을 예측할 때"},
+      {d:'클래스 확률 예측(predict_proba)', c:"y_proba = model.predict_proba(X_test)[:, 1]", example:"이진분류에서 [:,1] → 양성 클래스(1)일 확률만 추출, 예: [0.12, 0.83, ...]", usage:"단순 분류 결과가 아니라 확률값(ROC-AUC 계산 등)이 필요할 때"},
     ]},
     { name:'분류 평가지표', items:[
-      {d:'정확도(accuracy) 계산', c:"from sklearn.metrics import accuracy_score\naccuracy_score(y_test, y_pred)"},
-      {d:'정밀도(precision) 계산', c:"from sklearn.metrics import precision_score\nprecision_score(y_test, y_pred)"},
-      {d:'재현율(recall) 계산', c:"from sklearn.metrics import recall_score\nrecall_score(y_test, y_pred)"},
-      {d:'F1 스코어 계산', c:"from sklearn.metrics import f1_score\nf1_score(y_test, y_pred)"},
-      {d:'ROC-AUC 계산', c:"from sklearn.metrics import roc_auc_score\nroc_auc_score(y_test, y_proba)"},
-      {d:'혼동행렬 계산', c:"from sklearn.metrics import confusion_matrix\nconfusion_matrix(y_test, y_pred)"},
-      {d:'분류 리포트 출력', c:"from sklearn.metrics import classification_report\nprint(classification_report(y_test, y_pred))"},
+      {d:'정확도(accuracy) 계산', c:"from sklearn.metrics import accuracy_score\naccuracy_score(y_test, y_pred)", formula:"정확도 = (맞춘 개수) / (전체 개수)", example:"10개 중 8개 맞춤 → 0.8", usage:"클래스 비율이 균형 잡힌 데이터에서 전반적인 성능을 볼 때(불균형 데이터에는 부적합)"},
+      {d:'정밀도(precision) 계산', c:"from sklearn.metrics import precision_score\nprecision_score(y_test, y_pred)", formula:"정밀도 = TP / (TP + FP)", example:"양성으로 예측한 10개 중 실제 양성 8개 → 0.8", usage:"양성 예측이 실제로 맞아야 하는 상황(예: 오탐 비용이 클 때)"},
+      {d:'재현율(recall) 계산', c:"from sklearn.metrics import recall_score\nrecall_score(y_test, y_pred)", formula:"재현율 = TP / (TP + FN)", example:"실제 양성 10개 중 8개를 맞춤 → 0.8", usage:"실제 양성을 놓치면 안 되는 상황(예: 암 진단처럼 미탐 비용이 클 때)"},
+      {d:'F1 스코어 계산', c:"from sklearn.metrics import f1_score\nf1_score(y_test, y_pred)", formula:"F1 = 2 × (정밀도×재현율) / (정밀도+재현율)", example:"정밀도0.8, 재현율0.6 → F1≈0.686", usage:"정밀도와 재현율을 동시에 고려해야 하거나 클래스가 불균형할 때"},
+      {d:'ROC-AUC 계산', c:"from sklearn.metrics import roc_auc_score\nroc_auc_score(y_test, y_proba)", formula:"TPR = TP/(TP+FN),  FPR = FP/(FP+TN)  (AUC = ROC 곡선 아래 면적)", example:"완벽한 분류기 → 1.0, 무작위 분류기 → 약 0.5", usage:"임계값(threshold)에 따라 달라지지 않는 분류기 자체의 전반적 판별력을 비교할 때"},
+      {d:'혼동행렬 계산', c:"from sklearn.metrics import confusion_matrix\nconfusion_matrix(y_test, y_pred)", example:"출력: [[TN, FP], [FN, TP]] 형태의 2x2 행렬", usage:"어떤 유형의 오류(오탐/미탐)가 많은지 세부적으로 확인할 때"},
+      {d:'분류 리포트 출력', c:"from sklearn.metrics import classification_report\nprint(classification_report(y_test, y_pred))", example:"출력: 클래스별 precision/recall/f1-score/support 요약표", usage:"클래스별 지표를 한 번에 표로 요약해서 보고 싶을 때"},
     ]},
     { name:'회귀 평가지표', items:[
-      {d:'평균제곱오차(MSE) 계산', c:"from sklearn.metrics import mean_squared_error\nmean_squared_error(y_test, y_pred)"},
-      {d:'평균절대오차(MAE) 계산', c:"from sklearn.metrics import mean_absolute_error\nmean_absolute_error(y_test, y_pred)"},
-      {d:'결정계수(R2) 계산', c:"from sklearn.metrics import r2_score\nr2_score(y_test, y_pred)"},
-      {d:'RMSE 계산식', c:"rmse = mean_squared_error(y_test, y_pred) ** 0.5"},
+      {d:'평균제곱오차(MSE) 계산', c:"from sklearn.metrics import mean_squared_error\nmean_squared_error(y_test, y_pred)", formula:"MSE = (1/n) Σ(yᵢ - ŷᵢ)²", example:"실제 [3,5], 예측 [2,5] → MSE=(1²+0²)/2=0.5", usage:"큰 오차에 더 큰 페널티를 주고 싶을 때(제곱이라 이상치에 민감)"},
+      {d:'평균절대오차(MAE) 계산', c:"from sklearn.metrics import mean_absolute_error\nmean_absolute_error(y_test, y_pred)", formula:"MAE = (1/n) Σ|yᵢ - ŷᵢ|", example:"실제 [3,5], 예측 [2,5] → MAE=(1+0)/2=0.5", usage:"이상치의 영향을 줄이고 오차를 실제 단위 그대로 해석하고 싶을 때"},
+      {d:'결정계수(R2) 계산', c:"from sklearn.metrics import r2_score\nr2_score(y_test, y_pred)", formula:"R² = 1 - (Σ(yᵢ-ŷᵢ)² / Σ(yᵢ-ȳ)²)", example:"1에 가까울수록 모델이 분산을 잘 설명함(0이면 평균 예측 수준)", usage:"모델이 데이터의 분산을 얼마나 잘 설명하는지 전반적인 적합도를 볼 때"},
+      {d:'RMSE 계산식', c:"from sklearn.metrics import mean_squared_error\npred_val = model.predict(X_val)\nrmse = mean_squared_error(y_val, pred_val) ** 0.5", formula:"RMSE = √MSE", example:"MSE=0.5 → RMSE≈0.707\nsquared=False 인자는 사이킷런 버전에 따라 사라졌으므로 ** 0.5 가 안전하다", usage:"MSE를 원래 단위로 되돌려 실질적인 오차 크기를 해석할 때(작업형2 회귀에서 가장 자주 요구되는 지표). 실기에는 y_test가 없으므로 검증 세트(y_val)로 계산한다"},
     ]},
     { name:'교차검증', items:[
-      {d:'교차검증 점수 계산', c:"from sklearn.model_selection import cross_val_score\nscores = cross_val_score(model, X, y, cv=5)"},
-      {d:'평가지표 지정 교차검증', c:"scores = cross_val_score(model, X, y, cv=5, scoring='accuracy')"},
-      {d:'KFold 객체 생성', c:"from sklearn.model_selection import KFold\nkf = KFold(n_splits=5, shuffle=True, random_state=42)"},
+      {d:'교차검증 점수 계산', c:"from sklearn.model_selection import cross_val_score\nscores = cross_val_score(model, X, y, cv=5)", example:"cv=5 → 데이터를 5등분해 5번 학습/평가 반복, 점수 5개 배열 반환", usage:"한 번의 분할(train_test_split)에만 의존하지 않고 모델 성능을 안정적으로 평가할 때"},
+      {d:'평가지표 지정 교차검증', c:"from sklearn.model_selection import cross_val_score\nscores = cross_val_score(model, X, y, cv=5, scoring='accuracy')", example:"scoring='accuracy' → 5개 fold 각각의 정확도 배열 반환", usage:"정확도가 아닌 다른 지표(F1, 정밀도 등) 기준으로 교차검증하고 싶을 때"},
+      {d:'KFold 객체 생성', c:"from sklearn.model_selection import KFold\nkf = KFold(n_splits=5, shuffle=True, random_state=42)", example:"n_splits=5 → 데이터를 5개 fold로 나누는 분할기 객체 생성", usage:"cross_val_score의 분할 방식을 세부적으로 직접 지정하고 싶을 때"},
     ]},
     { name:'하이퍼파라미터', items:[
-      {d:'탐색할 파라미터 그리드 정의', c:"params = {'n_estimators': [100, 200], 'max_depth': [4, 6]}"},
-      {d:'GridSearchCV 생성 및 학습', c:"from sklearn.model_selection import GridSearchCV\ngrid = GridSearchCV(model, param_grid=params, cv=5)\ngrid.fit(X_train, y_train)"},
-      {d:'최적 파라미터 확인', c:"grid.best_params_"},
+      {d:'탐색할 파라미터 그리드 정의', c:"params = {'n_estimators': [100, 200], 'max_depth': [4, 6]}", example:"n_estimators 2가지 × max_depth 2가지 = 총 4개 조합이 탐색 대상", usage:"GridSearchCV에 넘길 탐색 후보 값들을 미리 정의할 때"},
+      {d:'GridSearchCV 생성 및 학습', c:"from sklearn.model_selection import GridSearchCV\ngrid = GridSearchCV(model, param_grid=params, cv=5)\ngrid.fit(X_train, y_train)", example:"4개 조합 × cv=5 = 총 20번 학습해서 최적 조합 탐색", usage:"여러 하이퍼파라미터 조합 중 최적을 자동으로 찾고 싶을 때"},
+      {d:'최적 파라미터 확인', c:"grid.best_params_", example:"출력: {'n_estimators': 200, 'max_depth': 6} 처럼 최적 조합 반환", usage:"GridSearchCV 학습이 끝난 뒤 어떤 조합이 최적이었는지 확인할 때"},
     ]},
     { name:'결과 제출 형식', items:[
-      {d:'제출용 데이터프레임 생성', c:"result = pd.DataFrame({'id': test_id, 'pred': y_pred})"},
-      {d:'CSV 파일로 저장', c:"result.to_csv('result.csv', index=False)"},
-      {d:'예측 확률 제출 파일 생성', c:"pd.DataFrame({'id': test_id, 'proba': y_proba}).to_csv('result.csv', index=False)"},
+      {d:'제출용 데이터프레임 생성', c:"result = pd.DataFrame({'id': test_id, 'pred': y_pred})", example:"test_id는 앞에서 test['id']로 미리 빼둔 값\nid=[1,2], pred=[0.3,0.8] → id/pred 두 컬럼", usage:"작업형2의 마지막 단계. 컬럼명은 반드시 문제에 적힌 그대로 쓴다(pred/proba/target 등 회차마다 다르다). test_id는 Series(인덱스 있음)이고 y_pred는 배열(인덱스 없음)이라, test를 중간에 필터링해 인덱스가 흐트러졌다면 값이 어긋나거나 NaN이 생긴다 — 그럴 땐 test_id.reset_index(drop=True)로 맞춘다"},
+      {d:'CSV 파일로 저장', c:"result.to_csv('result.csv', index=False)", example:"result.csv 파일로 저장, index=False라 인덱스 열은 저장하지 않음", usage:"최종 제출 파일을 만들 때(index=False를 빠뜨리면 컬럼이 하나 더 생겨 형식 오류가 난다)"},
+      {d:'예측 확률 제출 파일 생성', c:"pd.DataFrame({'id': test_id, 'proba': y_proba}).to_csv('result.csv', index=False)", example:"id, proba 두 컬럼으로 바로 CSV 저장까지 한 줄에 처리", usage:"문제에서 클래스가 아닌 확률값 제출을 요구할 때"},
+      {d:'예측값 단일 컬럼만 제출', c:"pd.DataFrame({'pred': y_pred}).to_csv('result.csv', index=False)", example:"id 없이 예측값 컬럼 하나만 요구하는 회차도 있다", usage:"최근 회차는 id를 빼고 예측값 컬럼 하나만 요구하는 경우가 있다. 문제의 '제출 형식' 문장을 그대로 따르는 것이 원칙"},
+      {d:'제출 파일 확인', c:"print(pd.read_csv('result.csv').head())\nprint(pd.read_csv('result.csv').shape)", example:"출력: 컬럼명·행 수가 test 행 수와 같은지 눈으로 확인", usage:"제출 직전 마지막 점검. 행 수가 test와 다르거나 컬럼명이 틀리면 0점이므로 이 두 줄은 습관으로 만들어 둔다"},
     ]},
   ]},
   { key:'t3', label:'작업형3', categories:[
     { name:'기술통계', items:[
-      {d:'평균 계산', c:"df['col'].mean()"},
-      {d:'표준편차 계산', c:"df['col'].std()"},
-      {d:'분산 계산', c:"df['col'].var()"},
-      {d:'중앙값 계산', c:"df['col'].median()"},
+      {d:'평균 계산', c:"df['col'].mean()", formula:"μ = (Σxᵢ) / n", example:"[10,20,30] → 20.0", usage:"데이터의 중심 경향을 대표값으로 요약할 때(이상치 없는 대칭 데이터에 적합)"},
+      {d:'표준편차 계산', c:"df['col'].std()", formula:"σ = √(Σ(xᵢ-μ)² / (n-1))", example:"[10,20,30] → 약 10.0", usage:"데이터가 평균에서 얼마나 퍼져 있는지 파악할 때"},
+      {d:'분산 계산', c:"df['col'].var()", formula:"σ² = Σ(xᵢ-μ)² / (n-1)", example:"[10,20,30] → 100.0", usage:"표준편차의 제곱 단위 그대로 분산을 다뤄야 할 때(공식 계산 등)"},
+      {d:'중앙값 계산', c:"df['col'].median()", example:"[10,20,30] → 20.0 (짝수개면 가운데 두 값의 평균)", usage:"이상치나 치우친 분포에서 평균보다 대표값으로 더 안정적일 때"},
     ]},
     { name:'정규성 검정', items:[
-      {d:'샤피로-윌크 검정 실행', c:"from scipy.stats import shapiro\nstat, p = shapiro(df['col'])"},
-      {d:'유의수준 기준 정규성 판단', c:"if p > 0.05:\n    print('정규성을 만족한다')"},
-      {d:'그룹별 정규성 검정', c:"stat, p = shapiro(df[df['group'] == 'A']['col'])"},
+      {d:'샤피로-윌크 검정 실행', c:"from scipy.stats import shapiro\nstat, p = shapiro(df['col'])", formula:"W = (Σaᵢx₍ᵢ₎)² / Σ(xᵢ-x̄)²  (aᵢ: 순서통계량 가중치)", example:"출력: (statistic, p-value). p>0.05면 정규성 만족으로 판단", usage:"t검정 등 모수적 검정을 쓰기 전에 정규성을 확인할 때(표본이 작을 때 특히 유용, 일반적으로 표본 50개 미만에 권장)"},
+      {d:'유의수준 기준 정규성 판단', c:"if p > 0.05:\n    print('정규성을 만족한다')", formula:"p ≥ α(=0.05) → 귀무가설(정규분포를 따른다) 채택", example:"p=0.32 > 0.05 → '정규성을 만족한다' 출력", usage:"검정 결과(p-value)를 유의수준과 비교해 결론을 내려야 할 때"},
+      {d:'그룹별 정규성 검정', c:"from scipy.stats import shapiro\nstat, p = shapiro(df[df['group'] == 'A']['col'])", example:"group A만 필터링한 뒤 그 그룹의 col 값들로 shapiro 검정 수행", usage:"집단 비교 검정(t검정 등) 전에 각 집단이 정규성을 만족하는지 개별 확인할 때"},
     ]},
     { name:'t검정', items:[
-      {d:'단일표본 t검정', c:"from scipy.stats import ttest_1samp\nstat, p = ttest_1samp(df['col'], popmean=50)"},
-      {d:'대응표본 t검정', c:"from scipy.stats import ttest_rel\nstat, p = ttest_rel(df['before'], df['after'])"},
-      {d:'독립표본 t검정(등분산 가정)', c:"from scipy.stats import ttest_ind\nstat, p = ttest_ind(group1, group2, equal_var=True)"},
-      {d:'독립표본 t검정(이분산 가정)', c:"stat, p = ttest_ind(group1, group2, equal_var=False)"},
+      {d:'단일표본 t검정', c:"from scipy.stats import ttest_1samp\nstat, p = ttest_1samp(df['col'], popmean=50)", formula:"t = (x̄ - μ0) / (s/√n)", example:"표본평균 52, 기준값(popmean) 50 → 기준과 차이가 있는지 검정", usage:"표본 평균을 특정 기준값과 비교하고 싶을 때(예: 신제품 평균 무게가 50g인지)"},
+      {d:'대응표본 t검정', c:"from scipy.stats import ttest_rel\nstat, p = ttest_rel(df['before'], df['after'])", formula:"t = d̄ / (s_d/√n),  d = before - after", example:"같은 사람의 다이어트 전/후 체중처럼 짝지어진 두 값 비교", usage:"같은 대상에서 측정한 전/후 값(다이어트 전후 체중 등)을 비교할 때"},
+      {d:'독립표본 t검정(등분산 가정)', c:"from scipy.stats import ttest_ind\nstat, p = ttest_ind(group1, group2, equal_var=True)", formula:"t = (x̄1-x̄2) / (sp·√(1/n1+1/n2)),  sp² = ((n1-1)s1²+(n2-1)s2²)/(n1+n2-2)", example:"약 처방군 vs 대조군처럼 서로 다른 두 집단의 평균 비교", usage:"서로 다른 두 집단을 비교하고 두 집단의 분산이 비슷하다고 볼 수 있을 때"},
+      {d:'독립표본 t검정(이분산 가정)', c:"from scipy.stats import ttest_ind\nstat, p = ttest_ind(group1, group2, equal_var=False)", formula:"t = (x̄1-x̄2) / √(s1²/n1 + s2²/n2)  (Welch's t-test)", example:"equal_var=False만 다르고 사용법은 동일", usage:"두 집단의 분산이 다르거나 표본 크기 차이가 클 때(확실치 않으면 이 방법이 더 안전해 최근에는 기본값으로도 권장됨)"},
+      {d:'단측검정 - 크다(greater)', c:"from scipy.stats import ttest_1samp\nstat, p = ttest_1samp(df['col'], popmean=50, alternative='greater')", formula:"H0: μ ≤ 50,  H1: μ > 50", example:"'평균이 50보다 크다고 할 수 있는가'처럼 방향이 정해진 물음\np(단측) = p(양측)/2  (검정통계량 부호가 대립가설과 같을 때)", usage:"문제에 '~보다 크다/증가했다/개선되었다'처럼 방향이 명시되면 단측검정이다. alternative를 빼면 양측이 되어 p값이 2배가 되고 결론이 뒤집힐 수 있다"},
+      {d:'단측검정 - 작다(less)', c:"from scipy.stats import ttest_rel\nstat, p = ttest_rel(df['before'], df['after'], alternative='less')", formula:"H0: μ_before ≥ μ_after,  H1: μ_before < μ_after", example:"'처리 후 값이 더 커졌는가'를 before < after 방향으로 검정", usage:"대응표본에서 방향이 있는 물음일 때. 어느 쪽을 앞에 두느냐에 따라 greater/less가 뒤바뀌므로 인자 순서를 먼저 확인한다"},
+    ]},
+    { name:'등분산 검정', items:[
+      {d:'레빈(Levene) 등분산 검정', c:"from scipy.stats import levene\nstat, p = levene(group1, group2)", formula:"H0: 두 집단의 분산이 같다", example:"p > 0.05 → 등분산 만족 → ttest_ind(equal_var=True)\np < 0.05 → 등분산 불만족 → ttest_ind(equal_var=False)", usage:"독립표본 t검정 직전에 equal_var를 무엇으로 줄지 결정하는 근거. t검정 문제와 거의 항상 세트로 나온다"},
+      {d:'바틀렛(Bartlett) 등분산 검정', c:"from scipy.stats import bartlett\nstat, p = bartlett(group1, group2)", formula:"H0: 모든 집단의 분산이 같다", example:"levene과 목적은 같고, 정규성을 만족할 때 더 검정력이 높다", usage:"데이터가 정규분포를 따를 때의 등분산 검정. 정규성이 의심되면 levene을 쓴다"},
+      {d:'세 집단 이상 등분산 검정', c:"from scipy.stats import levene\nstat, p = levene(group1, group2, group3)", formula:"H0: σ1² = σ2² = σ3²", example:"인자를 늘리기만 하면 3개 이상도 그대로 검정된다", usage:"분산분석(ANOVA) 전에 등분산 가정을 확인할 때"},
+    ]},
+    { name:'비모수 검정', items:[
+      {d:'맨-휘트니 U 검정(독립 2집단)', c:"from scipy.stats import mannwhitneyu\nstat, p = mannwhitneyu(group1, group2)", formula:"H0: 두 집단의 분포(중앙값)가 같다", example:"독립표본 t검정의 비모수 버전. 순위를 기반으로 비교한다", usage:"정규성 검정에서 p<0.05가 나와 t검정을 쓸 수 없을 때 쓰는 대체 검정. 최근 회차에서 '정규성을 만족하지 않으면 적절한 검정을 하시오' 형태로 자주 출제된다"},
+      {d:'윌콕슨 부호순위 검정(대응표본)', c:"from scipy.stats import wilcoxon\nstat, p = wilcoxon(df['before'], df['after'])", formula:"H0: 두 시점 차이의 중앙값이 0이다", example:"대응표본 t검정(ttest_rel)의 비모수 버전", usage:"전/후 짝지어진 데이터인데 정규성을 만족하지 않을 때"},
+      {d:'크루스칼-왈리스 검정(3집단 이상)', c:"from scipy.stats import kruskal\nstat, p = kruskal(group1, group2, group3)", formula:"H0: 모든 집단의 분포가 같다", example:"일원배치 분산분석(f_oneway)의 비모수 버전", usage:"3개 이상 집단 비교인데 정규성이나 등분산을 만족하지 않을 때"},
+      {d:'비모수 대체 판단 흐름', c:"from scipy.stats import shapiro, ttest_ind, mannwhitneyu\nstat, p = shapiro(group1)\nif p > 0.05:\n    stat, p = ttest_ind(group1, group2)\nelse:\n    stat, p = mannwhitneyu(group1, group2)", example:"정규성 만족 → 모수 검정 / 불만족 → 비모수 검정", usage:"'적절한 검정 방법을 선택하여 수행하시오' 유형의 표준 답안 구조. 판단 근거(정규성 검정)까지 출력해야 배점을 다 받는다"},
     ]},
     { name:'카이제곱검정', items:[
-      {d:'교차표 생성', c:"table = pd.crosstab(df['col1'], df['col2'])"},
-      {d:'카이제곱 독립성 검정', c:"from scipy.stats import chi2_contingency\nchi2, p, dof, expected = chi2_contingency(table)"},
-      {d:'검정통계량과 p-value 확인', c:"print(chi2, p)"},
+      {d:'교차표 생성', c:"table = pd.crosstab(df['col1'], df['col2'])", example:"gender×purchase 조합별 빈도수를 담은 2x2(또는 그 이상) 표 생성", usage:"두 범주형 변수의 관계를 검정하기 전 빈도표를 만들 때"},
+      {d:'카이제곱 독립성 검정', c:"from scipy.stats import chi2_contingency\nchi2, p, dof, expected = chi2_contingency(table)", formula:"χ² = Σ((관측값-기대값)² / 기대값)", example:"출력: (chi2, p, dof, expected). p<0.05면 두 변수는 연관 있음", usage:"두 범주형 변수(성별과 구매여부 등)가 서로 연관 있는지 검정할 때"},
+      {d:'검정통계량과 p-value 확인', c:"print(chi2, p)", example:"chi2=4.23, p=0.04 처럼 앞서 구한 값을 그대로 출력", usage:"검정 통계량과 p-value를 최종 답안으로 출력해야 할 때"},
+      {d:'카이제곱 적합도 검정', c:"from scipy.stats import chisquare\nstat, p = chisquare(f_obs=[30, 25, 25, 20], f_exp=[25, 25, 25, 25])", formula:"χ² = Σ((관측빈도-기대빈도)² / 기대빈도),  df = k-1", example:"'네 요일의 방문자 수가 균등한가'처럼 하나의 범주형 변수가 특정 분포를 따르는지 검정", usage:"독립성 검정(두 변수의 관계)이 아니라 한 변수의 분포가 기댓값과 맞는지 볼 때. f_exp를 생략하면 균등분포를 가정한다"},
+      {d:'기대빈도 확인', c:"print(expected)", example:"chi2_contingency가 반환한 네 번째 값. 모든 칸의 기대빈도가 5 이상이어야 카이제곱 검정이 타당하다", usage:"검정의 사용 조건을 확인하거나, 기대빈도 자체를 답으로 요구할 때"},
     ]},
     { name:'분산분석', items:[
-      {d:'그룹별 데이터 준비', c:"group1 = df[df['col'] == 'A']['value']\ngroup2 = df[df['col'] == 'B']['value']\ngroup3 = df[df['col'] == 'C']['value']"},
-      {d:'일원배치 분산분석 실행', c:"from scipy.stats import f_oneway\nstat, p = f_oneway(group1, group2, group3)"},
-      {d:'유의수준 기준 결과 해석', c:"if p < 0.05:\n    print('집단 간 평균에 유의한 차이가 있다')"},
+      {d:'그룹별 데이터 준비', c:"group1 = df[df['col'] == 'A']['value']\ngroup2 = df[df['col'] == 'B']['value']\ngroup3 = df[df['col'] == 'C']['value']", example:"col값이 'A','B','C'인 행들을 각각 별도 Series로 분리", usage:"ANOVA 실행 전 비교할 3개 이상 집단 데이터를 나눠둘 때"},
+      {d:'일원배치 분산분석 실행', c:"from scipy.stats import f_oneway\nstat, p = f_oneway(group1, group2, group3)", formula:"F = MSB/MSW = (SSB/(k-1)) / (SSW/(N-k))", example:"3개 이상 집단의 평균이 모두 같은지 한 번에 검정", usage:"3개 이상 집단의 평균을 한 번에 비교할 때(t검정을 여러 번 반복하면 오류율이 커짐)"},
+      {d:'유의수준 기준 결과 해석', c:"if p < 0.05:\n    print('집단 간 평균에 유의한 차이가 있다')", formula:"p < α(=0.05) → 귀무가설(집단 간 평균이 같다) 기각", example:"p=0.01 < 0.05 → '집단 간 평균에 유의한 차이가 있다' 출력", usage:"ANOVA 검정 결과를 유의수준과 비교해 결론지을 때"},
+      {d:'분산분석표(ANOVA table) 출력', c:"import statsmodels.api as sm\nimport statsmodels.formula.api as smf\nmodel = smf.ols('value ~ C(group)', data=df).fit()\nprint(sm.stats.anova_lm(model))", formula:"F = MSB/MSW,  제곱합 SS / 자유도 df / 평균제곱 MS", example:"출력: sum_sq, df, F, PR(>F) 컬럼을 가진 분산분석표", usage:"F통계량뿐 아니라 제곱합·자유도까지 답으로 요구할 때. 범주형 변수는 반드시 C()로 감싼다"},
+      {d:'이원배치 분산분석(주효과)', c:"import statsmodels.api as sm\nimport statsmodels.formula.api as smf\nmodel = smf.ols('value ~ C(a) + C(b)', data=df).fit()\nprint(sm.stats.anova_lm(model))", formula:"두 요인 a, b가 각각 종속변수에 미치는 영향을 동시에 검정", usage:"요인이 두 개인 실험 설계(예: 비료 종류 × 토양 종류). 최근 회차에서 출제 빈도가 올라간 유형"},
+      {d:'이원배치 분산분석(교호작용 포함)', c:"import statsmodels.api as sm\nimport statsmodels.formula.api as smf\nmodel = smf.ols('value ~ C(a) * C(b)', data=df).fit()\nprint(sm.stats.anova_lm(model))", formula:"C(a) * C(b) = C(a) + C(b) + C(a):C(b)  (주효과 + 교호작용)", example:"출력의 C(a):C(b) 행이 교호작용 검정 결과", usage:"'교호작용이 유의한지 판단하시오'라는 지시가 있을 때. +가 아니라 *를 써야 교호작용 항이 생긴다"},
+      {d:'사후검정(Tukey HSD)', c:"from statsmodels.stats.multicomp import pairwise_tukeyhsd\nprint(pairwise_tukeyhsd(df['value'], df['group']))", formula:"모든 집단 쌍을 비교하되 다중비교로 인한 오류율 증가를 보정", example:"출력: group1, group2, meandiff, p-adj, reject 컬럼\nreject=True인 쌍이 유의하게 다른 집단", usage:"ANOVA에서 '차이가 있다'가 나온 뒤 '어느 집단끼리 다른지' 묻는 후속 문제"},
     ]},
     { name:'상관분석', items:[
-      {d:'피어슨 상관분석', c:"from scipy.stats import pearsonr\ncorr, p = pearsonr(df['col1'], df['col2'])"},
-      {d:'스피어만 상관분석', c:"from scipy.stats import spearmanr\ncorr, p = spearmanr(df['col1'], df['col2'])"},
-      {d:'스피어만 상관계수 행렬', c:"df[['col1', 'col2']].corr(method='spearman')"},
+      {d:'피어슨 상관분석', c:"from scipy.stats import pearsonr\ncorr, p = pearsonr(df['col1'], df['col2'])", formula:"r = Σ((xᵢ-x̄)(yᵢ-ȳ)) / √(Σ(xᵢ-x̄)²·Σ(yᵢ-ȳ)²)", example:"두 연속형 변수의 선형관계 강도, -1~1 사이 값", usage:"두 연속형 변수가 선형 관계이고 정규성을 대략 만족할 때"},
+      {d:'스피어만 상관분석', c:"from scipy.stats import spearmanr\ncorr, p = spearmanr(df['col1'], df['col2'])", formula:"ρ = 1 - (6·Σdᵢ²) / (n(n²-1))  (dᵢ: 두 변수 순위의 차이)", example:"비선형(단조 증가/감소)이거나 이상치가 있을 때 더 안정적", usage:"데이터가 정규분포가 아니거나 이상치가 있거나, 순위(등수) 데이터를 다룰 때"},
+      {d:'스피어만 상관계수 행렬', c:"df[['col1', 'col2']].corr(method='spearman')", formula:"ρ = 1 - (6·Σdᵢ²) / (n(n²-1))  (dᵢ: 두 변수 순위의 차이)", example:"df[['col1','col2']].corr(method='spearman') → 순위 기반 상관행렬", usage:"여러 변수 쌍의 순위상관을 한 번에 표로 보고 싶을 때"},
     ]},
     { name:'회귀분석', items:[
-      {d:'OLS 회귀모형 적합', c:"import statsmodels.formula.api as smf\nmodel = smf.ols('y ~ x1 + x2', data=df).fit()"},
-      {d:'회귀분석 결과 요약 출력', c:"print(model.summary())"},
-      {d:'회귀계수 확인', c:"model.params"},
-      {d:'회귀계수 유의확률 확인', c:"model.pvalues"},
+      {d:'OLS 회귀모형 적합', c:"import statsmodels.formula.api as smf\nmodel = smf.ols('y ~ x1 + x2', data=df).fit()", formula:"y = b0 + b1x1 + b2x2 + ε  (최소제곱법으로 b 추정)", example:"'sales ~ tv + radio' → 광고비로 매출액을 예측하는 모형", usage:"여러 독립변수로 연속형 종속변수를 예측하고 계수의 의미를 해석해야 할 때"},
+      {d:'회귀분석 결과 요약 출력', c:"print(model.summary())", example:"출력: 계수, 표준오차, t값, p값, R² 등 회귀분석 전체 리포트", usage:"회귀모형의 전반적인 적합도와 유의성을 한 번에 확인할 때"},
+      {d:'회귀계수 확인', c:"model.params", example:"model.params → {'Intercept': 2.9, 'tv': 0.045, ...}", usage:"특정 변수의 계수 값만 뽑아서 답안으로 제출할 때"},
+      {d:'회귀계수 유의확률 확인', c:"model.pvalues", example:"model.pvalues → {'tv': 0.0001, ...} (0.05보다 작으면 유의)", usage:"특정 변수가 통계적으로 유의한지 판단할 때"},
+      {d:'결정계수/수정된 결정계수', c:"print(round(model.rsquared, 3))\nprint(round(model.rsquared_adj, 3))", formula:"R²_adj = 1 - (1-R²)·(n-1)/(n-k-1)  (k: 독립변수 개수)", example:"변수를 늘리면 R²는 항상 오르지만 R²_adj는 쓸모없는 변수가 늘면 오히려 내려간다", usage:"'수정된 결정계수를 구하시오'는 다중회귀에서 자주 나오는 배점 항목"},
+      {d:'새로운 값에 대한 예측', c:"new = pd.DataFrame({'x1': [10], 'x2': [5]})\nprint(model.predict(new))", example:"x1=10, x2=5일 때의 y 예측값을 반환", usage:"'광고비가 100일 때 매출 예측값을 구하시오' 유형. 입력은 반드시 학습 때와 같은 컬럼명의 데이터프레임이어야 한다"},
+      {d:'잔차 확인', c:"resid = model.resid\nprint(round(resid.sum(), 4))", formula:"잔차 eᵢ = yᵢ - ŷᵢ", example:"최소제곱 회귀에서 잔차의 합은 이론상 0이 된다", usage:"잔차의 분산·표준편차·최댓값 등을 답으로 요구하거나, 잔차 정규성을 검정하라고 할 때"},
+      {d:'F통계량과 모형 유의성', c:"print(round(model.fvalue, 4))\nprint(model.f_pvalue < 0.05)", formula:"H0: 모든 회귀계수가 0이다(모형이 무의미하다)", example:"f_pvalue < 0.05 → 모형 전체가 통계적으로 유의", usage:"개별 계수가 아니라 '회귀모형 자체가 유의한가'를 묻는 문제"},
+      {d:'회귀계수 신뢰구간', c:"print(model.conf_int(alpha=0.05))", formula:"95% 신뢰구간 = b ± t(0.975, df)·SE(b)", example:"출력: 각 계수의 [하한, 상한] 두 컬럼", usage:"'회귀계수의 95% 신뢰구간을 구하시오'. alpha=0.01이면 99% 신뢰구간"},
+      {d:'예약어·특수문자 컬럼명 다루기(Q)', c:"import statsmodels.formula.api as smf\nmodel = smf.ols('y ~ Q(\"class\") + Q(\"pass\")', data=df).fit()", formula:"Q(\"이름\") — 수식 안에서 이름을 그대로 조회", example:"pass, class, if, return 처럼 파이썬 예약어이거나 공백·한글이 섞인 컬럼명은 수식에 그대로 쓸 수 없다", usage:"수식 문자열은 patsy가 파이썬 코드로 평가한다. 컬럼명이 예약어면 SyntaxError로 즉시 멈추므로 Q(\"...\")로 감싸거나, 아예 df.rename으로 이름을 바꾸고 시작하는 편이 안전하다"},
     ]},
     { name:'로지스틱회귀', items:[
-      {d:'로지스틱 회귀모형 적합', c:"model = smf.logit('y ~ x1 + x2', data=df).fit()"},
-      {d:'오즈비 계산', c:"odds_ratio = np.exp(model.params)"},
-      {d:'회귀계수 신뢰구간 계산', c:"conf = model.conf_int()"},
-      {d:'오즈비 신뢰구간 계산', c:"np.exp(model.conf_int())"},
+      {d:'로지스틱 회귀모형 적합', c:"import statsmodels.formula.api as smf\nmodel = smf.logit('y ~ x1 + x2', data=df).fit(disp=0)", formula:"logit(P) = ln(P/(1-P)) = b0 + b1x1 + ...", example:"'pass ~ gpa + interview' → 합격 여부(0/1)를 확률로 예측\ndisp=0을 주면 'Optimization terminated successfully...' 최적화 로그가 출력에 섞이지 않는다", usage:"종속변수가 0/1 같은 이진 범주일 때. 종속변수는 반드시 숫자 0/1이어야 하며 문자열이면 먼저 인코딩한다"},
+      {d:'오즈비 계산', c:"import numpy as np\nodds_ratio = np.exp(model.params)", formula:"오즈비(Odds Ratio) = e^b  (계수를 지수변환)", example:"gpa 계수 b=0.8 → 오즈비=e^0.8≈2.23 (gpa 1 증가 시 합격 오즈 2.23배)", usage:"계수를 '오즈가 몇 배 증가하는지'처럼 해석 가능한 값으로 바꿀 때"},
+      {d:'회귀계수 신뢰구간 계산', c:"conf = model.conf_int()", formula:"95% 신뢰구간 = b ± z(0.975)·SE(b)  (SE: 계수의 표준오차)", example:"model.conf_int() → 각 계수의 95% 신뢰구간 [하한, 상한]", usage:"계수 추정치의 불확실성 범위를 함께 제시해야 할 때"},
+      {d:'오즈비 신뢰구간 계산', c:"import numpy as np\nnp.exp(model.conf_int())", formula:"오즈비 신뢰구간 = e^(계수 신뢰구간)", example:"계수 CI [0.3, 1.3] → 오즈비 CI [e^0.3, e^1.3] ≈ [1.35, 3.67]", usage:"오즈비 해석에 통계적 신뢰 범위까지 요구하는 문제일 때"},
     ]},
     { name:'다중공선성', items:[
-      {d:'VIF 계산용 함수 불러오기', c:"from statsmodels.stats.outliers_influence import variance_inflation_factor"},
-      {d:'VIF 결과 저장용 데이터프레임 생성', c:"vif = pd.DataFrame()\nvif['feature'] = X.columns"},
-      {d:'컬럼별 VIF 값 계산', c:"vif['VIF'] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]"},
+      {d:'VIF 계산용 함수 불러오기', c:"from statsmodels.stats.outliers_influence import variance_inflation_factor", example:"variance_inflation_factor 함수를 사용하기 위한 import 문", usage:"회귀분석 전 독립변수들끼리 상관이 너무 높은지 점검하기 위한 준비 단계"},
+      {d:'VIF 결과 저장용 데이터프레임 생성', c:"vif = pd.DataFrame()\nvif['feature'] = X.columns", example:"vif['feature'] = X.columns → 각 독립변수명을 담는 준비 단계", usage:"여러 변수의 VIF 값을 한 번에 정리해서 보기 위한 준비 단계"},
+      {d:'컬럼별 VIF 값 계산', c:"from statsmodels.stats.outliers_influence import variance_inflation_factor\nvif['VIF'] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]", formula:"VIFᵢ = 1 / (1 - Rᵢ²)  (Rᵢ²: 변수i를 나머지 변수로 회귀했을 때의 결정계수)", example:"VIF>10이면 다중공선성이 심각하다고 판단", usage:"VIF가 10을 넘으면(기준에 따라 5) 다중공선성이 심각하다고 보고 변수 제거를 고려"},
+    ]},
+    { name:'확률분포/임계값', items:[
+      {d:'정규분포 확률 계산(cdf)', c:"from scipy.stats import norm\nprint(round(norm.cdf(1.96), 4))", formula:"P(Z ≤ z) — 누적분포함수", example:"norm.cdf(1.96) → 0.975 (표준정규분포에서 1.96 이하일 확률)", usage:"'평균 μ, 표준편차 σ인 정규분포에서 x 이하일 확률'을 구하라는 문제. norm.cdf(x, loc=μ, scale=σ) 형태로 쓴다"},
+      {d:'정규분포 임계값 계산(ppf)', c:"from scipy.stats import norm\nprint(round(norm.ppf(0.975), 4))", formula:"cdf의 역함수 — 누적확률이 p가 되는 지점", example:"norm.ppf(0.975) → 1.96 (양측 95% 신뢰구간의 z값)", usage:"신뢰구간을 손으로 계산하거나 '상위 5%에 해당하는 값'을 구할 때"},
+      {d:'t분포 임계값', c:"from scipy.stats import t\nprint(round(t.ppf(0.975, df=29), 4))", formula:"자유도 df인 t분포의 상위 2.5% 지점", example:"표본 30개(df=29) 양측 95% → 약 2.0452", usage:"모표준편차를 모르는 소표본 신뢰구간·검정에서 임계값이 필요할 때"},
+      {d:'카이제곱분포 임계값', c:"from scipy.stats import chi2\nprint(round(chi2.ppf(0.95, df=3), 4))", formula:"자유도 df인 χ²분포의 상위 5% 지점", example:"df=3 → 약 7.8147. 검정통계량이 이보다 크면 귀무가설 기각", usage:"카이제곱 검정에서 p값 대신 기각역(임계값)으로 판단하라고 할 때"},
+      {d:'모평균 신뢰구간 계산', c:"from scipy.stats import t\nimport numpy as np\nn = len(df)\nse = df['col'].std() / np.sqrt(n)\nci = t.interval(0.95, df=n-1, loc=df['col'].mean(), scale=se)\nprint(ci)", formula:"x̄ ± t(0.975, n-1)·(s/√n)", example:"출력: (하한, 상한) 튜플", usage:"'모평균의 95% 신뢰구간을 구하시오' 유형. 표준오차(se) 계산을 빠뜨리는 실수가 많다"},
+    ]},
+    { name:'일반화선형모형(GLM)', items:[
+      {d:'포아송 회귀 적합', c:"import statsmodels.api as sm\nimport statsmodels.formula.api as smf\nmodel = smf.glm('count ~ x1 + x2', data=df, family=sm.families.Poisson()).fit()\nprint(model.summary())", formula:"log(λ) = b0 + b1x1 + ...  (종속변수가 '건수'인 계수 모형)", example:"사고 건수, 방문 횟수처럼 0 이상의 정수를 예측할 때", usage:"종속변수가 개수(count)일 때. 최근 회차 작업형3에 등장한 유형이라 형태만이라도 익혀 둔다"},
+      {d:'GLM 계수와 지수변환', c:"import numpy as np\nprint(round(model.params['x1'], 4))\nprint(round(np.exp(model.params['x1']), 4))", formula:"포아송 회귀에서 e^b = x가 1 증가할 때 기대 건수의 배율", example:"b=0.2 → e^0.2 ≈ 1.2214 (x1이 1 늘면 기대 건수 약 22% 증가)", usage:"계수를 해석 가능한 배율로 바꿔 답하라고 할 때"},
+      {d:'로지스틱 GLM 형태', c:"import statsmodels.api as sm\nimport statsmodels.formula.api as smf\nmodel = smf.glm('y ~ x1 + x2', data=df, family=sm.families.Binomial()).fit()", formula:"logit(P) = b0 + b1x1 + ...", example:"smf.logit(...)와 같은 결과를 GLM 형식으로 적합", usage:"문제가 'GLM으로 적합하시오'라고 명시할 때. family만 바꾸면 되는 구조를 이해해 두면 응용이 쉽다"},
+      {d:'모형 적합도(AIC/이탈도)', c:"print(round(model.aic, 4))\nprint(round(model.deviance, 4))", formula:"AIC = -2·logL + 2k  (작을수록 좋은 모형)", example:"두 모형의 AIC를 비교해 더 나은 쪽을 고른다", usage:"'두 모형 중 어느 쪽이 더 적합한가'를 묻거나 AIC 값 자체를 답으로 요구할 때"},
     ]},
   ]},
-  { key:'t4', label:'종합문제', categories:[
-    { name:'작업형1 유형', items:[
+  { key:'t4', label:'모의고사', categories:[
+    { name:'1회차 · 작업형1 (단답형 3문제)', items:[
       {
-        d:'결측치·이상치 종합 처리',
-        scenario:'고객 데이터에는 income 컬럼에 결측치가 있고, age 컬럼에는 극단적인 값이 섞여 있다. 아래 조건에 따라 데이터를 정제한 뒤 남은 행의 개수를 구하시오.',
-        table:{ cols:['id','age','income'], rows:[['1','29','3100'],['2','41',''],['3','120','2800'],['4','35','4200'],['5','27','2600']] },
+        d:'문제1) 결측치 대체 후 평균 구하기',
+        scenario:'제공된 데이터는 특정 자동차 모델들의 연비(mpg) 측정 데이터이다. mpg 컬럼에는 결측치가 존재한다. 결측치를 처리한 후 요구하는 값을 정수/소수 형태로 출력하시오.',
+        table:{ cols:['id','model','mpg','hp'], rows:[['1','avante','13.4','140'],['2','avante','',  '138'],['3','sonata','11.2','159'],['4','k5','12.8','153']] },
         steps:[
-          'income 컬럼의 결측치를 income의 평균값으로 대체하시오.',
-          'age 컬럼에 대해 IQR 방식으로 하한/상한을 계산하고, 범위를 벗어나는 행을 제거하시오.',
-          '최종 데이터프레임의 행 개수를 출력하시오.'
+          'mpg 컬럼의 결측치를 mpg 컬럼의 중앙값으로 대체하시오.',
+          '대체 후 mpg 컬럼의 평균을 소수 둘째 자리까지 반올림하여 출력하시오.'
         ],
-        c:"df['income'] = df['income'].fillna(df['income'].mean())\nQ1 = df['age'].quantile(0.25)\nQ3 = df['age'].quantile(0.75)\nIQR = Q3 - Q1\nlower = Q1 - 1.5 * IQR\nupper = Q3 + 1.5 * IQR\ndf = df[(df['age'] >= lower) & (df['age'] <= upper)]\nprint(df.shape[0])"
+        c:"df['mpg'] = df['mpg'].fillna(df['mpg'].median())\nprint(round(df['mpg'].mean(), 2))"
       },
       {
-        d:'그룹 집계·파생변수 종합',
-        scenario:'지점별 판매 데이터에서 월별 파생변수를 만들고, 지역(region)별 평균 매출(sales)이 가장 높은 상위 3개 지역을 확인하시오.',
-        table:{ cols:['region','date','sales'], rows:[['서울','2024-01-05','1200'],['부산','2024-01-08','950'],['서울','2024-02-11','1400'],['대구','2024-02-19','870']] },
+        d:'문제2) IQR 이상치 제거 후 표본 수 구하기',
+        scenario:'동일 데이터에서 마력(hp) 컬럼에는 비정상적으로 크거나 작은 값이 일부 포함되어 있다. IQR 방식으로 이상치를 제거한 뒤 남은 데이터의 개수를 구하시오. (아래는 전체 300행 중 일부 발췌)',
+        table:{ cols:['id','model','mpg','hp'], rows:[['1','avante','13.4','140'],['2','avante','13.9','138'],['3','sonata','11.2','159'],['4','k5','12.8','153'],['5','genesis','8.9','980'],['6','morning','17.2','12']] },
         steps:[
-          'date 컬럼을 datetime 타입으로 변환하시오.',
-          'date에서 월을 추출하여 month 파생변수를 생성하시오.',
-          'region별 sales 평균을 구해 내림차순 정렬한 뒤 상위 3개를 출력하시오.'
+          'hp 컬럼에 대해 1사분위수(Q1)와 3사분위수(Q3)를 구하고 IQR을 계산하시오.',
+          'Q1 - 1.5*IQR 미만이거나 Q3 + 1.5*IQR을 초과하는 행을 제거하시오.',
+          '남은 데이터의 행 개수를 정수로 출력하시오.'
         ],
-        c:"df['date'] = pd.to_datetime(df['date'])\ndf['month'] = df['date'].dt.month\nresult = df.groupby('region')['sales'].mean().sort_values(ascending=False)\nprint(result.head(3))"
+        c:"Q1 = df['hp'].quantile(0.25)\nQ3 = df['hp'].quantile(0.75)\nIQR = Q3 - Q1\nlower = Q1 - 1.5 * IQR\nupper = Q3 + 1.5 * IQR\ndf = df[(df['hp'] >= lower) & (df['hp'] <= upper)]\nprint(df.shape[0])"
       },
       {
-        d:'인코딩·스케일링·상관분석 종합',
-        scenario:'설문 데이터에서 범주형 변수를 인코딩하고 점수를 표준화한 뒤, 두 변수 간의 관계를 상관계수로 확인하시오.',
-        table:{ cols:['id','gender','score'], rows:[['1','M','78'],['2','F','92'],['3','F','65'],['4','M','81']] },
+        d:'문제3) 그룹 집계 후 최댓값 구하기',
+        scenario:'차종(model)별 평균 연비를 비교하여 가장 높은 평균 연비를 가진 차종의 값을 확인하고자 한다.',
+        table:{ cols:['model','mpg','hp'], rows:[['avante','13.6','139'],['sonata','11.2','159'],['k5','12.8','153'],['avante','14.1','135']] },
         steps:[
-          'gender 컬럼을 LabelEncoder로 인코딩하시오.',
-          'score 컬럼을 StandardScaler로 표준화하시오.',
-          '인코딩된 gender와 표준화된 score 간의 상관계수를 출력하시오.'
+          'model별 mpg의 평균을 구하시오.',
+          '평균이 가장 높은 model의 mpg 평균값을 소수 둘째 자리까지 반올림하여 출력하시오.'
         ],
-        c:"from sklearn.preprocessing import LabelEncoder, StandardScaler\nle = LabelEncoder()\ndf['gender'] = le.fit_transform(df['gender'])\nscaler = StandardScaler()\ndf[['score']] = scaler.fit_transform(df[['score']])\nprint(df['gender'].corr(df['score']))"
+        c:"result = df.groupby('model')['mpg'].mean().sort_values(ascending=False)\nprint(round(result.iloc[0], 2))"
       },
     ]},
-    { name:'작업형2 유형', items:[
+    { name:'1회차 · 작업형2 (모델링 1문제)', items:[
       {
-        d:'분류 모델 종합(이탈 예측)',
-        scenario:'고객 이탈 여부(churn)를 예측하는 분류 모델을 만들고, 테스트셋에 대한 F1 스코어를 확인한 뒤 예측 결과를 제출 파일로 저장하시오.',
-        table:{ cols:['id','age','income','churn'], rows:[['1','34','3200','0'],['2','45','2100','1'],['3','29','4400','0'],['4','52','1800','1']] },
+        d:'통신사 고객 이탈 확률 예측',
+        scenario:'통신사 고객 데이터를 이용해 고객의 이탈 여부(churn)를 예측하는 모델을 만들고자 한다. 학습용 데이터(X_train, y_train)와 평가용 데이터(X_test)가 주어질 때, X_test 각 고객이 이탈(1)할 확률을 예측하여 다음 형식의 CSV 파일로 제출하시오. (컬럼명: id, pred)',
+        table:{ cols:['id','tenure','monthly_charges','contract_type','churn'], rows:[['1','12','58.3','month-to-month','1'],['2','44','89.1','two year','0'],['3','3','20.4','month-to-month','1'],['4','60','75.0','one year','0']] },
         steps:[
-          'churn을 target(y)으로, id와 churn을 제외한 나머지를 feature(X)로 분리하시오.',
-          'test_size=0.2, stratify=y, random_state=42로 학습/평가 데이터를 분할하시오.',
-          'RandomForestClassifier(random_state=42)로 학습하시오.',
-          '예측 결과에 대한 F1 스코어를 출력하시오.',
-          'id와 예측값을 담은 데이터프레임을 result.csv로 저장하시오(index 제외).'
+          "contract_type 컬럼을 원핫인코딩(pd.get_dummies)하시오.",
+          'RandomForestClassifier(random_state=42)로 모델을 학습하시오.',
+          'X_test에 대한 이탈 확률(양성 클래스 확률)을 predict_proba로 구하시오.',
+          "X_test의 컬럼 구성을 X_train과 동일하게 맞추시오. (train에만 있는 범주 때문에 컬럼이 어긋나는 것을 방지)",
+          "id 컬럼과 예측 확률을 pred 컬럼으로 하는 데이터프레임을 만들어 result.csv로 저장하시오. (index 제외)"
         ],
-        c:"X = df.drop(columns=['id', 'churn'])\ny = df['churn']\nfrom sklearn.model_selection import train_test_split\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)\nfrom sklearn.ensemble import RandomForestClassifier\nmodel = RandomForestClassifier(random_state=42)\nmodel.fit(X_train, y_train)\ny_pred = model.predict(X_test)\nfrom sklearn.metrics import f1_score\nprint(f1_score(y_test, y_pred))\nresult = pd.DataFrame({'id': test_id, 'pred': y_pred})\nresult.to_csv('result.csv', index=False)"
-      },
-      {
-        d:'회귀 모델 종합(주택 가격 예측)',
-        scenario:'면적과 방 개수로 주택 가격(price)을 예측하는 회귀 모델을 만들고, 예측 성능을 RMSE로 확인하시오.',
-        table:{ cols:['id','area','rooms','price'], rows:[['1','84','3','52000'],['2','59','2','38500'],['3','102','4','67000'],['4','71','3','45000']] },
-        steps:[
-          'price를 target(y)으로, id와 price를 제외한 나머지를 feature(X)로 분리하시오.',
-          'test_size=0.3, random_state=42로 학습/평가 데이터를 분할하시오.',
-          'LinearRegression으로 학습하시오.',
-          '예측 결과에 대한 RMSE를 계산하여 출력하시오.'
-        ],
-        c:"X = df.drop(columns=['id', 'price'])\ny = df['price']\nfrom sklearn.model_selection import train_test_split\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)\nfrom sklearn.linear_model import LinearRegression\nmodel = LinearRegression()\nmodel.fit(X_train, y_train)\ny_pred = model.predict(X_test)\nfrom sklearn.metrics import mean_squared_error\nrmse = mean_squared_error(y_test, y_pred) ** 0.5\nprint(rmse)"
-      },
-      {
-        d:'교차검증·그리드서치 종합',
-        scenario:'RandomForestClassifier의 n_estimators를 그리드서치로 탐색하여 최적 파라미터를 찾고, 그 모델의 테스트 정확도를 확인하시오.',
-        table:{ cols:['id','x1','x2','target'], rows:[['1','12.4','0.55','1'],['2','9.8','0.31','0'],['3','15.1','0.72','1'],['4','7.3','0.19','0']] },
-        steps:[
-          'target을 y로, id와 target을 제외한 나머지를 X로 분리하시오.',
-          'test_size=0.2, random_state=42로 학습/평가 데이터를 분할하시오.',
-          "n_estimators 후보를 [100, 200, 300]으로 하여 GridSearchCV(cv=5)를 수행하시오.",
-          '탐색된 최적 모델(best_estimator_)로 테스트 정확도를 출력하시오.'
-        ],
-        c:"X = df.drop(columns=['id', 'target'])\ny = df['target']\nfrom sklearn.model_selection import train_test_split, GridSearchCV\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\nfrom sklearn.ensemble import RandomForestClassifier\nparams = {'n_estimators': [100, 200, 300]}\ngrid = GridSearchCV(RandomForestClassifier(random_state=42), param_grid=params, cv=5)\ngrid.fit(X_train, y_train)\ny_pred = grid.best_estimator_.predict(X_test)\nfrom sklearn.metrics import accuracy_score\nprint(accuracy_score(y_test, y_pred))"
+        c:"from sklearn.ensemble import RandomForestClassifier\ntest_id = X_test['id']\nX_train = X_train.drop(columns=['id'])\nX_test = X_test.drop(columns=['id'])\nX_train = pd.get_dummies(X_train, columns=['contract_type'])\nX_test = pd.get_dummies(X_test, columns=['contract_type'])\nX_test = X_test.reindex(columns=X_train.columns, fill_value=0)\nmodel = RandomForestClassifier(random_state=42)\nmodel.fit(X_train, y_train)\nproba = model.predict_proba(X_test)[:, 1]\nresult = pd.DataFrame({'id': test_id, 'pred': proba})\nresult.to_csv('result.csv', index=False)"
       },
     ]},
-    { name:'작업형3 유형', items:[
+    { name:'1회차 · 작업형3 (통계 2문제)', items:[
       {
-        d:'독립표본 t검정 종합',
-        scenario:'두 그룹(A, B)의 점수 평균에 차이가 있는지 유의수준 0.05에서 검정하고 결론을 출력하시오.',
-        table:{ cols:['group','score'], rows:[['A','82'],['A','76'],['B','69'],['B','74']] },
+        d:'문제1) 대응표본 t검정 - 다이어트 전후 체중',
+        scenario:'다이어트 프로그램에 참여한 참가자들의 시작 전(before)과 종료 후(after) 체중을 측정하였다. (1) 검정통계량과 (2) p-value를 각각 소수 넷째 자리까지 반올림하여 구하고, (3) 유의수준 0.05에서 귀무가설의 기각 여부를 판단하시오.',
+        table:{ cols:['id','before','after'], rows:[['1','78.2','75.1'],['2','82.5','80.9'],['3','69.0','68.4'],['4','90.3','86.7']] },
         steps:[
-          "group이 'A'인 데이터와 'B'인 데이터의 score를 각각 분리하시오.",
-          '등분산을 가정하고 독립표본 t검정을 실시하시오.',
-          'p-value를 소수 넷째 자리까지 반올림하여 출력하시오.',
-          '유의수준 0.05를 기준으로 판단한 결론을 출력하시오.'
+          'before와 after에 대해 대응표본 t검정을 실시하시오.',
+          '검정통계량과 p-value를 각각 소수 넷째 자리까지 반올림하여 출력하시오.',
+          'p-value를 유의수준 0.05와 비교하여 귀무가설의 기각/채택 결론을 출력하시오.'
         ],
-        c:"groupA = df[df['group'] == 'A']['score']\ngroupB = df[df['group'] == 'B']['score']\nfrom scipy.stats import ttest_ind\nstat, p = ttest_ind(groupA, groupB, equal_var=True)\nprint(round(p, 4))\nif p < 0.05:\n    print('두 그룹 간 평균 차이가 유의하다')\nelse:\n    print('두 그룹 간 평균 차이가 유의하지 않다')"
+        c:"from scipy.stats import ttest_rel\nstat, p = ttest_rel(df['before'], df['after'])\nprint(round(stat, 4))\nprint(round(p, 4))\nif p < 0.05:\n    print('귀무가설을 기각한다')\nelse:\n    print('귀무가설을 채택한다')"
       },
       {
-        d:'카이제곱 독립성검정 종합',
-        scenario:'성별(gender)과 구매 여부(purchase)가 서로 독립적인지 유의수준 0.05에서 검정하시오.',
-        table:{ cols:['gender','purchase'], rows:[['M','Y'],['F','N'],['F','Y'],['M','N']] },
+        d:'문제2) 다중선형회귀 - 광고비와 매출액',
+        scenario:'TV, 라디오, 신문 광고비에 따른 매출액(sales)을 설명하는 다중선형회귀모형을 적합하고자 한다. (1) tv의 회귀계수를 소수 넷째 자리까지, (2) 모형의 결정계수를 소수 셋째 자리까지 구하고, (3) tv 회귀계수의 유의확률이 0.05 미만인지 판단하시오.',
+        table:{ cols:['tv','radio','newspaper','sales'], rows:[['230.1','37.8','69.2','22.1'],['44.5','39.3','45.1','10.4'],['17.2','45.9','69.3','9.3'],['151.5','41.3','58.5','18.5']] },
+        steps:[
+          "statsmodels의 smf.ols로 'sales ~ tv + radio + newspaper' 모형을 적합하시오.",
+          'tv의 회귀계수를 소수 넷째 자리까지 반올림하여 출력하시오.',
+          '모형의 결정계수(rsquared)를 소수 셋째 자리까지 반올림하여 출력하시오.',
+          'tv 회귀계수의 유의확률이 0.05 미만인지 출력하시오.'
+        ],
+        c:"import statsmodels.formula.api as smf\nmodel = smf.ols('sales ~ tv + radio + newspaper', data=df).fit()\nprint(round(model.params['tv'], 4))\nprint(round(model.rsquared, 3))\nprint(model.pvalues['tv'] < 0.05)"
+      },
+    ]},
+    { name:'2회차 · 작업형1 (단답형 3문제)', items:[
+      {
+        d:'문제1) 최빈값 대체 후 조건별 개수',
+        scenario:'커피 전문점의 일별 매출 데이터에서 결제수단(payment) 컬럼에 결측치가 존재한다.',
+        table:{ cols:['date','payment','amount'], rows:[['2024-05-01','card','18000'],['2024-05-01','','25000'],['2024-05-02','cash','21000'],['2024-05-02','card','30500']] },
+        steps:[
+          'payment 컬럼의 결측치를 payment 컬럼의 최빈값으로 대체하시오.',
+          'amount가 20000 이상인 행의 개수를 정수로 출력하시오.'
+        ],
+        c:"df['payment'] = df['payment'].fillna(df['payment'].mode()[0])\nprint(df[df['amount'] >= 20000].shape[0])"
+      },
+      {
+        d:'문제2) Z-score 이상치 제거 후 표준편차',
+        scenario:'아파트 실거래가 데이터(전체 500행)에서 거래금액(price)에 비정상적인 값이 일부 포함되어 있다. 아래는 일부 발췌이다. (Z-score는 표본표준편차 std() 기준으로 계산한다)',
+        table:{ cols:['id','area','price'], rows:[['1','84','52000'],['2','59','38500'],['3','102','67000'],['4','71','450000'],['...','...','...'],['500','78','49800']] },
+        steps:[
+          'price 컬럼에 대해 (값 - 평균) / 표준편차로 Z-score를 계산하시오.',
+          'Z-score의 절댓값이 3을 초과하는 행을 제거하시오.',
+          '제거 후 남은 데이터의 price 표준편차를 반올림한 정수로 출력하시오.'
+        ],
+        c:"df['z'] = (df['price'] - df['price'].mean()) / df['price'].std()\ndf = df[abs(df['z']) <= 3]\nprint(round(df['price'].std()))"
+      },
+      {
+        d:'문제3) 날짜 파생변수와 최다 주문 요일',
+        scenario:'온라인 쇼핑몰의 주문 데이터에서 요일별 주문 건수를 비교하고자 한다. (월요일=0)',
+        table:{ cols:['order_id','order_date','amount'], rows:[['1','2024-03-04','32000'],['2','2024-03-05','15000'],['3','2024-03-11','28000'],['4','2024-03-12','19000'],['5','2024-03-18','24000']] },
+        steps:[
+          'order_date 컬럼을 datetime 타입으로 변환하시오.',
+          '요일을 나타내는 파생변수 dow를 dayofweek로 생성하시오.',
+          'dow별 주문 건수가 가장 많은 요일의 값을 정수로 출력하시오.'
+        ],
+        c:"df['order_date'] = pd.to_datetime(df['order_date'])\ndf['dow'] = df['order_date'].dt.dayofweek\nprint(df['dow'].value_counts().idxmax())"
+      },
+    ]},
+    { name:'2회차 · 작업형2 (모델링 1문제)', items:[
+      {
+        d:'가입자 보험료 예측(회귀)',
+        scenario:'가입자의 나이, BMI, 흡연 여부를 이용해 보험료(charges)를 예측하는 회귀 모델을 만들고자 한다. 학습용 데이터(train)와 평가용 데이터(test)가 주어지며 test에는 charges 컬럼이 없다. 모델 성능을 RMSE로 확인한 뒤, id와 예측값을 pred 컬럼으로 하는 CSV 파일을 제출하시오.',
+        table:{ cols:['id','age','bmi','smoker','charges'], rows:[['1','29','23.1','no','3200.5'],['2','52','31.4','yes','28900.2'],['3','40','27.8','no','7300.0'],['4','61','29.9','yes','32100.7']] },
+        steps:[
+          'train에서 charges를 y로, 나머지를 X로 분리하시오. (id는 제출용으로 따로 보관)',
+          'smoker 컬럼을 LabelEncoder로 인코딩하시오. (fit은 train으로만)',
+          'train을 다시 학습용/검증용으로 나누고 RandomForestRegressor(random_state=42)로 학습하시오.',
+          '검증 데이터에 대한 RMSE를 계산하여 출력하시오.',
+          'test 전체로 다시 학습한 모델의 예측값을 id와 함께 result.csv로 저장하시오. (index 제외)'
+        ],
+        c:"from sklearn.model_selection import train_test_split\nfrom sklearn.preprocessing import LabelEncoder\nfrom sklearn.ensemble import RandomForestRegressor\nfrom sklearn.metrics import mean_squared_error\ntest_id = test['id']\nX = train.drop(columns=['id', 'charges'])\ny = train['charges']\nX_test = test.drop(columns=['id'])\nle = LabelEncoder()\nX['smoker'] = le.fit_transform(X['smoker'])\nX_test['smoker'] = le.transform(X_test['smoker'])\nX_tr, X_val, y_tr, y_val = train_test_split(X, y, test_size=0.2, random_state=42)\nmodel = RandomForestRegressor(random_state=42)\nmodel.fit(X_tr, y_tr)\nprint(mean_squared_error(y_val, model.predict(X_val)) ** 0.5)\nmodel.fit(X, y)\nresult = pd.DataFrame({'id': test_id, 'pred': model.predict(X_test)})\nresult.to_csv('result.csv', index=False)"
+      },
+    ]},
+    { name:'2회차 · 작업형3 (통계 2문제)', items:[
+      {
+        d:'문제1) 카이제곱 독립성검정 - 성별과 구매여부',
+        scenario:'고객의 성별(gender)과 특정 상품 구매 여부(purchase)가 서로 연관이 있는지 확인하고자 한다. (1) 검정통계량과 (2) p-value를 각각 소수 넷째 자리까지 구하고, (3) 유의수준 0.05에서 독립성 여부를 판단하시오.',
+        table:{ cols:['gender','purchase'], rows:[['M','Y'],['F','N'],['F','Y'],['M','N'],['F','Y']] },
         steps:[
           'gender와 purchase에 대한 교차표를 생성하시오.',
-          '카이제곱 독립성 검정을 실시하시오.',
-          '검정통계량과 p-value를 출력하시오.',
-          '유의수준 0.05를 기준으로 판단한 결론을 출력하시오.'
+          '카이제곱 독립성 검정을 실시하고 검정통계량과 p-value를 각각 소수 넷째 자리까지 반올림하여 출력하시오.',
+          '유의수준 0.05를 기준으로 독립 여부에 대한 결론을 출력하시오.'
         ],
-        c:"table = pd.crosstab(df['gender'], df['purchase'])\nfrom scipy.stats import chi2_contingency\nchi2, p, dof, expected = chi2_contingency(table)\nprint(chi2, p)\nif p < 0.05:\n    print('두 변수는 서로 독립이 아니다')\nelse:\n    print('두 변수는 서로 독립이다')"
+        c:"from scipy.stats import chi2_contingency\ntable = pd.crosstab(df['gender'], df['purchase'])\nchi2, p, dof, expected = chi2_contingency(table)\nprint(round(chi2, 4))\nprint(round(p, 4))\nif p < 0.05:\n    print('두 변수는 서로 독립이 아니다')\nelse:\n    print('두 변수는 서로 독립이다')"
       },
       {
-        d:'로지스틱 회귀 종합',
-        scenario:'공부 시간과 출석률로 합격 여부(pass)를 설명하는 로지스틱 회귀모형을 적합하고, study_hours의 오즈비를 구하시오.',
-        table:{ cols:['study_hours','attendance','pass'], rows:[['3.5','0.92','1'],['1.2','0.65','0'],['4.0','0.88','1'],['0.8','0.55','0']] },
+        d:'문제2) 로지스틱 회귀 - 합격 여부와 오즈비',
+        scenario:'지원자의 학점(gpa)과 면접 점수(interview)가 합격 여부(passed)에 미치는 영향을 분석하고자 한다. (1) gpa의 회귀계수, (2) gpa의 오즈비를 각각 소수 넷째 자리까지 구하고, (3) gpa 오즈비의 95% 신뢰구간을 구하시오. ※ 종속변수명이 pass가 아니라 passed인 이유: pass는 파이썬 예약어라 수식 문자열 안에서 그대로 쓰면 SyntaxError가 난다.',
+        table:{ cols:['gpa','interview','passed'], rows:[['3.5','82','1'],['2.1','65','0'],['3.9','88','1'],['1.8','55','0']] },
         steps:[
-          "smf.logit으로 'pass ~ study_hours + attendance' 모형을 적합하시오.",
-          '적합된 모형의 회귀계수를 오즈비(np.exp)로 변환하시오.',
-          'study_hours의 오즈비를 출력하시오.'
+          "smf.logit으로 'passed ~ gpa + interview' 모형을 적합하시오.",
+          'gpa의 회귀계수를 소수 넷째 자리까지 반올림하여 출력하시오.',
+          'gpa의 오즈비(np.exp)를 소수 넷째 자리까지 반올림하여 출력하시오.',
+          'gpa 오즈비의 95% 신뢰구간을 출력하시오.'
         ],
-        c:"import statsmodels.formula.api as smf\nmodel = smf.logit('pass ~ study_hours + attendance', data=df).fit()\nodds_ratio = np.exp(model.params)\nprint(odds_ratio['study_hours'])"
+        c:"import numpy as np\nimport statsmodels.formula.api as smf\nmodel = smf.logit('passed ~ gpa + interview', data=df).fit(disp=0)\nprint(round(model.params['gpa'], 4))\nprint(round(np.exp(model.params['gpa']), 4))\nprint(np.exp(model.conf_int()).loc['gpa'])"
+      },
+    ]},
+    { name:'3회차 · 작업형1 (단답형 3문제)', items:[
+      {
+        d:'문제1) 그룹별 산포가 가장 큰 범주 찾기',
+        scenario:'전국 매장의 상품 카테고리별 일 매출 데이터이다. 매출 변동이 가장 심한(표준편차가 가장 큰) 카테고리를 찾고자 한다. (전체 400행 중 일부 발췌)',
+        table:{ cols:['store','category','sales'], rows:[['s1','food','120000'],['s1','book','43000'],['s2','food','310000'],['s2','book','47000'],['s3','toy','88000']] },
+        steps:[
+          'category별 sales의 표준편차를 구하시오.',
+          '표준편차가 가장 큰 category의 이름을 출력하시오.'
+        ],
+        c:"result = df.groupby('category')['sales'].std()\nprint(result.idxmax())"
+      },
+      {
+        d:'문제2) 월별 집계 후 최대 매출 월 구하기',
+        scenario:'온라인몰의 주문 데이터에서 월별 총 매출을 비교하고자 한다.',
+        table:{ cols:['order_id','order_date','amount'], rows:[['1','2024-01-15','32000'],['2','2024-01-28','15000'],['3','2024-02-03','28000'],['4','2024-03-12','19000'],['5','2024-03-27','41000']] },
+        steps:[
+          'order_date를 datetime으로 변환하고 month 파생변수를 만드시오.',
+          'month별 amount 합계를 구하시오.',
+          '합계가 가장 큰 월의 값(정수)과 그 달의 합계를 차례로 출력하시오.'
+        ],
+        c:"df['order_date'] = pd.to_datetime(df['order_date'])\ndf['month'] = df['order_date'].dt.month\nresult = df.groupby('month')['amount'].sum()\nprint(result.idxmax())\nprint(result.max())"
+      },
+      {
+        d:'문제3) 이상치를 제거하지 않고 상·하한으로 대체',
+        scenario:'센서 측정값(value)에 이상치가 포함되어 있다. 행을 제거하지 말고 IQR 기준 상·하한 값으로 눌러 담은(윈저화) 뒤 평균을 구하시오.',
+        table:{ cols:['id','value'], rows:[['1','12.5'],['2','13.1'],['3','11.8'],['4','95.0'],['5','12.9']] },
+        steps:[
+          'value 컬럼의 Q1, Q3, IQR을 구하고 하한/상한을 계산하시오.',
+          '하한보다 작은 값은 하한으로, 상한보다 큰 값은 상한으로 대체하시오.',
+          '대체 후 value의 평균을 소수 둘째 자리까지 반올림하여 출력하시오.'
+        ],
+        c:"Q1 = df['value'].quantile(0.25)\nQ3 = df['value'].quantile(0.75)\nIQR = Q3 - Q1\nlower = Q1 - 1.5 * IQR\nupper = Q3 + 1.5 * IQR\ndf.loc[df['value'] < lower, 'value'] = lower\ndf.loc[df['value'] > upper, 'value'] = upper\nprint(round(df['value'].mean(), 2))"
+      },
+    ]},
+    { name:'3회차 · 작업형2 (모델링 1문제)', items:[
+      {
+        d:'구독 서비스 해지 예측(분류·ROC-AUC)',
+        scenario:'구독 서비스 이용자의 해지 여부(target)를 예측하는 모델을 만들고자 한다. train.csv에는 target이 있고 test.csv에는 없다. 검증 성능을 ROC-AUC로 확인한 뒤, test 각 이용자의 해지 확률을 id와 함께 result.csv로 제출하시오. (컬럼명: id, pred)',
+        table:{ cols:['id','age','plan','months','device','target'], rows:[['1','34','basic','12','ios','0'],['2','27','premium','3','android','1'],['3','45','basic','30','ios','0'],['4','22','premium','1','web','1']] },
+        steps:[
+          'test의 id를 따로 보관하고, train에서 X와 y를 분리하시오.',
+          '문자열(object) 컬럼을 자동으로 찾아 원핫인코딩하고, X_test의 컬럼을 X와 동일하게 맞추시오.',
+          'train을 학습/검증으로 나누어 RandomForestClassifier(random_state=42)로 학습하고 검증 ROC-AUC를 출력하시오.',
+          '전체 학습 데이터로 다시 학습한 뒤 test의 해지 확률을 예측하여 result.csv로 저장하시오. (index 제외)'
+        ],
+        c:"from sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import RandomForestClassifier\nfrom sklearn.metrics import roc_auc_score\ntest_id = test['id']\nX = train.drop(columns=['id', 'target'])\ny = train['target']\nX_test = test.drop(columns=['id'])\ncat_cols = X.select_dtypes(include='object').columns\nX = pd.get_dummies(X, columns=cat_cols)\nX_test = pd.get_dummies(X_test, columns=cat_cols)\nX_test = X_test.reindex(columns=X.columns, fill_value=0)\nX_tr, X_val, y_tr, y_val = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)\nmodel = RandomForestClassifier(random_state=42)\nmodel.fit(X_tr, y_tr)\nprint(roc_auc_score(y_val, model.predict_proba(X_val)[:, 1]))\nmodel.fit(X, y)\nresult = pd.DataFrame({'id': test_id, 'pred': model.predict_proba(X_test)[:, 1]})\nresult.to_csv('result.csv', index=False)"
+      },
+    ]},
+    { name:'3회차 · 작업형3 (통계 2문제)', items:[
+      {
+        d:'문제1) 정규성 확인 후 적절한 두 집단 비교',
+        scenario:'두 학습법(A, B)으로 공부한 학생들의 점수를 비교하고자 한다. (1) A집단의 정규성 검정 p-value를 소수 넷째 자리까지 구하고, (2) 정규성을 만족하지 않으므로 비모수 검정을 실시하여 검정통계량과 p-value를 소수 넷째 자리까지 구하시오.',
+        table:{ cols:['id','group','score'], rows:[['1','A','88'],['2','A','61'],['3','B','75'],['4','B','92'],['5','A','99']] },
+        steps:[
+          'group이 A인 집단과 B인 집단의 score를 각각 분리하시오.',
+          'A집단에 대해 샤피로-윌크 검정을 실시하고 p-value를 소수 넷째 자리까지 출력하시오.',
+          '정규성을 만족하지 않는 경우에 적합한 맨-휘트니 U 검정을 실시하시오.',
+          '검정통계량과 p-value를 각각 소수 넷째 자리까지 반올림하여 출력하시오.'
+        ],
+        c:"from scipy.stats import shapiro, mannwhitneyu\ngroup1 = df[df['group'] == 'A']['score']\ngroup2 = df[df['group'] == 'B']['score']\nstat, p = shapiro(group1)\nprint(round(p, 4))\nstat, p = mannwhitneyu(group1, group2)\nprint(round(stat, 4))\nprint(round(p, 4))"
+      },
+      {
+        d:'문제2) 일원배치 분산분석과 사후검정',
+        scenario:'세 종류의 비료(fertilizer)가 작물 생장량(growth)에 미치는 영향을 분석하고자 한다. (1) 분산분석표를 출력하고 (2) 유의수준 0.05에서 어느 집단끼리 차이가 있는지 사후검정으로 확인하시오.',
+        table:{ cols:['fertilizer','growth'], rows:[['A','21.3'],['A','20.8'],['B','25.1'],['B','24.7'],['C','19.2'],['C','18.9']] },
+        steps:[
+          "smf.ols로 'growth ~ C(fertilizer)' 모형을 적합하시오.",
+          'anova_lm으로 분산분석표를 출력하시오.',
+          'Tukey HSD 사후검정 결과를 출력하시오.'
+        ],
+        c:"import statsmodels.api as sm\nimport statsmodels.formula.api as smf\nfrom statsmodels.stats.multicomp import pairwise_tukeyhsd\nmodel = smf.ols('growth ~ C(fertilizer)', data=df).fit()\nprint(sm.stats.anova_lm(model))\nprint(pairwise_tukeyhsd(df['growth'], df['fertilizer']))"
+      },
+    ]},
+    { name:'4회차 · 작업형1 (단답형 3문제)', items:[
+      {
+        d:'문제1) 결측 비율 기준으로 컬럼 제거',
+        scenario:'설문 응답 데이터에는 응답률이 낮은 문항이 섞여 있다. 결측치 비율이 30% 이상인 컬럼을 모두 제거한 뒤 남은 컬럼 수를 구하시오. (전체 1000행)',
+        table:{ cols:['id','q1','q2','q3','q4'], rows:[['1','5','','4','3'],['2','4','','','5'],['3','3','2','5',''],['4','5','','4','4']] },
+        steps:[
+          '컬럼별 결측치 비율을 구하시오.',
+          '결측치 비율이 0.3 이상인 컬럼을 제거하시오.',
+          '남은 컬럼의 개수를 정수로 출력하시오.'
+        ],
+        c:"ratio = df.isnull().mean()\ndf = df.drop(columns=ratio[ratio >= 0.3].index)\nprint(df.shape[1])"
+      },
+      {
+        d:'문제2) 데이터 일부만 사용했을 때 표준편차 변화',
+        scenario:'거래 데이터의 앞부분 70%만 사용했을 때 price의 표준편차가 얼마나 달라지는지 확인하고자 한다.',
+        table:{ cols:['id','price'], rows:[['1','12000'],['2','18500'],['3','9800'],['4','24000'],['5','15300']] },
+        steps:[
+          '전체 데이터의 price 표준편차를 구하시오.',
+          '데이터의 앞에서부터 70%에 해당하는 행만 남기시오. (행 수는 정수로 내림)',
+          '두 표준편차 차이의 절댓값을 소수 둘째 자리까지 반올림하여 출력하시오.'
+        ],
+        c:"before = df['price'].std()\ndf = df.iloc[:int(len(df) * 0.7)]\nafter = df['price'].std()\nprint(round(abs(before - after), 2))"
+      },
+      {
+        d:'문제3) 중복 제거 후 그룹 평균 최댓값',
+        scenario:'같은 사용자가 여러 번 기록된 소비 데이터이다. 사용자당 첫 기록만 남긴 뒤 도시별 평균 소비액을 비교하시오.',
+        table:{ cols:['user_id','city','spend'], rows:[['u1','seoul','32000'],['u1','seoul','31000'],['u2','busan','21000'],['u3','seoul','45000'],['u4','busan','28000']] },
+        steps:[
+          'user_id 기준으로 중복을 제거하고 첫 번째 행만 남기시오.',
+          'city별 spend 평균을 구하시오.',
+          '평균이 가장 높은 city의 이름과 그 평균값(소수 둘째 자리까지)을 차례로 출력하시오.'
+        ],
+        c:"df = df.drop_duplicates(subset=['user_id'])\nresult = df.groupby('city')['spend'].mean()\nprint(result.idxmax())\nprint(round(result.max(), 2))"
+      },
+    ]},
+    { name:'4회차 · 작업형2 (모델링 1문제)', items:[
+      {
+        d:'중고차 가격 예측(회귀·RMSE)',
+        scenario:'중고차의 연식, 주행거리, 연료 종류로 판매가(price)를 예측하는 회귀 모델을 만들고자 한다. train.csv에는 price가 있고 test.csv에는 없다. 검증 RMSE를 출력한 뒤 test 예측값을 id와 함께 result.csv로 제출하시오. (컬럼명: id, pred)',
+        table:{ cols:['id','year','mileage','fuel','price'], rows:[['1','2019','42000','gasoline','13500000'],['2','2015','118000','diesel','7200000'],['3','2021','15000','hybrid','24800000'],['4','2017','76000','gasoline','9900000']] },
+        steps:[
+          'test의 id를 보관하고 train에서 X와 y를 분리하시오.',
+          '문자열 컬럼을 원핫인코딩하고 X_test의 컬럼을 X와 동일하게 맞추시오.',
+          'train을 학습/검증으로 나누어 GradientBoostingRegressor(random_state=42)로 학습하고 검증 RMSE를 출력하시오.',
+          '전체 학습 데이터로 다시 학습한 뒤 test 예측값을 result.csv로 저장하시오. (index 제외)'
+        ],
+        c:"from sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import GradientBoostingRegressor\nfrom sklearn.metrics import mean_squared_error\ntest_id = test['id']\nX = train.drop(columns=['id', 'price'])\ny = train['price']\nX_test = test.drop(columns=['id'])\ncat_cols = X.select_dtypes(include='object').columns\nX = pd.get_dummies(X, columns=cat_cols)\nX_test = pd.get_dummies(X_test, columns=cat_cols)\nX_test = X_test.reindex(columns=X.columns, fill_value=0)\nX_tr, X_val, y_tr, y_val = train_test_split(X, y, test_size=0.2, random_state=42)\nmodel = GradientBoostingRegressor(random_state=42)\nmodel.fit(X_tr, y_tr)\nprint(mean_squared_error(y_val, model.predict(X_val)) ** 0.5)\nmodel.fit(X, y)\nresult = pd.DataFrame({'id': test_id, 'pred': model.predict(X_test)})\nresult.to_csv('result.csv', index=False)"
+      },
+    ]},
+    { name:'4회차 · 작업형3 (통계 2문제)', items:[
+      {
+        d:'문제1) 등분산 검정 후 단측 독립표본 t검정',
+        scenario:'새 교육방식(new)이 기존 방식(old)보다 점수를 높이는지 확인하고자 한다. (1) 레빈 등분산 검정의 p-value를 소수 넷째 자리까지 구하고, (2) 등분산을 가정한 상태에서 new가 old보다 크다는 단측 검정을 실시하여 검정통계량과 p-value를 소수 넷째 자리까지 구하시오.',
+        table:{ cols:['id','method','score'], rows:[['1','new','88'],['2','new','91'],['3','old','79'],['4','old','83'],['5','new','86'],['6','old','77']] },
+        steps:[
+          'method가 new인 집단과 old인 집단의 score를 각각 분리하시오.',
+          '레빈 등분산 검정을 실시하고 p-value를 소수 넷째 자리까지 출력하시오.',
+          "등분산을 가정(equal_var=True)하고 alternative='greater'로 독립표본 t검정을 실시하시오.",
+          '검정통계량과 p-value를 각각 소수 넷째 자리까지 반올림하여 출력하시오.'
+        ],
+        c:"from scipy.stats import levene, ttest_ind\ngroup1 = df[df['method'] == 'new']['score']\ngroup2 = df[df['method'] == 'old']['score']\nstat, p_var = levene(group1, group2)\nprint(round(p_var, 4))\nstat, p = ttest_ind(group1, group2, equal_var=True, alternative='greater')\nprint(round(stat, 4))\nprint(round(p, 4))"
+      },
+      {
+        d:'문제2) 카이제곱 적합도 검정',
+        scenario:'한 상담센터의 요일별 방문 건수가 균등하다고 볼 수 있는지 확인하고자 한다. (1) 검정통계량과 (2) p-value를 각각 소수 넷째 자리까지 구하고, (3) 유의수준 0.05에서 균등성 여부를 판단하시오.',
+        table:{ cols:['day','visits'], rows:[['mon','30'],['tue','25'],['wed','25'],['thu','20'],['fri','40']] },
+        steps:[
+          'visits를 관측빈도로 하여 균등분포를 기대빈도로 하는 적합도 검정을 실시하시오.',
+          '검정통계량과 p-value를 각각 소수 넷째 자리까지 반올림하여 출력하시오.',
+          '유의수준 0.05를 기준으로 요일별 방문 건수가 균등한지 결론을 출력하시오.'
+        ],
+        c:"from scipy.stats import chisquare\nstat, p = chisquare(f_obs=df['visits'])\nprint(round(stat, 4))\nprint(round(p, 4))\nif p < 0.05:\n    print('요일별 방문 건수는 균등하지 않다')\nelse:\n    print('요일별 방문 건수는 균등하다')"
+      },
+    ]},
+    { name:'5회차 · 작업형1 (단답형 3문제)', items:[
+      {
+        d:'문제1) 조건 파생변수 생성 후 개수 세기',
+        scenario:'시험 점수 데이터에서 80점 이상을 A, 그 외를 B로 분류한 뒤 A 등급 인원 수를 구하시오.',
+        table:{ cols:['id','score'], rows:[['1','92'],['2','75'],['3','80'],['4','68'],['5','88']] },
+        steps:[
+          "score가 80 이상이면 'A', 아니면 'B'인 grade 파생변수를 만드시오.",
+          "grade가 'A'인 행의 개수를 정수로 출력하시오."
+        ],
+        c:"import numpy as np\ndf['grade'] = np.where(df['score'] >= 80, 'A', 'B')\nprint(df['grade'].value_counts()['A'])"
+      },
+      {
+        d:'문제2) 등빈도 구간화 후 상위 구간 평균',
+        scenario:'소득(income) 기준으로 4개의 동일 인원 구간으로 나눈 뒤, 소득 최상위 구간의 평균 지출액(spend)을 구하시오.',
+        table:{ cols:['id','income','spend'], rows:[['1','2800','1200'],['2','5100','2300'],['3','3900','1700'],['4','7600','3100'],['5','4400','1900']] },
+        steps:[
+          'income을 q=4로 등빈도 구간화하여 bin 파생변수를 만드시오. (labels=False로 0~3의 정수)',
+          'bin별 spend 평균을 구하시오.',
+          '최상위 구간(bin=3)의 평균을 소수 둘째 자리까지 반올림하여 출력하시오.'
+        ],
+        c:"df['bin'] = pd.qcut(df['income'], q=4, labels=False)\nresult = df.groupby('bin')['spend'].mean()\nprint(round(result.loc[3], 2))"
+      },
+      {
+        d:'문제3) 문자열 정리 후 숫자 합계',
+        scenario:"거래금액(price)이 '1,250,000'처럼 콤마가 포함된 문자열로 저장되어 있다. 숫자로 변환한 뒤 총합을 구하시오.",
+        table:{ cols:['id','price'], rows:[['1','1,250,000'],['2','980,000'],['3','2,400,000'],['4','360,000']] },
+        steps:[
+          'price 컬럼에서 콤마를 제거하시오.',
+          'price 컬럼을 정수형으로 변환하시오.',
+          'price의 총합을 정수로 출력하시오.'
+        ],
+        c:"df['price'] = df['price'].str.replace(',', '').astype(int)\nprint(df['price'].sum())"
+      },
+    ]},
+    { name:'5회차 · 작업형2 (모델링 1문제)', items:[
+      {
+        d:'대출 부도 예측(분류·확률 제출)',
+        scenario:'대출 신청자의 정보로 부도 여부(default)를 예측하는 모델을 만들고자 한다. 수치형 컬럼에는 결측치가 있다. 검증 ROC-AUC를 출력한 뒤 test의 부도 확률을 pred 컬럼 하나로만 result.csv에 저장하시오.',
+        table:{ cols:['id','income','debt','job','years','default'], rows:[['1','4200','1800','office','5','0'],['2','2100','','service','1','1'],['3','6800','2200','office','12','0'],['4','1800','1600','none','0','1']] },
+        steps:[
+          'train에서 X와 y를 분리하고, test의 id는 제출에 쓰지 않으므로 제거하시오.',
+          '수치형 컬럼의 결측치를 각 컬럼의 중앙값으로 대체하시오.',
+          '문자열 컬럼을 원핫인코딩하고 X_test의 컬럼을 X와 동일하게 맞추시오.',
+          'GradientBoostingClassifier(random_state=42)로 학습하고 검증 ROC-AUC를 출력하시오.',
+          'test의 부도 확률을 pred 컬럼 하나만 담아 result.csv로 저장하시오. (index 제외)'
+        ],
+        c:"from sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import GradientBoostingClassifier\nfrom sklearn.metrics import roc_auc_score\nX = train.drop(columns=['id', 'default'])\ny = train['default']\nX_test = test.drop(columns=['id'])\nmed = X.median(numeric_only=True)\nX = X.fillna(med)\nX_test = X_test.fillna(med)\ncat_cols = X.select_dtypes(include='object').columns\nX = pd.get_dummies(X, columns=cat_cols)\nX_test = pd.get_dummies(X_test, columns=cat_cols)\nX_test = X_test.reindex(columns=X.columns, fill_value=0)\nX_tr, X_val, y_tr, y_val = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)\nmodel = GradientBoostingClassifier(random_state=42)\nmodel.fit(X_tr, y_tr)\nprint(roc_auc_score(y_val, model.predict_proba(X_val)[:, 1]))\nmodel.fit(X, y)\nresult = pd.DataFrame({'pred': model.predict_proba(X_test)[:, 1]})\nresult.to_csv('result.csv', index=False)"
+      },
+    ]},
+    { name:'5회차 · 작업형3 (통계 2문제)', items:[
+      {
+        d:'문제1) 이원배치 분산분석과 교호작용',
+        scenario:'학습방법(method)과 성별(gender)이 점수(score)에 미치는 영향을 분석하고자 한다. 두 요인의 주효과와 교호작용을 함께 검정하고, 교호작용이 유의수준 0.05에서 유의한지 판단하시오.',
+        table:{ cols:['method','gender','score'], rows:[['A','M','82'],['A','F','88'],['B','M','75'],['B','F','91'],['A','M','79'],['B','F','93']] },
+        steps:[
+          "smf.ols로 'score ~ C(method) * C(gender)' 모형을 적합하시오. (*를 써야 교호작용 항이 포함됨)",
+          'anova_lm으로 분산분석표를 출력하시오.',
+          '교호작용 항의 유의확률이 0.05 미만인지 출력하시오.'
+        ],
+        c:"import statsmodels.api as sm\nimport statsmodels.formula.api as smf\nmodel = smf.ols('score ~ C(method) * C(gender)', data=df).fit()\ntable = sm.stats.anova_lm(model)\nprint(table)\nprint(table.loc['C(method):C(gender)', 'PR(>F)'] < 0.05)"
+      },
+      {
+        d:'문제2) 포아송 회귀 - 사고 건수 예측',
+        scenario:'운전 시간(hours)과 경력(experience)이 연간 사고 건수(accidents)에 미치는 영향을 포아송 회귀로 분석하고자 한다. (1) hours의 회귀계수와 (2) 그 지수변환값을 각각 소수 넷째 자리까지 구하고, (3) hours가 유의수준 0.05에서 유의한지 판단하시오.',
+        table:{ cols:['hours','experience','accidents'], rows:[['1200','3','2'],['800','10','0'],['1500','1','4'],['600','15','0'],['1100','5','1']] },
+        steps:[
+          "smf.glm으로 'accidents ~ hours + experience' 포아송 모형을 적합하시오. (family=sm.families.Poisson())",
+          'hours의 회귀계수를 소수 넷째 자리까지 반올림하여 출력하시오.',
+          'hours 계수의 지수변환값(np.exp)을 소수 넷째 자리까지 반올림하여 출력하시오.',
+          'hours의 유의확률이 0.05 미만인지 출력하시오.'
+        ],
+        c:"import numpy as np\nimport statsmodels.api as sm\nimport statsmodels.formula.api as smf\nmodel = smf.glm('accidents ~ hours + experience', data=df, family=sm.families.Poisson()).fit()\nprint(round(model.params['hours'], 4))\nprint(round(np.exp(model.params['hours']), 4))\nprint(model.pvalues['hours'] < 0.05)"
       },
     ]},
   ]},
@@ -858,14 +1317,22 @@ var DATA = [
 var ITEM_INDEX = {};
 var ALL_IDS = [];
 var state = {};
+/* 저장은 위치 인덱스(t1-3-2)가 아니라 내용 시그니처로 키를 잡는다.
+   그래야 문제를 추가·재배치해도 기존 진행상황이 어긋나지 않는다. */
+var SIG_BY_ID = {};
+var ID_BY_SIG = {};
 
 DATA.forEach(function(tab, ti){
   tab.categories.forEach(function(cat, ci){
     cat.items.forEach(function(it, ii){
       var id = tab.key + '-' + ci + '-' + ii;
-      ITEM_INDEX[id] = { desc: it.d, code: it.c, tabLabel: tab.label, catName: cat.name, tabIdx: ti, catIdx: ci, scenario: it.scenario, table: it.table, steps: it.steps };
+      ITEM_INDEX[id] = { desc: it.d, code: it.c, tabLabel: tab.label, catName: cat.name, tabIdx: ti, catIdx: ci, scenario: it.scenario, table: it.table, steps: it.steps, formula: it.formula, example: it.example, usage: it.usage };
       ALL_IDS.push(id);
       state[id] = { typed:'', completed:false, everWrong:false, elapsedSec:0, running:false, startTs:null };
+      var sig = tab.key + '|' + it.d;
+      if(ID_BY_SIG[sig]) sig += '|' + ii; /* 같은 탭 안에 설명이 겹치면 순번으로 구분 */
+      SIG_BY_ID[id] = sig;
+      ID_BY_SIG[sig] = id;
     });
   });
 });
@@ -881,6 +1348,53 @@ var practiceEl = document.getElementById('practice');
 var progressTextEl = document.getElementById('progressText');
 var progressFillEl = document.getElementById('progressFill');
 var wrongToggleEl = document.getElementById('wrongToggle');
+var resetAllEl = document.getElementById('resetAllBtn');
+
+/* ---------- persistence ---------- */
+var STORAGE_KEY = 'bigdata-typing-trainer/v1';
+var saveTimer = null;
+
+function loadState(){
+  var raw = null;
+  try { raw = localStorage.getItem(STORAGE_KEY); } catch(err){ return; }
+  if(!raw) return;
+  var saved = null;
+  try { saved = JSON.parse(raw); } catch(err){ return; }
+  if(!saved || typeof saved !== 'object' || !saved.items) return;
+  Object.keys(saved.items).forEach(function(sig){
+    var id = ID_BY_SIG[sig];
+    if(!id || !state[id]) return; /* 문제가 삭제·수정되어 사라진 항목은 무시 */
+    var s = saved.items[sig] || {};
+    state[id].typed = typeof s.t === 'string' ? s.t : '';
+    state[id].completed = !!s.c;
+    state[id].everWrong = !!s.w;
+    state[id].elapsedSec = typeof s.e === 'number' ? s.e : 0;
+    state[id].running = false;
+    state[id].startTs = null;
+  });
+  wrongOnly = !!saved.wrongOnly;
+}
+
+function saveStateNow(){
+  if(saveTimer){ clearTimeout(saveTimer); saveTimer = null; }
+  var items = {};
+  ALL_IDS.forEach(function(id){
+    var s = state[id];
+    if(!s.typed && !s.completed && !s.everWrong && !s.elapsedSec) return; /* 손대지 않은 항목은 저장 생략 */
+    var elapsed = s.elapsedSec + (s.running ? (Date.now() - s.startTs) / 1000 : 0);
+    items[SIG_BY_ID[id]] = { t:s.typed, c:s.completed, w:s.everWrong, e:Math.round(elapsed) };
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ v:1, wrongOnly:wrongOnly, items:items }));
+  } catch(err){ /* 시크릿 모드 등 저장 불가여도 앱은 그대로 동작 */ }
+}
+
+function saveState(){
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveStateNow, 400);
+}
+
+window.addEventListener('beforeunload', saveStateNow);
 
 /* ---------- tabs ---------- */
 function renderTabs(){
@@ -1012,6 +1526,8 @@ function renderDictList(query){
     meta.appendChild(desc);
     row.appendChild(dot);
     row.appendChild(meta);
+    row.dataset.id = id;
+    if(id === currentId) row.classList.add('selected');
     row.addEventListener('click', function(){ activateItem(id); });
     listEl.appendChild(row);
   });
@@ -1078,6 +1594,21 @@ wrongToggleEl.addEventListener('click', function(){
   wrongOnly = !wrongOnly;
   wrongToggleEl.classList.toggle('active', wrongOnly);
   applyWrongFilter();
+  saveState();
+});
+
+resetAllEl.addEventListener('click', function(){
+  if(!window.confirm('저장된 진행상황(완료·오답노트·입력 내용)을 모두 지웁니다. 계속할까요?')) return;
+  if(timerHandle){ clearInterval(timerHandle); timerHandle = null; }
+  ALL_IDS.forEach(function(id){
+    state[id] = { typed:'', completed:false, everWrong:false, elapsedSec:0, running:false, startTs:null };
+  });
+  currentId = null;
+  try { localStorage.removeItem(STORAGE_KEY); } catch(err){}
+  if(saveTimer){ clearTimeout(saveTimer); saveTimer = null; }
+  renderPracticeEmpty();
+  renderSidebar();
+  updateHeaderProgress();
 });
 
 /* ---------- practice pane ---------- */
@@ -1098,15 +1629,61 @@ function formatTime(sec){
 
 function normalizeNewlines(v){ return v.replace(/\r\n/g, '\n'); }
 
+/* 채점용 정규화: 줄 끝 공백과 마지막 빈 줄은 무시한다.
+   (답을 다 치고 습관적으로 Enter를 한 번 더 누르는 것만으로 오답 처리되던 문제) */
+function normalizeForCompare(v){
+  return normalizeNewlines(v)
+    .split('\n')
+    .map(function(line){ return line.replace(/[ \t]+$/, ''); })
+    .join('\n')
+    .replace(/\n+$/, '');
+}
+
+function startTimer(id){
+  var st = state[id];
+  if(st.completed) return;
+  if(!st.running){ st.running = true; st.startTs = Date.now(); }
+  if(timerHandle) clearInterval(timerHandle);
+  timerHandle = setInterval(function(){ tick(id); }, 250);
+}
+
 function activateItem(id){
   if(currentId === id) return;
   deactivateCurrent();
   currentId = id;
   renderPracticeFor(id);
-  var btn = sidebarEl.querySelector('.item-btn[data-id="' + id + '"]');
-  sidebarEl.querySelectorAll('.item-btn.selected').forEach(function(b){ b.classList.remove('selected'); });
-  if(btn) btn.classList.add('selected');
+  sidebarEl.querySelectorAll('.selected').forEach(function(b){ b.classList.remove('selected'); });
+  var btn = sidebarEl.querySelector('[data-id="' + id + '"]');
+  if(btn){
+    var det = btn.closest('details.category');
+    if(det) det.open = true;
+    btn.classList.add('selected');
+    if(btn.scrollIntoView) btn.scrollIntoView({ block:'nearest' });
+  }
 }
+
+/* Alt+↑/↓ 로 사이드바에 보이는 항목 사이를 이동 (오답노트 필터 상태를 그대로 따름) */
+function visibleItemIds(){
+  var nodes = sidebarEl.querySelectorAll('.item-btn:not(.hidden), .dict-item');
+  return Array.prototype.filter.call(nodes, function(n){
+    var det = n.closest('details.category');
+    return !(det && det.classList.contains('hidden'));
+  }).map(function(n){ return n.dataset.id; });
+}
+
+function gotoAdjacent(step){
+  var ids = visibleItemIds();
+  if(!ids.length) return;
+  var i = currentId ? ids.indexOf(currentId) : -1;
+  if(i === -1){ activateItem(ids[step > 0 ? 0 : ids.length - 1]); return; }
+  activateItem(ids[(i + step + ids.length) % ids.length]);
+}
+
+document.addEventListener('keydown', function(e){
+  if(!e.altKey || e.ctrlKey || e.metaKey) return;
+  if(e.key === 'ArrowDown'){ e.preventDefault(); gotoAdjacent(1); }
+  else if(e.key === 'ArrowUp'){ e.preventDefault(); gotoAdjacent(-1); }
+});
 
 function deactivateCurrent(){
   if(timerHandle){ clearInterval(timerHandle); timerHandle = null; }
@@ -1182,9 +1759,56 @@ function renderProblemBrief(container, it){
   container.appendChild(ol);
 }
 
+function renderInfoPanel(container, it){
+  container.innerHTML = '';
+  if(it.usage){
+    var u = document.createElement('div');
+    u.className = 'info-row';
+    var uLabel = document.createElement('span');
+    uLabel.className = 'info-label usage';
+    uLabel.textContent = '왜·언제';
+    var uVal = document.createElement('p');
+    uVal.className = 'info-usage';
+    uVal.textContent = it.usage;
+    u.appendChild(uLabel);
+    u.appendChild(uVal);
+    container.appendChild(u);
+  }
+  if(it.formula){
+    var f = document.createElement('div');
+    f.className = 'info-row';
+    var fLabel = document.createElement('span');
+    fLabel.className = 'info-label';
+    fLabel.textContent = '수식';
+    var fVal = document.createElement('pre');
+    fVal.className = 'info-formula';
+    fVal.textContent = it.formula;
+    f.appendChild(fLabel);
+    f.appendChild(fVal);
+    container.appendChild(f);
+  }
+  if(it.example){
+    var e = document.createElement('div');
+    e.className = 'info-row';
+    var eLabel = document.createElement('span');
+    eLabel.className = 'info-label';
+    eLabel.textContent = '예시';
+    var eVal = document.createElement('pre');
+    eVal.className = 'info-example';
+    eVal.textContent = it.example;
+    e.appendChild(eLabel);
+    e.appendChild(eVal);
+    container.appendChild(e);
+  }
+}
+
 function renderPracticeFor(id){
   var it = ITEM_INDEX[id];
   var st = state[id];
+
+  /* 작업형1·3은 답을 print()로 출력해야 채점된다 — 해당 항목에 상시 경고 */
+  var needsPrint = it.tabIdx === 0 || it.tabIdx === 2 ||
+                   (it.tabIdx === 3 && /작업형[13]/.test(it.catName));
 
   practiceEl.innerHTML =
     '<div class="practice-head">' +
@@ -1198,82 +1822,66 @@ function renderPracticeFor(id){
         '<span class="badge-done" id="doneBadge" hidden>완료</span>' +
       '</div>' +
     '</div>' +
+    (needsPrint ? '<div class="print-notice"><span class="bang">!</span><span>작업형1·3은 <strong>답을 print()로 출력해야</strong> 채점됩니다. 변수에 담아두기만 하면 0점입니다.</span></div>' : '') +
+    ((it.formula || it.example || it.usage) ? '<div class="info-panel" id="infoPanel"></div>' : '') +
     (it.steps ? '<div class="problem-brief" id="problemBrief"></div>' : '') +
     '<div class="editor-block">' +
-      '<div class="editor-tabbar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="filename">정답.py</span></div>' +
-      '<div class="code-ref" id="codeRef"></div>' +
-    '</div>' +
-    '<div class="editor-block">' +
-      '<div class="editor-tabbar"><span class="filename">내_입력.py</span><button class="retry-btn" type="button" id="retryBtn">&#8635; 다시 시도</button></div>' +
+      '<div class="editor-tabbar"><span class="filename">내_입력.py</span><button class="submit-btn" type="button" id="submitBtn">제출</button><button class="retry-btn" type="button" id="retryBtn">&#8635; 다시 시도</button></div>' +
       '<div class="type-area" id="typeArea">' +
-        '<div class="type-overlay" id="typeOverlay"></div>' +
         '<textarea class="type-input" id="typeInput" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off"></textarea>' +
       '</div>' +
+      '<div class="feedback-panel" id="feedback" hidden></div>' +
     '</div>' +
-    '<p class="hint">들여쓰기는 <kbd>Tab</kbd> 키로 스페이스 4칸이 입력됩니다. 괄호, 콤마, 공백까지 완전히 일치해야 완료 처리됩니다.</p>';
+    '<p class="hint">들여쓰기는 <kbd>Tab</kbd>(스페이스 4칸), 제출은 <kbd>Ctrl</kbd>+<kbd>Enter</kbd>, 항목 이동은 <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd>. 줄 끝 공백과 마지막 빈 줄은 채점에서 무시합니다.</p>' +
+    '<div class="editor-block">' +
+      '<div class="editor-tabbar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="filename">정답.py</span><button class="reveal-btn" type="button" id="revealBtn"></button></div>' +
+      '<div class="code-ref" id="codeRef"></div>' +
+    '</div>';
 
   document.getElementById('itemTitle').textContent = it.desc;
+  if(it.formula || it.example || it.usage){ renderInfoPanel(document.getElementById('infoPanel'), it); }
   if(it.steps){ renderProblemBrief(document.getElementById('problemBrief'), it); }
-  renderCodeRef(document.getElementById('codeRef'), it.code);
+
+  /* 모의고사(steps 보유) 항목은 정답을 기본으로 숨겨 실전처럼 먼저 작성하게 한다 */
+  var codeRefEl = document.getElementById('codeRef');
+  var revealBtn = document.getElementById('revealBtn');
+  var answerShown = !it.steps;
+  function applyReveal(){
+    if(answerShown){
+      codeRefEl.classList.remove('masked');
+      renderCodeRef(codeRefEl, it.code);
+      revealBtn.textContent = '정답 숨기기';
+    } else {
+      codeRefEl.classList.add('masked');
+      codeRefEl.textContent = '실전처럼 먼저 직접 작성해 보세요. 막히면 [정답 보기]를 누르세요.';
+      revealBtn.textContent = '정답 보기';
+    }
+  }
+  revealBtn.addEventListener('click', function(){ answerShown = !answerShown; applyReveal(); });
+  applyReveal();
 
   var textarea = document.getElementById('typeInput');
+  var submitBtn = document.getElementById('submitBtn');
   textarea.value = st.typed;
   textarea.rows = Math.max(it.code.split('\n').length + 1, 3);
   if(st.completed){
     textarea.setAttribute('readonly', '');
     document.getElementById('typeArea').classList.add('is-complete');
     document.getElementById('doneBadge').hidden = false;
+    submitBtn.disabled = true;
   } else {
     textarea.focus();
   }
 
-  renderOverlay(id);
   updateStatsDisplay(id);
 
   textarea.addEventListener('input', function(e){ onInput(id, e); });
   textarea.addEventListener('keydown', function(e){ onKeydown(id, e); });
+  submitBtn.addEventListener('click', function(){ onSubmit(id); });
   document.getElementById('retryBtn').addEventListener('click', function(){ resetItem(id); });
 
-  if(st.running){
-    timerHandle = setInterval(function(){ tick(id); }, 250);
-  }
-}
-
-function renderOverlay(id){
-  var it = ITEM_INDEX[id];
-  var st = state[id];
-  var overlay = document.getElementById('typeOverlay');
-  if(!overlay) return;
-  var target = it.code;
-  var typed = st.typed;
-  var max = Math.max(target.length, typed.length);
-  var frag = document.createDocumentFragment();
-  var hasError = false;
-  for(var i = 0; i < max; i++){
-    var span = document.createElement('span');
-    span.className = 'ch';
-    if(i < target.length && i < typed.length){
-      if(typed[i] === target[i]){
-        span.classList.add('ok');
-        span.textContent = target[i];
-      } else {
-        span.classList.add('bad');
-        span.textContent = target[i];
-        hasError = true;
-      }
-    } else if(i >= target.length){
-      span.classList.add('extra');
-      span.textContent = typed[i];
-      hasError = true;
-    } else {
-      span.classList.add('pending');
-      span.textContent = target[i];
-    }
-    frag.appendChild(span);
-  }
-  overlay.innerHTML = '';
-  overlay.appendChild(frag);
-  if(hasError) st.everWrong = true;
+  /* 항목을 떠났다 돌아와도 타이머가 이어지도록(이전에는 여기서 영구히 멈췄다) */
+  if(!st.completed && st.typed.length > 0){ startTimer(id); }
 }
 
 function updateStatsDisplay(id){
@@ -1303,23 +1911,69 @@ function onInput(id, e){
   if(st.completed) return;
   var val = normalizeNewlines(e.target.value);
 
-  if(st.typed.length === 0 && val.length > 0 && !st.running){
-    st.running = true;
-    st.startTs = Date.now();
-    if(timerHandle) clearInterval(timerHandle);
-    timerHandle = setInterval(function(){ tick(id); }, 250);
-  }
+  if(val.length > 0 && !st.running){ startTimer(id); }
 
   st.typed = val;
-  renderOverlay(id);
   updateStatsDisplay(id);
   updateDot(id);
-  var it = ITEM_INDEX[id];
-  updateCatBadge(it.tabLabel === undefined ? '' : idPrefix(id));
-  applyWrongFilter();
+  saveState();
 
-  if(val === it.code){
+  var feedback = document.getElementById('feedback');
+  if(feedback && !feedback.hidden){ feedback.hidden = true; feedback.innerHTML = ''; }
+}
+
+function onSubmit(id){
+  var st = state[id];
+  if(st.completed) return;
+  var it = ITEM_INDEX[id];
+  var val = normalizeForCompare(st.typed);
+  var target = normalizeForCompare(it.code);
+
+  if(val === target){
     completeItem(id);
+    return;
+  }
+
+  var wasWrong = st.everWrong;
+  st.everWrong = true;
+  updateDot(id);
+  if(wrongOnly && !wasWrong){ applyWrongFilter(); }
+  renderFeedback(id, val, target);
+  saveState();
+}
+
+function renderFeedback(id, val, target){
+  var container = document.getElementById('feedback');
+  if(!container) return;
+
+  container.hidden = false;
+  container.innerHTML = '';
+
+  var title = document.createElement('p');
+  title.className = 'feedback-title';
+  title.textContent = '✕ 정답과 다릅니다. 틀린 부분(빨간색)을 확인하고 다시 제출하세요.';
+  container.appendChild(title);
+
+  var codeEl = document.createElement('pre');
+  codeEl.className = 'feedback-code';
+  for(var i = 0; i < val.length; i++){
+    var span = document.createElement('span');
+    span.className = 'ch';
+    if(i < target.length){
+      span.classList.add(val[i] === target[i] ? 'ok' : 'bad');
+    } else {
+      span.classList.add('extra');
+    }
+    span.textContent = val[i];
+    codeEl.appendChild(span);
+  }
+  container.appendChild(codeEl);
+
+  if(val.length < target.length){
+    var note = document.createElement('p');
+    note.className = 'feedback-note';
+    note.textContent = '입력한 길이가 정답보다 짧습니다 (정답 ' + target.length + '자 중 ' + val.length + '자 입력).';
+    container.appendChild(note);
   }
 }
 
@@ -1348,11 +2002,21 @@ function completeItem(id){
   if(typeArea) typeArea.classList.add('is-complete');
   var doneBadge = document.getElementById('doneBadge');
   if(doneBadge) doneBadge.hidden = false;
+  var submitBtn = document.getElementById('submitBtn');
+  if(submitBtn) submitBtn.disabled = true;
+  var feedback = document.getElementById('feedback');
+  if(feedback){ feedback.hidden = true; feedback.innerHTML = ''; }
+  saveStateNow();
 }
 
 function onKeydown(id, e){
   var st = state[id];
   if(st.completed) return;
+  if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+    e.preventDefault();
+    onSubmit(id);
+    return;
+  }
   if(e.key === 'Tab'){
     e.preventDefault();
     var ta = e.target;
@@ -1383,16 +2047,22 @@ function resetItem(id){
   if(typeArea) typeArea.classList.remove('is-complete');
   var doneBadge = document.getElementById('doneBadge');
   if(doneBadge) doneBadge.hidden = true;
+  var submitBtn = document.getElementById('submitBtn');
+  if(submitBtn) submitBtn.disabled = false;
+  var feedback = document.getElementById('feedback');
+  if(feedback){ feedback.hidden = true; feedback.innerHTML = ''; }
 
-  renderOverlay(id);
   updateStatsDisplay(id);
   updateDot(id);
   updateCatBadge(idPrefix(id));
   updateHeaderProgress();
   applyWrongFilter();
+  saveStateNow();
 }
 
 /* ---------- init ---------- */
+loadState();
+wrongToggleEl.classList.toggle('active', wrongOnly);
 renderTabs();
 renderSidebar();
 updateHeaderProgress();
